@@ -1,0 +1,56 @@
+version: '3.9'
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: saasdb
+      POSTGRES_USER: saasuser
+      POSTGRES_PASSWORD: saaspassword
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./migrations:/migrations
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+
+  tenant-api:
+    build:
+      context: .
+      dockerfile: Dockerfile.tenant-api
+    ports:
+      - "8080:8080"
+    env_file: .env
+    volumes:
+      - ./uploads:/app/uploads
+    depends_on:
+      - postgres
+      - redis
+
+  admin-api:
+    build:
+      context: .
+      dockerfile: Dockerfile.admin-api
+    ports:
+      - "8081:8081"
+    env_file: .env
+    depends_on:
+      - postgres
+      - redis
+
+  app-api:
+    build:
+      context: .
+      dockerfile: Dockerfile.app-api
+    ports:
+      - "8082:8082"
+    env_file: .env
+    depends_on:
+      - postgres
+      - redis
+
+volumes:
+  pgdata:
