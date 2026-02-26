@@ -35,7 +35,7 @@ type SubscribeInput struct {
 	CompanyName  string
 	PlanID       string
 	BillingCycle string
-	PromotionID  *string
+	PromoCode    *string
 	OwnerName    string
 	OwnerEmail   string
 	OwnerPass    string
@@ -68,13 +68,16 @@ func (s *Service) Subscribe(ctx context.Context, input SubscribeInput) (*Subscri
 	contractedPrice := basePrice
 	var promoPrice *float64
 	var promoExpiresAt interface{}
+	var promotionID *string
 
-	// Apply promotion if provided
-	if input.PromotionID != nil && *input.PromotionID != "" {
-		promo, err := s.repo.GetPromotionByID(ctx, *input.PromotionID)
+	// Apply promotion if promo_code provided (lookup by name)
+	if input.PromoCode != nil && *input.PromoCode != "" {
+		promo, err := s.repo.GetPromotionByName(ctx, *input.PromoCode)
 		if err != nil {
-			return nil, errors.New("invalid promotion")
+			return nil, errors.New("invalid promotion code")
 		}
+		promoID := promo.ID
+		promotionID = &promoID
 		var finalPrice float64
 		if promo.DiscountType == "percent" {
 			finalPrice = basePrice * (1 - promo.DiscountValue/100)
@@ -115,7 +118,7 @@ func (s *Service) Subscribe(ctx context.Context, input SubscribeInput) (*Subscri
 	}
 
 	// 3. Create tenant plan
-	if err := s.repo.CreateTenantPlan(ctx, tx, tenantID, input.PlanID, input.BillingCycle, basePrice, contractedPrice, input.PromotionID, promoPrice, promoExpiresAt); err != nil {
+	if err := s.repo.CreateTenantPlan(ctx, tx, tenantID, input.PlanID, input.BillingCycle, basePrice, contractedPrice, promotionID, promoPrice, promoExpiresAt); err != nil {
 		return nil, fmt.Errorf("create tenant plan: %w", err)
 	}
 

@@ -43,7 +43,7 @@ func NewHandler(service *svc.Service, redisClient *redis.Client) *Handler {
 func (h *Handler) Login(c *gin.Context) {
 	var req models.LoginRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		c.JSON(http.StatusBadRequest, gin.H{"error": utils.FormatValidationErrors(err)})
 		return
 	}
 
@@ -107,7 +107,7 @@ func (h *Handler) ChangePassword(c *gin.Context) {
 	adminID := c.GetString("admin_id")
 	var req models.ChangePasswordRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		c.JSON(http.StatusBadRequest, gin.H{"error": utils.FormatValidationErrors(err)})
 		return
 	}
 
@@ -185,7 +185,7 @@ func (h *Handler) CreateSysUser(c *gin.Context) {
 
 	var req models.CreateAdminRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		c.JSON(http.StatusBadRequest, gin.H{"error": utils.FormatValidationErrors(err)})
 		return
 	}
 
@@ -267,7 +267,7 @@ func (h *Handler) UpdateSysUser(c *gin.Context) {
 	id := c.Param("id")
 	var req models.UpdateAdminRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		c.JSON(http.StatusBadRequest, gin.H{"error": utils.FormatValidationErrors(err)})
 		return
 	}
 
@@ -356,7 +356,7 @@ func (h *Handler) UpdateSysUserProfile(c *gin.Context) {
 	id := c.Param("id")
 	var req models.UpdateProfileRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		c.JSON(http.StatusBadRequest, gin.H{"error": utils.FormatValidationErrors(err)})
 		return
 	}
 
@@ -404,7 +404,7 @@ func (h *Handler) UpdateMyProfile(c *gin.Context) {
 	adminID := c.GetString("admin_id")
 	var req models.UpdateProfileRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		c.JSON(http.StatusBadRequest, gin.H{"error": utils.FormatValidationErrors(err)})
 		return
 	}
 
@@ -450,7 +450,7 @@ func (h *Handler) ListRoles(c *gin.Context) {
 func (h *Handler) CreateRole(c *gin.Context) {
 	var req models.CreateRoleRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		c.JSON(http.StatusBadRequest, gin.H{"error": utils.FormatValidationErrors(err)})
 		return
 	}
 
@@ -499,7 +499,7 @@ func (h *Handler) UpdateRole(c *gin.Context) {
 	id, _ := strconv.Atoi(c.Param("id"))
 	var req models.UpdateRoleRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		c.JSON(http.StatusBadRequest, gin.H{"error": utils.FormatValidationErrors(err)})
 		return
 	}
 
@@ -546,7 +546,7 @@ func (h *Handler) AssignRole(c *gin.Context) {
 	id := c.Param("id")
 	var req models.AssignRoleRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		c.JSON(http.StatusBadRequest, gin.H{"error": utils.FormatValidationErrors(err)})
 		return
 	}
 
@@ -651,7 +651,7 @@ func (h *Handler) CreateTenant(c *gin.Context) {
 
 	var req tenantModels.CreateTenantRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		c.JSON(http.StatusBadRequest, gin.H{"error": utils.FormatValidationErrors(err)})
 		return
 	}
 
@@ -782,7 +782,7 @@ func (h *Handler) UpdateTenant(c *gin.Context) {
 	id := c.Param("id")
 	var req tenantModels.UpdateTenantRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		c.JSON(http.StatusBadRequest, gin.H{"error": utils.FormatValidationErrors(err)})
 		return
 	}
 
@@ -842,7 +842,7 @@ func (h *Handler) UpdateTenantStatus(c *gin.Context) {
 	id := c.Param("id")
 	var req tenantModels.UpdateTenantStatusRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		c.JSON(http.StatusBadRequest, gin.H{"error": utils.FormatValidationErrors(err)})
 		return
 	}
 
@@ -876,7 +876,7 @@ func (h *Handler) ChangeTenantPlan(c *gin.Context) {
 	tenantID := c.Param("id")
 	var req tenantModels.ChangePlanRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		c.JSON(http.StatusBadRequest, gin.H{"error": utils.FormatValidationErrors(err)})
 		return
 	}
 
@@ -1014,7 +1014,7 @@ func (h *Handler) ListPlans(c *gin.Context) {
 func (h *Handler) CreatePlan(c *gin.Context) {
 	var req tenantModels.CreatePlanRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		c.JSON(http.StatusBadRequest, gin.H{"error": utils.FormatValidationErrors(err)})
 		return
 	}
 
@@ -1075,7 +1075,7 @@ func (h *Handler) UpdatePlan(c *gin.Context) {
 	id := c.Param("id")
 	var req tenantModels.UpdatePlanRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		c.JSON(http.StatusBadRequest, gin.H{"error": utils.FormatValidationErrors(err)})
 		return
 	}
 
@@ -1122,7 +1122,7 @@ func (h *Handler) AddFeatureToPlan(c *gin.Context) {
 	planID := c.Param("id")
 	var req tenantModels.PlanFeatureRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		c.JSON(http.StatusBadRequest, gin.H{"error": utils.FormatValidationErrors(err)})
 		return
 	}
 	if err := h.service.Repo().AddFeatureToPlan(c.Request.Context(), planID, req.FeatureID); err != nil {
@@ -1188,7 +1188,7 @@ func (h *Handler) ListFeatures(c *gin.Context) {
 func (h *Handler) CreateFeature(c *gin.Context) {
 	var req tenantModels.CreateFeatureRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		c.JSON(http.StatusBadRequest, gin.H{"error": utils.FormatValidationErrors(err)})
 		return
 	}
 
@@ -1239,7 +1239,7 @@ func (h *Handler) UpdateFeature(c *gin.Context) {
 	id := c.Param("id")
 	var req tenantModels.UpdateFeatureRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		c.JSON(http.StatusBadRequest, gin.H{"error": utils.FormatValidationErrors(err)})
 		return
 	}
 
@@ -1304,7 +1304,7 @@ func (h *Handler) ListPromotions(c *gin.Context) {
 func (h *Handler) CreatePromotion(c *gin.Context) {
 	var req tenantModels.CreatePromotionRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		c.JSON(http.StatusBadRequest, gin.H{"error": utils.FormatValidationErrors(err)})
 		return
 	}
 
@@ -1355,7 +1355,7 @@ func (h *Handler) UpdatePromotion(c *gin.Context) {
 	id := c.Param("id")
 	var req tenantModels.UpdatePromotionRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		c.JSON(http.StatusBadRequest, gin.H{"error": utils.FormatValidationErrors(err)})
 		return
 	}
 

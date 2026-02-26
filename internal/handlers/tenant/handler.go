@@ -59,35 +59,48 @@ func (h *Handler) ListPlans(c *gin.Context) {
 // @Router /subscription [post]
 func (h *Handler) Subscribe(c *gin.Context) {
 	var req struct {
-		TenantName   string  `json:"tenant_name" binding:"required"`
-		Subdomain    string  `json:"subdomain" binding:"required"`
+		Name         string  `json:"name" binding:"required"`
+		Email        string  `json:"email" binding:"required,email"`
+		Password     string  `json:"password" binding:"required,min=6"`
 		IsCompany    bool    `json:"is_company"`
 		CompanyName  string  `json:"company_name"`
 		PlanID       string  `json:"plan_id" binding:"required"`
 		BillingCycle string  `json:"billing_cycle" binding:"required"`
-		PromotionID  *string `json:"promotion_id"`
-		OwnerName    string  `json:"owner_name" binding:"required"`
-		OwnerEmail   string  `json:"owner_email" binding:"required,email"`
-		OwnerPass    string  `json:"owner_password" binding:"required,min=6"`
+		PromoCode    *string `json:"promo_code"`
+		Subdomain    string  `json:"subdomain" binding:"required"`
 	}
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		c.JSON(http.StatusBadRequest, gin.H{"error": utils.FormatValidationErrors(err)})
 		return
+	}
+
+	// company_name is required when is_company is true
+	if req.IsCompany && strings.TrimSpace(req.CompanyName) == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": map[string]string{
+			"company_name": "Company name is required when is_company is true",
+		}})
+		return
+	}
+
+	// Determine tenant name: company_name if company, otherwise user name
+	tenantName := req.Name
+	if req.IsCompany && req.CompanyName != "" {
+		tenantName = req.CompanyName
 	}
 
 	subdomain := strings.ToLower(strings.ReplaceAll(req.Subdomain, " ", ""))
 
 	result, err := h.service.Subscribe(c.Request.Context(), svc.SubscribeInput{
-		TenantName:   req.TenantName,
+		TenantName:   tenantName,
 		Subdomain:    subdomain,
 		IsCompany:    req.IsCompany,
 		CompanyName:  req.CompanyName,
 		PlanID:       req.PlanID,
 		BillingCycle: req.BillingCycle,
-		PromotionID:  req.PromotionID,
-		OwnerName:    req.OwnerName,
-		OwnerEmail:   req.OwnerEmail,
-		OwnerPass:    req.OwnerPass,
+		PromoCode:    req.PromoCode,
+		OwnerName:    req.Name,
+		OwnerEmail:   req.Email,
+		OwnerPass:    req.Password,
 	})
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
@@ -170,7 +183,7 @@ func (h *Handler) Login(c *gin.Context) {
 		Password string `json:"password" binding:"required"`
 	}
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		c.JSON(http.StatusBadRequest, gin.H{"error": utils.FormatValidationErrors(err)})
 		return
 	}
 
@@ -242,7 +255,7 @@ func (h *Handler) ChangePassword(c *gin.Context) {
 		NewPassword     string `json:"new_password" binding:"required,min=6"`
 	}
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		c.JSON(http.StatusBadRequest, gin.H{"error": utils.FormatValidationErrors(err)})
 		return
 	}
 
@@ -344,7 +357,7 @@ func (h *Handler) UpdateProfile(c *gin.Context) {
 		About    *string `json:"about"`
 	}
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		c.JSON(http.StatusBadRequest, gin.H{"error": utils.FormatValidationErrors(err)})
 		return
 	}
 	if err := h.repo.UpdateUserProfile(c.Request.Context(), userID, req.FullName, req.About); err != nil {
@@ -494,7 +507,7 @@ func (h *Handler) UpdateTenantProfile(c *gin.Context) {
 		CustomSettings interface{} `json:"custom_settings"`
 	}
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		c.JSON(http.StatusBadRequest, gin.H{"error": utils.FormatValidationErrors(err)})
 		return
 	}
 
@@ -643,7 +656,7 @@ func (h *Handler) InviteMember(c *gin.Context) {
 		Role     string `json:"role" binding:"required"`
 	}
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		c.JSON(http.StatusBadRequest, gin.H{"error": utils.FormatValidationErrors(err)})
 		return
 	}
 
@@ -685,7 +698,7 @@ func (h *Handler) UpdateMemberRole(c *gin.Context) {
 		RoleID string `json:"role_id" binding:"required"`
 	}
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		c.JSON(http.StatusBadRequest, gin.H{"error": utils.FormatValidationErrors(err)})
 		return
 	}
 
@@ -802,7 +815,7 @@ func (h *Handler) CreateRole(c *gin.Context) {
 		Title string `json:"title" binding:"required"`
 	}
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		c.JSON(http.StatusBadRequest, gin.H{"error": utils.FormatValidationErrors(err)})
 		return
 	}
 
@@ -841,7 +854,7 @@ func (h *Handler) UpdateRole(c *gin.Context) {
 		Title *string `json:"title"`
 	}
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		c.JSON(http.StatusBadRequest, gin.H{"error": utils.FormatValidationErrors(err)})
 		return
 	}
 
@@ -905,7 +918,7 @@ func (h *Handler) AssignPermission(c *gin.Context) {
 		PermissionID string `json:"permission_id" binding:"required"`
 	}
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		c.JSON(http.StatusBadRequest, gin.H{"error": utils.FormatValidationErrors(err)})
 		return
 	}
 
@@ -1056,7 +1069,7 @@ func (h *Handler) CreateProduct(c *gin.Context) {
 		Stock       int     `json:"stock"`
 	}
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		c.JSON(http.StatusBadRequest, gin.H{"error": utils.FormatValidationErrors(err)})
 		return
 	}
 
@@ -1097,7 +1110,7 @@ func (h *Handler) UpdateProduct(c *gin.Context) {
 		IsActive    *bool    `json:"is_active"`
 	}
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		c.JSON(http.StatusBadRequest, gin.H{"error": utils.FormatValidationErrors(err)})
 		return
 	}
 
@@ -1254,7 +1267,7 @@ func (h *Handler) CreateService(c *gin.Context) {
 		Duration    *int    `json:"duration"`
 	}
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		c.JSON(http.StatusBadRequest, gin.H{"error": utils.FormatValidationErrors(err)})
 		return
 	}
 
@@ -1294,7 +1307,7 @@ func (h *Handler) UpdateService(c *gin.Context) {
 		IsActive    *bool    `json:"is_active"`
 	}
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		c.JSON(http.StatusBadRequest, gin.H{"error": utils.FormatValidationErrors(err)})
 		return
 	}
 
@@ -1439,7 +1452,7 @@ func (h *Handler) UpsertSetting(c *gin.Context) {
 		Data     interface{} `json:"data" binding:"required"`
 	}
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		c.JSON(http.StatusBadRequest, gin.H{"error": utils.FormatValidationErrors(err)})
 		return
 	}
 
@@ -1640,7 +1653,7 @@ func (h *Handler) UpdateAppUserStatus(c *gin.Context) {
 		Status string `json:"status" binding:"required,oneof=active blocked"`
 	}
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		c.JSON(http.StatusBadRequest, gin.H{"error": utils.FormatValidationErrors(err)})
 		return
 	}
 	if err := h.repo.UpdateAppUserStatus(c.Request.Context(), tenantID, appUserID, req.Status); err != nil {

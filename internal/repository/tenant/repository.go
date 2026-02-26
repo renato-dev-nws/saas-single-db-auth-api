@@ -82,6 +82,18 @@ func (r *Repository) GetPromotionByID(ctx context.Context, id string) (*promoRow
 	return &p, nil
 }
 
+func (r *Repository) GetPromotionByName(ctx context.Context, name string) (*promoRow, error) {
+	var p promoRow
+	err := r.db.QueryRow(ctx,
+		`SELECT id, name, description, discount_type, discount_value, duration_months, valid_from, valid_until, is_active
+		 FROM promotions WHERE name = $1 AND is_active = true`, name,
+	).Scan(&p.ID, &p.Name, &p.Description, &p.DiscountType, &p.DiscountValue, &p.DurationMonths, &p.ValidFrom, &p.ValidUntil, &p.IsActive)
+	if err != nil {
+		return nil, err
+	}
+	return &p, nil
+}
+
 type promoRow struct {
 	ID             string
 	Name           string

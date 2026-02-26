@@ -95,6 +95,29 @@ func TenantMiddleware(db *pgxpool.Pool, cache *redis.Client) gin.HandlerFunc {
 	}
 }
 
+// TenantAccessMiddleware ensures the authenticated user's token tenant_id matches
+// the URL-derived tenant_id. Must be placed AFTER TenantMiddleware and an auth middleware.
+func TenantAccessMiddleware() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		tenantID := c.GetString("tenant_id")            // from TenantMiddleware (URL)
+		tokenTenantID := c.GetString("token_tenant_id") // from UserAuthMiddleware or AppAuthMiddleware (JWT)
+
+		if tenantID == "" || tokenTenantID == "" {
+			c.JSON(http.StatusForbidden, gin.H{"error": "access_denied"})
+			c.Abort()
+			return
+		}
+
+		if tenantID != tokenTenantID {
+			c.JSON(http.StatusForbidden, gin.H{"error": "access_denied"})
+			c.Abort()
+			return
+		}
+
+		c.Next()
+	}
+}
+
 func getActiveTenantFeatures(ctx context.Context, db *pgxpool.Pool, tenantID string) []string {
 	rows, err := db.Query(ctx,
 		`SELECT f.slug

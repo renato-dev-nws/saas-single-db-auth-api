@@ -109,6 +109,7 @@ func main() {
 		tenantScoped.Use(
 			middleware.TenantMiddleware(db, redisClient.Inner()),
 			middleware.UserAuthMiddleware(cfg.JWTSecret, redisClient.Inner()),
+			middleware.TenantAccessMiddleware(),
 		)
 		{
 			// Config

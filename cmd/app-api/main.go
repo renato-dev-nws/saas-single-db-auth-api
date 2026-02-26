@@ -73,7 +73,10 @@ func main() {
 
 		// ─── Auth (Protected) ─────────────────────────────
 		protectedAuth := api.Group("/auth")
-		protectedAuth.Use(middleware.AppAuthMiddleware(cfg.JWTSecret, redisClient.Inner()))
+		protectedAuth.Use(
+			middleware.AppAuthMiddleware(cfg.JWTSecret, redisClient.Inner()),
+			middleware.TenantAccessMiddleware(),
+		)
 		{
 			protectedAuth.POST("/logout", handler.Logout)
 			protectedAuth.GET("/me", handler.Me)
@@ -81,7 +84,10 @@ func main() {
 
 		// ─── Profile (Protected) ──────────────────────────
 		profile := api.Group("/profile")
-		profile.Use(middleware.AppAuthMiddleware(cfg.JWTSecret, redisClient.Inner()))
+		profile.Use(
+			middleware.AppAuthMiddleware(cfg.JWTSecret, redisClient.Inner()),
+			middleware.TenantAccessMiddleware(),
+		)
 		{
 			profile.GET("", handler.GetProfile)
 			profile.PUT("", handler.UpdateProfile)

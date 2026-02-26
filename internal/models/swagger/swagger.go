@@ -13,9 +13,14 @@ type TokenResponse struct {
 	Token string `json:"token" example:"eyJhbGciOiJIUzI1NiIs..."`
 }
 
-// ErrorResponse represents an error response
+// ErrorResponse represents an error response (string for general errors)
 type ErrorResponse struct {
 	Error string `json:"error" example:"error_message"`
+}
+
+// ValidationErrorResponse represents a validation error response with field-level errors
+type ValidationErrorResponse struct {
+	Error map[string]string `json:"error"`
 }
 
 // MessageResponse represents a simple message response

@@ -10,16 +10,16 @@ test-plans-public:
 # Test subscription (public)
 test-subscription:
 	@echo "Testing subscription endpoint..."
-	@curl -X POST http://localhost:8080/api/v1/subscription \
+	@curl -s -X POST http://localhost:8080/api/v1/subscription \
 		-H "Content-Type: application/json" \
-		-d '{"plan_id":"10000000-0000-0000-0000-000000000001","billing_cycle":"monthly","tenant_name":"Minha Loja","subdomain":"minhaloja","is_company":false,"owner_name":"Joao Silva","owner_email":"joao@minha-loja.com","owner_password":"senha12345"}'
+		-d '{"plan_id":"10000000-0000-0000-0000-000000000001","billing_cycle":"monthly","subdomain":"minhaloja2","is_company":false,"name":"Joao Silva 2","email":"joao2@minha-loja.com","password":"senha12345"}'
 	@echo ""
 
 test-subscription-with-promo:
 	@echo "Testing subscription with promo..."
-	@curl -X POST http://localhost:8080/api/v1/subscription \
+	@curl -s -X POST http://localhost:8080/api/v1/subscription \
 		-H "Content-Type: application/json" \
-		-d '{"plan_id":"20000000-0000-0000-0000-000000000001","billing_cycle":"monthly","promotion_id":"cc000000-0000-0000-0000-000000000001","tenant_name":"Loja Promo","subdomain":"lojapromo","is_company":false,"owner_name":"Maria Promo","owner_email":"maria@loja-promo.com","owner_password":"senha12345"}'
+		-d '{"plan_id":"20000000-0000-0000-0000-000000000001","billing_cycle":"monthly","promo_code":"Lançamento 50% off","subdomain":"lojapromo2","is_company":true,"company_name":"Loja Promo 2","name":"Maria Promo 2","email":"maria2@loja-promo.com","password":"senha12345"}'
 	@echo ""
 
 # Test login backoffice
@@ -79,7 +79,7 @@ test-testenovo:
 	@echo "========================================="
 	@RESPONSE=$$(curl -s -X POST http://localhost:8080/api/v1/subscription \
 		-H "Content-Type: application/json" \
-		-d '{"plan_id":"20000000-0000-0000-0000-000000000001","billing_cycle":"monthly","tenant_name":"Nova Empresa","subdomain":"novaempresa","is_company":false,"owner_name":"Novo Usuario","owner_email":"novo@empresa.com","owner_password":"senha12345"}'); \
+		-d '{"plan_id":"20000000-0000-0000-0000-000000000001","billing_cycle":"monthly","subdomain":"novaempresa2","is_company":true,"company_name":"Nova Empresa 2","name":"Novo Usuario 2","email":"novo2@empresa.com","password":"senha12345"}'); \
 	echo "1. Subscription:"; echo "$$RESPONSE"; \
 	TOKEN=$$(echo "$$RESPONSE" | grep -o '"token":"[^"]*' | cut -d'"' -f4); \
 	URL_CODE=$$(echo "$$RESPONSE" | grep -o '"url_code":"[^"]*' | cut -d'"' -f4); \

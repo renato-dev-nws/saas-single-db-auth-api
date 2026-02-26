@@ -6,6 +6,7 @@ include scripts/makefiles/app-tests.mk
 include scripts/makefiles/product-tests.mk
 include scripts/makefiles/service-tests.mk
 include scripts/makefiles/setting-tests.mk
+include scripts/makefiles/security-tests.mk
 
 .PHONY: up down build logs logs-admin logs-tenant logs-app dev-admin dev-tenant dev-app
 
