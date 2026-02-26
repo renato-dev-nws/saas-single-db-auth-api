@@ -403,7 +403,8 @@ func (h *Handler) CreateTenant(c *gin.Context) {
 	defer tx.Rollback(ctx)
 
 	// Create tenant
-	tenantID, err := h.service.Repo().CreateTenant(ctx, tx, req.Name, req.URLCode, req.Subdomain, req.IsCompany, req.CompanyName)
+	urlCode := utils.GenerateURLCode()
+	tenantID, err := h.service.Repo().CreateTenant(ctx, tx, req.Name, urlCode, req.Subdomain, req.IsCompany, req.CompanyName)
 	if err != nil {
 		c.JSON(http.StatusConflict, gin.H{"error": "tenant_already_exists"})
 		return
@@ -452,7 +453,7 @@ func (h *Handler) CreateTenant(c *gin.Context) {
 	// Create owner user if email provided
 	var ownerInfo interface{}
 	if req.OwnerEmail != "" {
-		ownerInfo, err = createOwnerForTenant(ctx, tx, tenantID, req.OwnerEmail, req.OwnerFullName, req.OwnerPassword, req.URLCode)
+		ownerInfo, err = createOwnerForTenant(ctx, tx, tenantID, req.OwnerEmail, req.OwnerFullName, req.OwnerPassword, urlCode)
 		if err != nil {
 			c.JSON(http.StatusConflict, gin.H{"error": "owner_creation_failed: " + err.Error()})
 			return
@@ -465,7 +466,7 @@ func (h *Handler) CreateTenant(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusCreated, gin.H{
-		"tenant": gin.H{"id": tenantID, "name": req.Name, "url_code": req.URLCode, "status": "active"},
+		"tenant": gin.H{"id": tenantID, "name": req.Name, "url_code": urlCode, "status": "active"},
 		"owner":  ownerInfo,
 	})
 }
@@ -657,7 +658,7 @@ func (h *Handler) CreatePlan(c *gin.Context) {
 		maxUsers = 1
 	}
 
-	id, err := h.service.Repo().CreatePlan(c.Request.Context(), req.Name, req.Description, req.Price, maxUsers, req.IsMultilang)
+	id, err := h.service.Repo().CreatePlan(c.Request.Context(), req.Name, req.Description, req.PlanType, req.Price, maxUsers, req.IsMultilang)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed_to_create_plan"})
 		return

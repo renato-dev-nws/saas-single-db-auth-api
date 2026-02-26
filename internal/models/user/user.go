@@ -11,6 +11,7 @@ type User struct {
 	Email             string     `json:"email"`
 	HashPass          string     `json:"-"`
 	LastTenantURLCode *string    `json:"last_tenant_url_code"`
+	EmailVerifiedAt   *time.Time `json:"email_verified_at"`
 	Status            string     `json:"status"`
 	CreatedAt         time.Time  `json:"created_at"`
 	UpdatedAt         time.Time  `json:"updated_at"`

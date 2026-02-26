@@ -9,6 +9,7 @@ import (
 	"github.com/saas-single-db-api/internal/cache"
 	"github.com/saas-single-db-api/internal/config"
 	"github.com/saas-single-db-api/internal/database"
+	"github.com/saas-single-db-api/internal/email"
 	tenantHandler "github.com/saas-single-db-api/internal/handlers/tenant"
 	"github.com/saas-single-db-api/internal/middleware"
 	tenantRepo "github.com/saas-single-db-api/internal/repository/tenant"
@@ -33,8 +34,19 @@ func main() {
 	// Repositories
 	repo := tenantRepo.NewRepository(db)
 
+	// Email service
+	emailSvc := email.NewService(email.Config{
+		Host:     cfg.SMTPHost,
+		Port:     cfg.SMTPPort,
+		User:     cfg.SMTPUser,
+		Password: cfg.SMTPPassword,
+		From:     cfg.SMTPFrom,
+		AppName:  cfg.AppName,
+		BaseURL:  cfg.AppBaseURL,
+	}, db)
+
 	// Services
-	service := tenantSvc.NewService(repo, redisClient, cfg.JWTSecret, cfg.JWTExpiryHours)
+	service := tenantSvc.NewService(repo, redisClient, emailSvc, cfg.JWTSecret, cfg.JWTExpiryHours)
 
 	// Handlers
 	handler := tenantHandler.NewHandler(service, repo, storageProvider, redisClient, cfg.JWTSecret, cfg.JWTExpiryHours)
@@ -53,6 +65,7 @@ func main() {
 		auth := api.Group("/auth")
 		{
 			auth.POST("/login", handler.Login)
+			auth.GET("/verify-email", handler.VerifyEmail)
 		}
 
 		// ─── Auth (Protected) ─────────────────────────────
@@ -62,6 +75,7 @@ func main() {
 			protectedAuth.POST("/logout", handler.Logout)
 			protectedAuth.GET("/me", handler.Me)
 			protectedAuth.POST("/switch/:url_code", handler.SelectTenant)
+			protectedAuth.POST("/resend-verification", handler.ResendVerification)
 		}
 
 		// ─── Profile (Protected) ──────────────────────────

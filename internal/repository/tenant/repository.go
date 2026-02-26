@@ -3,6 +3,7 @@ package tenant
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -50,8 +51,8 @@ func (r *Repository) CreateTenantPlan(ctx context.Context, tx pgx.Tx, tenantID, 
 func (r *Repository) GetPlanByID(ctx context.Context, id string) (*planRow, error) {
 	var p planRow
 	err := r.db.QueryRow(ctx,
-		`SELECT id, name, description, price, max_users, is_multilang, is_active FROM plans WHERE id = $1`, id,
-	).Scan(&p.ID, &p.Name, &p.Description, &p.Price, &p.MaxUsers, &p.IsMultilang, &p.IsActive)
+		`SELECT id, name, description, plan_type, price, max_users, is_multilang, is_active FROM plans WHERE id = $1`, id,
+	).Scan(&p.ID, &p.Name, &p.Description, &p.PlanType, &p.Price, &p.MaxUsers, &p.IsMultilang, &p.IsActive)
 	if err != nil {
 		return nil, err
 	}
@@ -62,6 +63,7 @@ type planRow struct {
 	ID          string
 	Name        string
 	Description *string
+	PlanType    string
 	Price       float64
 	MaxUsers    int
 	IsMultilang bool
@@ -94,7 +96,7 @@ type promoRow struct {
 
 func (r *Repository) ListActivePlans(ctx context.Context) ([]interface{}, error) {
 	rows, err := r.db.Query(ctx,
-		`SELECT p.id, p.name, p.description, p.price, p.max_users, p.is_multilang
+		`SELECT p.id, p.name, p.description, p.plan_type, p.price, p.max_users, p.is_multilang
 		 FROM plans p WHERE p.is_active = true ORDER BY p.price`,
 	)
 	if err != nil {
@@ -108,12 +110,13 @@ func (r *Repository) ListActivePlans(ctx context.Context) ([]interface{}, error)
 			ID          string   `json:"id"`
 			Name        string   `json:"name"`
 			Description *string  `json:"description"`
+			PlanType    string   `json:"plan_type"`
 			Price       float64  `json:"price"`
 			MaxUsers    int      `json:"max_users"`
 			IsMultilang bool     `json:"is_multilang"`
 			Features    []string `json:"features"`
 		}
-		if err := rows.Scan(&p.ID, &p.Name, &p.Description, &p.Price, &p.MaxUsers, &p.IsMultilang); err != nil {
+		if err := rows.Scan(&p.ID, &p.Name, &p.Description, &p.PlanType, &p.Price, &p.MaxUsers, &p.IsMultilang); err != nil {
 			return nil, err
 		}
 		// Get features
@@ -204,9 +207,9 @@ func (r *Repository) CreateTenantMember(ctx context.Context, tx pgx.Tx, userID, 
 func (r *Repository) GetUserByEmail(ctx context.Context, email string) (*userRow, error) {
 	var u userRow
 	err := r.db.QueryRow(ctx,
-		`SELECT id, name, email, hash_pass, last_tenant_url_code, status
+		`SELECT id, name, email, hash_pass, last_tenant_url_code, email_verified_at, status
 		 FROM users WHERE email = $1 AND deleted_at IS NULL`, email,
-	).Scan(&u.ID, &u.Name, &u.Email, &u.HashPass, &u.LastTenantURLCode, &u.Status)
+	).Scan(&u.ID, &u.Name, &u.Email, &u.HashPass, &u.LastTenantURLCode, &u.EmailVerifiedAt, &u.Status)
 	if err != nil {
 		return nil, err
 	}
@@ -216,9 +219,9 @@ func (r *Repository) GetUserByEmail(ctx context.Context, email string) (*userRow
 func (r *Repository) GetUserByID(ctx context.Context, id string) (*userRow, error) {
 	var u userRow
 	err := r.db.QueryRow(ctx,
-		`SELECT id, name, email, hash_pass, last_tenant_url_code, status
+		`SELECT id, name, email, hash_pass, last_tenant_url_code, email_verified_at, status
 		 FROM users WHERE id = $1 AND deleted_at IS NULL`, id,
-	).Scan(&u.ID, &u.Name, &u.Email, &u.HashPass, &u.LastTenantURLCode, &u.Status)
+	).Scan(&u.ID, &u.Name, &u.Email, &u.HashPass, &u.LastTenantURLCode, &u.EmailVerifiedAt, &u.Status)
 	if err != nil {
 		return nil, err
 	}
@@ -231,6 +234,7 @@ type userRow struct {
 	Email             string
 	HashPass          string
 	LastTenantURLCode *string
+	EmailVerifiedAt   *time.Time
 	Status            string
 }
 
@@ -1127,6 +1131,61 @@ func (r *Repository) SoftDeleteAppUser(ctx context.Context, tenantID, userID str
 	_, err := r.db.Exec(ctx,
 		`UPDATE tenant_app_users SET deleted_at = NOW(), updated_at = NOW()
 		 WHERE tenant_id = $1 AND id = $2 AND deleted_at IS NULL`, tenantID, userID,
+	)
+	return err
+}
+
+// --- Email Verification ---
+
+func (r *Repository) CreateVerificationToken(ctx context.Context, tx pgx.Tx, userID, token string) error {
+	_, err := tx.Exec(ctx,
+		`INSERT INTO email_verification_tokens (user_id, token, expires_at)
+		 VALUES ($1, $2, NOW() + INTERVAL '24 hours')`,
+		userID, token,
+	)
+	return err
+}
+
+func (r *Repository) CreateVerificationTokenNonTx(ctx context.Context, userID, token string) error {
+	_, err := r.db.Exec(ctx,
+		`INSERT INTO email_verification_tokens (user_id, token, expires_at)
+		 VALUES ($1, $2, NOW() + INTERVAL '24 hours')`,
+		userID, token,
+	)
+	return err
+}
+
+func (r *Repository) GetVerificationToken(ctx context.Context, token string) (*VerificationTokenRow, error) {
+	var t VerificationTokenRow
+	err := r.db.QueryRow(ctx,
+		`SELECT id, user_id, token, used_at, expires_at
+		 FROM email_verification_tokens
+		 WHERE token = $1 AND used_at IS NULL AND expires_at > NOW()`, token,
+	).Scan(&t.ID, &t.UserID, &t.Token, &t.UsedAt, &t.ExpiresAt)
+	if err != nil {
+		return nil, err
+	}
+	return &t, nil
+}
+
+type VerificationTokenRow struct {
+	ID        string
+	UserID    string
+	Token     string
+	UsedAt    *time.Time
+	ExpiresAt time.Time
+}
+
+func (r *Repository) MarkTokenUsed(ctx context.Context, tokenID string) error {
+	_, err := r.db.Exec(ctx,
+		`UPDATE email_verification_tokens SET used_at = NOW() WHERE id = $1`, tokenID,
+	)
+	return err
+}
+
+func (r *Repository) SetEmailVerified(ctx context.Context, userID string) error {
+	_, err := r.db.Exec(ctx,
+		`UPDATE users SET email_verified_at = NOW(), updated_at = NOW() WHERE id = $1`, userID,
 	)
 	return err
 }

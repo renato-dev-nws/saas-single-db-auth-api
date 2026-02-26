@@ -41,7 +41,7 @@ func (h *Handler) ListPlans(c *gin.Context) {
 func (h *Handler) Subscribe(c *gin.Context) {
 	var req struct {
 		TenantName   string  `json:"tenant_name" binding:"required"`
-		URLCode      string  `json:"url_code" binding:"required"`
+		Subdomain    string  `json:"subdomain" binding:"required"`
 		IsCompany    bool    `json:"is_company"`
 		CompanyName  string  `json:"company_name"`
 		PlanID       string  `json:"plan_id" binding:"required"`
@@ -56,12 +56,10 @@ func (h *Handler) Subscribe(c *gin.Context) {
 		return
 	}
 
-	urlCode := utils.Slugify(req.URLCode)
-	subdomain := strings.ToLower(strings.ReplaceAll(req.URLCode, " ", ""))
+	subdomain := strings.ToLower(strings.ReplaceAll(req.Subdomain, " ", ""))
 
 	result, err := h.service.Subscribe(c.Request.Context(), svc.SubscribeInput{
 		TenantName:   req.TenantName,
-		URLCode:      urlCode,
 		Subdomain:    subdomain,
 		IsCompany:    req.IsCompany,
 		CompanyName:  req.CompanyName,
@@ -83,6 +81,36 @@ func (h *Handler) Subscribe(c *gin.Context) {
 		"url_code":  result.URLCode,
 		"token":     result.Token,
 	})
+}
+
+func (h *Handler) VerifyEmail(c *gin.Context) {
+	token := c.Query("token")
+	if token == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "token is required"})
+		return
+	}
+
+	if err := h.service.VerifyEmail(c.Request.Context(), token); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "email_verified"})
+}
+
+func (h *Handler) ResendVerification(c *gin.Context) {
+	userID := c.GetString("user_id")
+	if userID == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+
+	if err := h.service.ResendVerification(c.Request.Context(), userID); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "verification_email_sent"})
 }
 
 // ==================== AUTH ====================

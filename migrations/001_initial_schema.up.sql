@@ -12,6 +12,7 @@ CREATE TYPE billing_cycle    AS ENUM ('monthly', 'quarterly', 'semiannual', 'ann
 CREATE TYPE user_status      AS ENUM ('active', 'inactive', 'suspended');
 CREATE TYPE storage_provider AS ENUM ('local', 's3', 'r2');
 CREATE TYPE discount_type    AS ENUM ('percent', 'fixed');
+CREATE TYPE plan_type        AS ENUM ('individual', 'business');
 
 -- ============================================================
 -- System Admin Tables
@@ -90,6 +91,7 @@ CREATE TABLE plans (
     id            UUID           PRIMARY KEY DEFAULT uuid_generate_v4(),
     name          VARCHAR(255)   NOT NULL,
     description   TEXT,
+    plan_type     plan_type      NOT NULL DEFAULT 'individual',
     price         DECIMAL(10,2)  NOT NULL DEFAULT 0,
     max_users     INTEGER        NOT NULL DEFAULT 1,
     is_multilang  BOOLEAN        NOT NULL DEFAULT false,
@@ -126,7 +128,7 @@ CREATE TABLE promotions (
 CREATE TABLE tenants (
     id            UUID           PRIMARY KEY DEFAULT uuid_generate_v4(),
     name          VARCHAR(255)   NOT NULL,
-    url_code      VARCHAR(20)    UNIQUE NOT NULL,
+    url_code      CHAR(11)       UNIQUE NOT NULL,
     subdomain     VARCHAR(50)    UNIQUE NOT NULL,
     is_company    BOOLEAN        NOT NULL DEFAULT false,
     company_name  VARCHAR(255),
@@ -175,7 +177,8 @@ CREATE TABLE users (
     name                 VARCHAR(255) NOT NULL,
     email                VARCHAR(255) UNIQUE NOT NULL,
     hash_pass            VARCHAR(255) NOT NULL,
-    last_tenant_url_code VARCHAR(20),
+    last_tenant_url_code CHAR(11),
+    email_verified_at    TIMESTAMP,
     status               user_status  NOT NULL DEFAULT 'active',
     created_at           TIMESTAMP    NOT NULL DEFAULT NOW(),
     updated_at           TIMESTAMP    NOT NULL DEFAULT NOW(),
@@ -302,6 +305,34 @@ CREATE TABLE tenant_app_user_profiles (
 );
 
 -- ============================================================
+-- Email Verification Tokens
+-- ============================================================
+
+CREATE TABLE email_verification_tokens (
+    id         UUID         PRIMARY KEY DEFAULT uuid_generate_v4(),
+    user_id    UUID         NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    token      VARCHAR(64)  UNIQUE NOT NULL,
+    expires_at TIMESTAMP    NOT NULL,
+    used_at    TIMESTAMP,
+    created_at TIMESTAMP    NOT NULL DEFAULT NOW()
+);
+
+-- ============================================================
+-- Email Templates
+-- ============================================================
+
+CREATE TABLE email_templates (
+    id         UUID         PRIMARY KEY DEFAULT uuid_generate_v4(),
+    slug       VARCHAR(100) UNIQUE NOT NULL,
+    subject    VARCHAR(500) NOT NULL,
+    body_html  TEXT         NOT NULL,
+    variables  JSONB        NOT NULL DEFAULT '[]',
+    is_active  BOOLEAN      NOT NULL DEFAULT true,
+    created_at TIMESTAMP    NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMP    NOT NULL DEFAULT NOW()
+);
+
+-- ============================================================
 -- Images Table
 -- ============================================================
 
@@ -336,9 +367,10 @@ CREATE INDEX idx_tenant_plans_plan_id   ON tenant_plans(plan_id);
 
 CREATE INDEX idx_promotions_is_active ON promotions(is_active);
 
-CREATE INDEX idx_users_email       ON users(email);
-CREATE INDEX idx_users_status      ON users(status);
-CREATE INDEX idx_users_deleted_at  ON users(deleted_at) WHERE deleted_at IS NOT NULL;
+CREATE INDEX idx_users_email              ON users(email);
+CREATE INDEX idx_users_status             ON users(status);
+CREATE INDEX idx_users_deleted_at         ON users(deleted_at) WHERE deleted_at IS NOT NULL;
+CREATE INDEX idx_users_email_verified_at  ON users(email_verified_at) WHERE email_verified_at IS NULL;
 
 CREATE INDEX idx_tenant_members_user_id    ON tenant_members(user_id)   WHERE deleted_at IS NULL;
 CREATE INDEX idx_tenant_members_tenant_id  ON tenant_members(tenant_id) WHERE deleted_at IS NULL;
@@ -354,6 +386,9 @@ CREATE INDEX idx_tenant_app_users_email     ON tenant_app_users(tenant_id, email
 CREATE INDEX idx_system_admin_users_email      ON system_admin_users(email);
 CREATE INDEX idx_system_admin_users_status     ON system_admin_users(status);
 CREATE INDEX idx_system_admin_users_deleted_at ON system_admin_users(deleted_at) WHERE deleted_at IS NOT NULL;
+
+CREATE INDEX idx_email_verification_tokens_user_id ON email_verification_tokens(user_id);
+CREATE INDEX idx_email_verification_tokens_token   ON email_verification_tokens(token);
 
 -- ============================================================
 -- Seed Data
@@ -415,18 +450,28 @@ INSERT INTO features (id, title, slug, code) VALUES
 
 -- Default promotion
 INSERT INTO promotions (id, name, description, discount_type, discount_value, duration_months, valid_from, is_active) VALUES
-    ('pppppppp-pppp-pppp-pppp-pppppppppppp',
+    ('cc000000-0000-0000-0000-000000000001',
      'Lançamento 50% off',
      '50% de desconto nos primeiros 3 meses',
      'percent', 50.00, 3,
      NOW(), true);
 
--- Default plans
-INSERT INTO plans (id, name, price, max_users, is_multilang) VALUES
-    ('11111111-1111-1111-1111-111111111111', 'Starter',    29.90,   1, false),
-    ('22222222-2222-2222-2222-222222222222', 'Business',   59.90,   3, false),
-    ('33333333-3333-3333-3333-333333333333', 'Premium',    99.90,   5, true),
-    ('44444444-4444-4444-4444-444444444444', 'Enterprise', 199.90, 10, true);
+-- ============================================================
+-- Default Plans (8 plans)
+-- Individual: always 1 user (with and without multilang)
+-- Business: 1, 5 and 10 users (with and without multilang)
+-- ============================================================
+INSERT INTO plans (id, name, description, plan_type, price, max_users, is_multilang) VALUES
+    -- Individual plans (1 user always)
+    ('10000000-0000-0000-0000-000000000001', 'Individual',           'Plano individual sem multilang',            'individual',  29.90,  1, false),
+    ('10000000-0000-0000-0000-000000000002', 'Individual Multi',     'Plano individual com multilang',            'individual',  49.90,  1, true),
+    -- Business plans (1, 5, 10 users)
+    ('20000000-0000-0000-0000-000000000001', 'Business 1',           'Plano empresarial 1 usuário',               'business',    59.90,  1, false),
+    ('20000000-0000-0000-0000-000000000002', 'Business 1 Multi',     'Plano empresarial 1 usuário com multilang', 'business',    79.90,  1, true),
+    ('20000000-0000-0000-0000-000000000003', 'Business 5',           'Plano empresarial 5 usuários',              'business',    99.90,  5, false),
+    ('20000000-0000-0000-0000-000000000004', 'Business 5 Multi',     'Plano empresarial 5 usuários com multilang','business',   129.90,  5, true),
+    ('20000000-0000-0000-0000-000000000005', 'Business 10',          'Plano empresarial 10 usuários',             'business',   199.90, 10, false),
+    ('20000000-0000-0000-0000-000000000006', 'Business 10 Multi',    'Plano empresarial 10 usuários com multilang','business',  249.90, 10, true);
 
 -- Assign all features to all plans
 INSERT INTO plan_features (plan_id, feature_id)
@@ -449,7 +494,7 @@ INSERT INTO user_permissions (id, title, slug, feature_id) VALUES
 INSERT INTO user_roles (id, tenant_id, title, slug) VALUES
     ('eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee', NULL, 'Owner',  'owner'),
     ('ffffffff-ffff-ffff-ffff-ffffffffffff', NULL, 'Admin',  'admin'),
-    ('gggggggg-gggg-gggg-gggg-gggggggggggg', NULL, 'Member', 'member')
+    ('eeeeeeee-eeee-eeee-eeee-111111111111', NULL, 'Member', 'member')
 ON CONFLICT (id) DO NOTHING;
 
 -- Assign all permissions to owner template role
@@ -464,3 +509,103 @@ SELECT r.id, p.id FROM user_roles r, user_permissions p WHERE r.slug = 'admin' A
 INSERT INTO user_role_permissions (role_id, permission_id)
 SELECT r.id, p.id FROM user_roles r, user_permissions p
 WHERE r.slug = 'member' AND r.tenant_id IS NULL AND p.slug IN ('prod_r', 'serv_r');
+
+-- ============================================================
+-- Default Email Templates
+-- ============================================================
+
+INSERT INTO email_templates (slug, subject, body_html, variables) VALUES
+(
+    'welcome_verify_email',
+    'Bem-vindo ao {{app_name}}! Confirme seu e-mail',
+    '<!DOCTYPE html>
+<html lang="pt-BR">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>
+<body style="margin:0;padding:0;background:#f4f4f7;font-family:Arial,Helvetica,sans-serif;">
+<table width="100%" cellpadding="0" cellspacing="0" style="background:#f4f4f7;padding:40px 0;">
+<tr><td align="center">
+<table width="600" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:8px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.08);">
+  <tr><td style="background:#4F46E5;padding:32px 40px;text-align:center;">
+    <h1 style="color:#ffffff;margin:0;font-size:24px;">{{app_name}}</h1>
+  </td></tr>
+  <tr><td style="padding:40px;">
+    <h2 style="color:#333;margin:0 0 16px;">Olá, {{owner_name}}! 👋</h2>
+    <p style="color:#555;font-size:16px;line-height:1.6;">
+      Sua conta no <strong>{{app_name}}</strong> foi criada com sucesso!
+    </p>
+    <p style="color:#555;font-size:16px;line-height:1.6;">
+      Seu painel de administração: <strong>{{panel_url}}</strong>
+    </p>
+    <p style="color:#555;font-size:16px;line-height:1.6;">
+      Para ativar sua conta e começar a usar, clique no botão abaixo para confirmar seu e-mail:
+    </p>
+    <table width="100%" cellpadding="0" cellspacing="0" style="margin:32px 0;">
+    <tr><td align="center">
+      <a href="{{verify_url}}" style="display:inline-block;background:#4F46E5;color:#ffffff;text-decoration:none;padding:14px 32px;border-radius:6px;font-size:16px;font-weight:bold;">
+        Confirmar meu e-mail
+      </a>
+    </td></tr>
+    </table>
+    <p style="color:#888;font-size:14px;">
+      Se o botão não funcionar, copie e cole este link no seu navegador:<br>
+      <a href="{{verify_url}}" style="color:#4F46E5;">{{verify_url}}</a>
+    </p>
+    <hr style="border:none;border-top:1px solid #eee;margin:32px 0;">
+    <p style="color:#888;font-size:13px;margin:0;">
+      Detalhes da sua conta:<br>
+      <strong>Tenant:</strong> {{tenant_name}}<br>
+      <strong>Plano:</strong> {{plan_name}}<br>
+      <strong>E-mail:</strong> {{owner_email}}
+    </p>
+  </td></tr>
+  <tr><td style="background:#f8f8fa;padding:24px 40px;text-align:center;">
+    <p style="color:#999;font-size:12px;margin:0;">
+      Este link expira em 24 horas. Se você não criou essa conta, ignore este e-mail.
+    </p>
+  </td></tr>
+</table>
+</td></tr>
+</table>
+</body>
+</html>',
+    '["app_name", "owner_name", "owner_email", "tenant_name", "plan_name", "panel_url", "verify_url"]'::jsonb
+),
+(
+    'email_verified',
+    '{{app_name}} — E-mail confirmado!',
+    '<!DOCTYPE html>
+<html lang="pt-BR">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>
+<body style="margin:0;padding:0;background:#f4f4f7;font-family:Arial,Helvetica,sans-serif;">
+<table width="100%" cellpadding="0" cellspacing="0" style="background:#f4f4f7;padding:40px 0;">
+<tr><td align="center">
+<table width="600" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:8px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.08);">
+  <tr><td style="background:#4F46E5;padding:32px 40px;text-align:center;">
+    <h1 style="color:#ffffff;margin:0;font-size:24px;">{{app_name}}</h1>
+  </td></tr>
+  <tr><td style="padding:40px;text-align:center;">
+    <h2 style="color:#333;margin:0 0 16px;">E-mail confirmado! ✅</h2>
+    <p style="color:#555;font-size:16px;line-height:1.6;">
+      Parabéns, <strong>{{owner_name}}</strong>! Seu e-mail foi verificado com sucesso.
+    </p>
+    <p style="color:#555;font-size:16px;line-height:1.6;">
+      Agora você pode acessar todos os recursos do seu plano.
+    </p>
+    <table width="100%" cellpadding="0" cellspacing="0" style="margin:32px 0;">
+    <tr><td align="center">
+      <a href="{{panel_url}}" style="display:inline-block;background:#4F46E5;color:#ffffff;text-decoration:none;padding:14px 32px;border-radius:6px;font-size:16px;font-weight:bold;">
+        Acessar meu painel
+      </a>
+    </td></tr>
+    </table>
+  </td></tr>
+  <tr><td style="background:#f8f8fa;padding:24px 40px;text-align:center;">
+    <p style="color:#999;font-size:12px;margin:0;">© {{app_name}}</p>
+  </td></tr>
+</table>
+</td></tr>
+</table>
+</body>
+</html>',
+    '["app_name", "owner_name", "panel_url"]'::jsonb
+);

@@ -9,26 +9,27 @@ import (
 	"github.com/jackc/pgx/v5"
 
 	"github.com/saas-single-db-api/internal/cache"
+	"github.com/saas-single-db-api/internal/email"
 	repo "github.com/saas-single-db-api/internal/repository/tenant"
 	"github.com/saas-single-db-api/internal/utils"
 )
 
 type Service struct {
-	repo      *repo.Repository
-	cache     *cache.RedisClient
-	jwtSecret string
-	jwtExpiry int
+	repo         *repo.Repository
+	cache        *cache.RedisClient
+	emailService *email.Service
+	jwtSecret    string
+	jwtExpiry    int
 }
 
-func NewService(r *repo.Repository, c *cache.RedisClient, jwtSecret string, jwtExpiry int) *Service {
-	return &Service{repo: r, cache: c, jwtSecret: jwtSecret, jwtExpiry: jwtExpiry}
+func NewService(r *repo.Repository, c *cache.RedisClient, emailSvc *email.Service, jwtSecret string, jwtExpiry int) *Service {
+	return &Service{repo: r, cache: c, emailService: emailSvc, jwtSecret: jwtSecret, jwtExpiry: jwtExpiry}
 }
 
 // --- Subscription Flow ---
 
 type SubscribeInput struct {
 	TenantName   string
-	URLCode      string
 	Subdomain    string
 	IsCompany    bool
 	CompanyName  string
@@ -59,6 +60,9 @@ func (s *Service) Subscribe(ctx context.Context, input SubscribeInput) (*Subscri
 	if err != nil || !plan.IsActive {
 		return nil, errors.New("invalid or inactive plan")
 	}
+
+	// Auto-generate URL code
+	urlCode := utils.GenerateURLCode()
 
 	basePrice := plan.Price
 	contractedPrice := basePrice
@@ -100,7 +104,7 @@ func (s *Service) Subscribe(ctx context.Context, input SubscribeInput) (*Subscri
 	defer tx.Rollback(ctx)
 
 	// 1. Create tenant
-	tenantID, err := s.repo.CreateTenant(ctx, tx, input.TenantName, input.URLCode, input.Subdomain, input.IsCompany, input.CompanyName)
+	tenantID, err := s.repo.CreateTenant(ctx, tx, input.TenantName, urlCode, input.Subdomain, input.IsCompany, input.CompanyName)
 	if err != nil {
 		return nil, fmt.Errorf("create tenant: %w", err)
 	}
@@ -121,7 +125,7 @@ func (s *Service) Subscribe(ctx context.Context, input SubscribeInput) (*Subscri
 	}
 
 	// 5. Create owner user
-	userID, err := s.repo.CreateUser(ctx, tx, input.OwnerName, input.OwnerEmail, hashPass, input.URLCode)
+	userID, err := s.repo.CreateUser(ctx, tx, input.OwnerName, input.OwnerEmail, hashPass, urlCode)
 	if err != nil {
 		return nil, fmt.Errorf("create user: %w", err)
 	}
@@ -141,8 +145,28 @@ func (s *Service) Subscribe(ctx context.Context, input SubscribeInput) (*Subscri
 		return nil, fmt.Errorf("create tenant member: %w", err)
 	}
 
+	// 8. Create email verification token
+	verifyToken := utils.GenerateVerificationToken()
+	if err := s.repo.CreateVerificationToken(ctx, tx, userID, verifyToken); err != nil {
+		return nil, fmt.Errorf("create verification token: %w", err)
+	}
+
 	if err := tx.Commit(ctx); err != nil {
 		return nil, err
+	}
+
+	// 9. Send welcome + verification email (async, don't block on failure)
+	if s.emailService != nil {
+		go func() {
+			verifyURL := fmt.Sprintf("%s/api/v1/auth/verify-email?token=%s", s.emailService.BaseURL(), verifyToken)
+			vars := map[string]string{
+				"user_name":        input.OwnerName,
+				"tenant_name":      input.TenantName,
+				"verification_url": verifyURL,
+				"url_code":         urlCode,
+			}
+			_ = s.emailService.SendWelcomeVerification(context.Background(), input.OwnerEmail, vars)
+		}()
 	}
 
 	// Generate token
@@ -155,8 +179,67 @@ func (s *Service) Subscribe(ctx context.Context, input SubscribeInput) (*Subscri
 		TenantID: tenantID,
 		UserID:   userID,
 		Token:    token,
-		URLCode:  input.URLCode,
+		URLCode:  urlCode,
 	}, nil
+}
+
+// VerifyEmail verifies a user's email using the verification token
+func (s *Service) VerifyEmail(ctx context.Context, token string) error {
+	vt, err := s.repo.GetVerificationToken(ctx, token)
+	if err != nil {
+		return errors.New("invalid or expired verification token")
+	}
+
+	if err := s.repo.SetEmailVerified(ctx, vt.UserID); err != nil {
+		return fmt.Errorf("set email verified: %w", err)
+	}
+
+	if err := s.repo.MarkTokenUsed(ctx, vt.ID); err != nil {
+		return fmt.Errorf("mark token used: %w", err)
+	}
+
+	// Send confirmation email
+	if s.emailService != nil {
+		go func() {
+			user, err := s.repo.GetUserByID(context.Background(), vt.UserID)
+			if err == nil {
+				vars := map[string]string{
+					"user_name": user.Name,
+				}
+				_ = s.emailService.SendEmailVerified(context.Background(), user.Email, vars)
+			}
+		}()
+	}
+
+	return nil
+}
+
+// ResendVerification creates a new verification token and sends the email
+func (s *Service) ResendVerification(ctx context.Context, userID string) error {
+	user, err := s.repo.GetUserByID(ctx, userID)
+	if err != nil {
+		return errors.New("user not found")
+	}
+
+	if user.EmailVerifiedAt != nil {
+		return errors.New("email already verified")
+	}
+
+	verifyToken := utils.GenerateVerificationToken()
+	if err := s.repo.CreateVerificationTokenNonTx(ctx, userID, verifyToken); err != nil {
+		return fmt.Errorf("create verification token: %w", err)
+	}
+
+	if s.emailService != nil {
+		verifyURL := fmt.Sprintf("%s/api/v1/auth/verify-email?token=%s", s.emailService.BaseURL(), verifyToken)
+		vars := map[string]string{
+			"user_name":        user.Name,
+			"verification_url": verifyURL,
+		}
+		return s.emailService.SendWelcomeVerification(ctx, user.Email, vars)
+	}
+
+	return nil
 }
 
 // --- Auth ---

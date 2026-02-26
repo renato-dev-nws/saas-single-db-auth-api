@@ -12,14 +12,14 @@ test-subscription:
 	@echo "Testing subscription endpoint..."
 	@curl -X POST http://localhost:8080/api/v1/subscription \
 		-H "Content-Type: application/json" \
-		-d '{"plan_id":"33333333-3333-3333-3333-333333333333","billing_cycle":"monthly","tenant_name":"Minha Loja","url_code":"minha-loja","is_company":false,"owner_name":"Joao Silva","owner_email":"joao@minha-loja.com","owner_password":"senha12345"}'
+		-d '{"plan_id":"10000000-0000-0000-0000-000000000001","billing_cycle":"monthly","tenant_name":"Minha Loja","subdomain":"minhaloja","is_company":false,"owner_name":"Joao Silva","owner_email":"joao@minha-loja.com","owner_password":"senha12345"}'
 	@echo ""
 
 test-subscription-with-promo:
 	@echo "Testing subscription with promo..."
 	@curl -X POST http://localhost:8080/api/v1/subscription \
 		-H "Content-Type: application/json" \
-		-d '{"plan_id":"33333333-3333-3333-3333-333333333333","billing_cycle":"monthly","promotion_id":"pppppppp-pppp-pppp-pppp-pppppppppppp","tenant_name":"Loja Promo","url_code":"loja-promo","is_company":false,"owner_name":"Maria Promo","owner_email":"maria@loja-promo.com","owner_password":"senha12345"}'
+		-d '{"plan_id":"20000000-0000-0000-0000-000000000001","billing_cycle":"monthly","promotion_id":"cc000000-0000-0000-0000-000000000001","tenant_name":"Loja Promo","subdomain":"lojapromo","is_company":false,"owner_name":"Maria Promo","owner_email":"maria@loja-promo.com","owner_password":"senha12345"}'
 	@echo ""
 
 # Test login backoffice
@@ -44,23 +44,29 @@ test-user-me:
 		-H "Authorization: Bearer $$TOKEN"
 	@echo ""
 
-# Test switch tenant
+# Test switch tenant (requires test-subscription to have been run first)
 test-switch-tenant:
 	@echo "Testing switch tenant..."
-	@TOKEN=$$(curl -s -X POST http://localhost:8080/api/v1/auth/login \
+	@LOGIN=$$(curl -s -X POST http://localhost:8080/api/v1/auth/login \
 		-H "Content-Type: application/json" \
-		-d '{"email":"joao@minha-loja.com","password":"senha12345"}' | grep -o '"token":"[^"]*' | cut -d'"' -f4); \
-	curl -X POST http://localhost:8080/api/v1/auth/switch/minha-loja \
+		-d '{"email":"joao@minha-loja.com","password":"senha12345"}'); \
+	TOKEN=$$(echo "$$LOGIN" | grep -o '"token":"[^"]*' | cut -d'"' -f4); \
+	URL_CODE=$$(echo "$$LOGIN" | grep -o '"url_code":"[^"]*' | head -1 | cut -d'"' -f4); \
+	echo "URL_CODE=$$URL_CODE"; \
+	curl -X POST http://localhost:8080/api/v1/auth/switch/$$URL_CODE \
 		-H "Authorization: Bearer $$TOKEN"
 	@echo ""
 
-# Test tenant config
+# Test tenant config (requires test-subscription to have been run first)
 test-tenant-config:
 	@echo "Testing tenant config..."
-	@TOKEN=$$(curl -s -X POST http://localhost:8080/api/v1/auth/login \
+	@LOGIN=$$(curl -s -X POST http://localhost:8080/api/v1/auth/login \
 		-H "Content-Type: application/json" \
-		-d '{"email":"joao@minha-loja.com","password":"senha12345"}' | grep -o '"token":"[^"]*' | cut -d'"' -f4); \
-	curl -X GET http://localhost:8080/api/v1/minha-loja/config \
+		-d '{"email":"joao@minha-loja.com","password":"senha12345"}'); \
+	TOKEN=$$(echo "$$LOGIN" | grep -o '"token":"[^"]*' | cut -d'"' -f4); \
+	URL_CODE=$$(echo "$$LOGIN" | grep -o '"url_code":"[^"]*' | head -1 | cut -d'"' -f4); \
+	echo "URL_CODE=$$URL_CODE"; \
+	curl -X GET http://localhost:8080/api/v1/$$URL_CODE/config \
 		-H "Authorization: Bearer $$TOKEN"
 	@echo ""
 
@@ -73,7 +79,7 @@ test-testenovo:
 	@echo "========================================="
 	@RESPONSE=$$(curl -s -X POST http://localhost:8080/api/v1/subscription \
 		-H "Content-Type: application/json" \
-		-d '{"plan_id":"33333333-3333-3333-3333-333333333333","billing_cycle":"monthly","tenant_name":"Nova Empresa","url_code":"nova-empresa","is_company":false,"owner_name":"Novo Usuario","owner_email":"novo@empresa.com","owner_password":"senha12345"}'); \
+		-d '{"plan_id":"20000000-0000-0000-0000-000000000001","billing_cycle":"monthly","tenant_name":"Nova Empresa","subdomain":"novaempresa","is_company":false,"owner_name":"Novo Usuario","owner_email":"novo@empresa.com","owner_password":"senha12345"}'); \
 	echo "1. Subscription:"; echo "$$RESPONSE"; \
 	TOKEN=$$(echo "$$RESPONSE" | grep -o '"token":"[^"]*' | cut -d'"' -f4); \
 	URL_CODE=$$(echo "$$RESPONSE" | grep -o '"url_code":"[^"]*' | cut -d'"' -f4); \

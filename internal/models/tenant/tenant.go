@@ -53,6 +53,7 @@ type Plan struct {
 	ID          string    `json:"id"`
 	Name        string    `json:"name"`
 	Description *string   `json:"description"`
+	PlanType    string    `json:"plan_type"`
 	Price       float64   `json:"price"`
 	MaxUsers    int       `json:"max_users"`
 	IsMultilang bool      `json:"is_multilang"`
@@ -101,7 +102,6 @@ func (tp *TenantPlan) EffectivePrice() float64 {
 // CreateTenantRequest is the admin request to create a tenant
 type CreateTenantRequest struct {
 	Name          string  `json:"name" binding:"required"`
-	URLCode       string  `json:"url_code" binding:"required"`
 	Subdomain     string  `json:"subdomain" binding:"required"`
 	IsCompany     bool    `json:"is_company"`
 	CompanyName   string  `json:"company_name"`
@@ -140,7 +140,6 @@ type SubscriptionRequest struct {
 	BillingCycle string  `json:"billing_cycle"`
 	PromotionID  *string `json:"promotion_id"`
 	Name         string  `json:"name" binding:"required"`
-	URLCode      string  `json:"url_code" binding:"required"`
 	Subdomain    string  `json:"subdomain" binding:"required"`
 	IsCompany    bool    `json:"is_company"`
 	CompanyName  string  `json:"company_name"`
@@ -186,6 +185,7 @@ type UserBriefDTO struct {
 type CreatePlanRequest struct {
 	Name        string   `json:"name" binding:"required"`
 	Description *string  `json:"description"`
+	PlanType    string   `json:"plan_type" binding:"required"`
 	Price       float64  `json:"price" binding:"required"`
 	MaxUsers    int      `json:"max_users"`
 	IsMultilang bool     `json:"is_multilang"`

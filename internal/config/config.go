@@ -30,6 +30,15 @@ type Config struct {
 	TenantAPIPort string
 	AdminAPIPort  string
 	AppAPIPort    string
+
+	// SMTP / Email
+	SMTPHost     string
+	SMTPPort     string
+	SMTPUser     string
+	SMTPPassword string
+	SMTPFrom     string
+	AppName      string
+	AppBaseURL   string
 }
 
 func Load() *Config {
@@ -58,6 +67,14 @@ func Load() *Config {
 		TenantAPIPort: getEnv("TENANT_API_PORT", "8080"),
 		AdminAPIPort:  getEnv("ADMIN_API_PORT", "8081"),
 		AppAPIPort:    getEnv("APP_API_PORT", "8082"),
+
+		SMTPHost:     getEnv("SMTP_HOST", ""),
+		SMTPPort:     getEnv("SMTP_PORT", "587"),
+		SMTPUser:     getEnv("SMTP_USER", ""),
+		SMTPPassword: getEnv("SMTP_PASSWORD", ""),
+		SMTPFrom:     getEnv("SMTP_FROM", "noreply@mysaas.com"),
+		AppName:      getEnv("APP_NAME", "MySaaS"),
+		AppBaseURL:   getEnv("APP_BASE_URL", "http://localhost:8080"),
 	}
 }
 

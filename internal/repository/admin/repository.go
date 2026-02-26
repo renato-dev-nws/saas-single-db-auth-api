@@ -502,7 +502,7 @@ type memberRow struct {
 
 func (r *Repository) ListPlans(ctx context.Context) ([]planWithFeatures, error) {
 	rows, err := r.db.Query(ctx,
-		`SELECT p.id, p.name, p.description, p.price, p.max_users, p.is_multilang, p.is_active,
+		`SELECT p.id, p.name, p.description, p.plan_type, p.price, p.max_users, p.is_multilang, p.is_active,
 		        p.created_at, p.updated_at
 		 FROM plans p ORDER BY p.price`,
 	)
@@ -514,7 +514,7 @@ func (r *Repository) ListPlans(ctx context.Context) ([]planWithFeatures, error) 
 	var plans []planWithFeatures
 	for rows.Next() {
 		var p planWithFeatures
-		if err := rows.Scan(&p.ID, &p.Name, &p.Description, &p.Price, &p.MaxUsers,
+		if err := rows.Scan(&p.ID, &p.Name, &p.Description, &p.PlanType, &p.Price, &p.MaxUsers,
 			&p.IsMultilang, &p.IsActive, &p.CreatedAt, &p.UpdatedAt); err != nil {
 			return nil, err
 		}
@@ -533,6 +533,7 @@ type planWithFeatures struct {
 	ID          string
 	Name        string
 	Description *string
+	PlanType    string
 	Price       float64
 	MaxUsers    int
 	IsMultilang bool
@@ -552,9 +553,9 @@ type featureRow struct {
 func (r *Repository) GetPlanByID(ctx context.Context, id string) (*planWithFeatures, error) {
 	var p planWithFeatures
 	err := r.db.QueryRow(ctx,
-		`SELECT id, name, description, price, max_users, is_multilang, is_active, created_at, updated_at
+		`SELECT id, name, description, plan_type, price, max_users, is_multilang, is_active, created_at, updated_at
 		 FROM plans WHERE id = $1`, id,
-	).Scan(&p.ID, &p.Name, &p.Description, &p.Price, &p.MaxUsers, &p.IsMultilang, &p.IsActive, &p.CreatedAt, &p.UpdatedAt)
+	).Scan(&p.ID, &p.Name, &p.Description, &p.PlanType, &p.Price, &p.MaxUsers, &p.IsMultilang, &p.IsActive, &p.CreatedAt, &p.UpdatedAt)
 	if err != nil {
 		return nil, err
 	}
@@ -562,11 +563,11 @@ func (r *Repository) GetPlanByID(ctx context.Context, id string) (*planWithFeatu
 	return &p, nil
 }
 
-func (r *Repository) CreatePlan(ctx context.Context, name string, description *string, price float64, maxUsers int, isMultilang bool) (string, error) {
+func (r *Repository) CreatePlan(ctx context.Context, name string, description *string, planType string, price float64, maxUsers int, isMultilang bool) (string, error) {
 	var id string
 	err := r.db.QueryRow(ctx,
-		`INSERT INTO plans (name, description, price, max_users, is_multilang) VALUES ($1, $2, $3, $4, $5) RETURNING id`,
-		name, description, price, maxUsers, isMultilang,
+		`INSERT INTO plans (name, description, plan_type, price, max_users, is_multilang) VALUES ($1, $2, $3::plan_type, $4, $5, $6) RETURNING id`,
+		name, description, planType, price, maxUsers, isMultilang,
 	).Scan(&id)
 	return id, err
 }

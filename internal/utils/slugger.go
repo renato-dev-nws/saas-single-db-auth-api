@@ -14,8 +14,3 @@ func Slugify(text string) string {
 	slug = strings.Trim(slug, "-")
 	return slug
 }
-
-// GenerateURLCode generates a URL code from a name
-func GenerateURLCode(name string) string {
-	return Slugify(name)
-}

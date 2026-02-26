@@ -59,7 +59,7 @@ test-plans-create:
 	curl -X POST http://localhost:8081/api/v1/admin/plans \
 		-H "Content-Type: application/json" \
 		-H "Authorization: Bearer $$TOKEN" \
-		-d '{"name":"Plano Teste","slug":"plano-teste","price":99.90,"max_users":10,"is_active":true}'
+		-d '{"name":"Plano Teste","plan_type":"business","price":99.90,"max_users":10,"is_multilang":false}'
 	@echo ""
 
 # Test features
@@ -101,7 +101,7 @@ test-tenants-create:
 	curl -X POST http://localhost:8081/api/v1/admin/tenants \
 		-H "Content-Type: application/json" \
 		-H "Authorization: Bearer $$TOKEN" \
-		-d '{"name":"Test Company","url_code":"testco","subdomain":"testco","plan_id":"11111111-1111-1111-1111-111111111111","billing_cycle":"monthly","owner_email":"owner@testco.com","owner_full_name":"Test Owner","owner_password":"pass12345"}'
+		-d '{"name":"Test Company","subdomain":"testco","plan_id":"20000000-0000-0000-0000-000000000001","billing_cycle":"monthly","owner_email":"owner@testco.com","owner_full_name":"Test Owner","owner_password":"pass12345"}'
 	@echo ""
 
 # Test promotions
