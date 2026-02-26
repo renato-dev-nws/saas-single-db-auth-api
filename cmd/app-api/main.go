@@ -5,6 +5,8 @@ import (
 	"log"
 
 	"github.com/gin-gonic/gin"
+	swaggerFiles "github.com/swaggo/files"
+	ginSwagger "github.com/swaggo/gin-swagger"
 
 	"github.com/saas-single-db-api/internal/cache"
 	"github.com/saas-single-db-api/internal/config"
@@ -14,7 +16,21 @@ import (
 	appRepo "github.com/saas-single-db-api/internal/repository/app"
 	appSvc "github.com/saas-single-db-api/internal/services/app"
 	"github.com/saas-single-db-api/internal/storage"
+
+	_ "github.com/saas-single-db-api/docs/app"
 )
+
+// @title App API
+// @version 1.0
+// @description API pública para usuários finais (app users) dos tenants. Gerencia registro, autenticação, perfil e catálogo de produtos/serviços.
+
+// @host localhost:8082
+// @BasePath /api/v1
+
+// @securityDefinitions.apikey BearerAuth
+// @in header
+// @name Authorization
+// @description JWT token de autenticação do app user. Formato: Bearer {token}
 
 func main() {
 	cfg := config.Load()
@@ -82,6 +98,9 @@ func main() {
 			catalog.GET("/services/:id", handler.GetServiceDetail)
 		}
 	}
+
+	// Swagger UI
+	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
 	fmt.Printf("🚀 App API starting on port %s\n", cfg.AppAPIPort)
 	if err := r.Run(":" + cfg.AppAPIPort); err != nil {

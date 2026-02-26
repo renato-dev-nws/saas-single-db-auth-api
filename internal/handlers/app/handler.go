@@ -7,6 +7,7 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"github.com/saas-single-db-api/internal/cache"
+	_ "github.com/saas-single-db-api/internal/models/swagger"
 	repo "github.com/saas-single-db-api/internal/repository/app"
 	svc "github.com/saas-single-db-api/internal/services/app"
 	"github.com/saas-single-db-api/internal/storage"
@@ -26,6 +27,17 @@ func NewHandler(s *svc.Service, r *repo.Repository, st storage.Provider, c *cach
 
 // ==================== AUTH ====================
 
+// Register godoc
+// @Summary Registrar app user
+// @Description Registra um novo usuário no app do tenant
+// @Tags Auth
+// @Accept json
+// @Produce json
+// @Param url_code path string true "URL code do tenant"
+// @Param request body swagger.AppRegisterRequest true "Dados de registro"
+// @Success 201 {object} swagger.AppAuthResponse
+// @Failure 400 {object} swagger.ErrorResponse
+// @Router /{url_code}/auth/register [post]
 func (h *Handler) Register(c *gin.Context) {
 	tenantID := c.GetString("tenant_id")
 	urlCode := c.Param("url_code")
@@ -52,6 +64,17 @@ func (h *Handler) Register(c *gin.Context) {
 	})
 }
 
+// Login godoc
+// @Summary Login de app user
+// @Description Autentica um app user e retorna token JWT
+// @Tags Auth
+// @Accept json
+// @Produce json
+// @Param url_code path string true "URL code do tenant"
+// @Param request body swagger.AppLoginRequest true "Credenciais"
+// @Success 200 {object} swagger.AppAuthResponse
+// @Failure 401 {object} swagger.ErrorResponse
+// @Router /{url_code}/auth/login [post]
 func (h *Handler) Login(c *gin.Context) {
 	tenantID := c.GetString("tenant_id")
 	urlCode := c.Param("url_code")
@@ -79,6 +102,15 @@ func (h *Handler) Login(c *gin.Context) {
 	})
 }
 
+// Logout godoc
+// @Summary Logout de app user
+// @Description Invalida o token JWT do app user
+// @Tags Auth
+// @Produce json
+// @Security BearerAuth
+// @Param url_code path string true "URL code do tenant"
+// @Success 200 {object} swagger.MessageResponse
+// @Router /{url_code}/auth/logout [post]
 func (h *Handler) Logout(c *gin.Context) {
 	token := strings.TrimPrefix(c.GetHeader("Authorization"), "Bearer ")
 	if token != "" {
@@ -87,6 +119,16 @@ func (h *Handler) Logout(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "logged out"})
 }
 
+// Me godoc
+// @Summary Dados do app user logado
+// @Description Retorna os dados do app user autenticado
+// @Tags Auth
+// @Produce json
+// @Security BearerAuth
+// @Param url_code path string true "URL code do tenant"
+// @Success 200 {object} swagger.AppUserDTO
+// @Failure 404 {object} swagger.ErrorResponse
+// @Router /{url_code}/auth/me [get]
 func (h *Handler) Me(c *gin.Context) {
 	tenantID := c.GetString("tenant_id")
 	userID := c.GetString("app_user_id")
@@ -99,6 +141,18 @@ func (h *Handler) Me(c *gin.Context) {
 	c.JSON(http.StatusOK, result)
 }
 
+// ChangePassword godoc
+// @Summary Alterar senha do app user
+// @Description Altera a senha do app user autenticado
+// @Tags Auth
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param url_code path string true "URL code do tenant"
+// @Param request body swagger.AppChangePasswordRequest true "Senhas"
+// @Success 200 {object} swagger.MessageResponse
+// @Failure 400 {object} swagger.ErrorResponse
+// @Router /{url_code}/auth/change-password [post]
 func (h *Handler) ChangePassword(c *gin.Context) {
 	tenantID := c.GetString("tenant_id")
 	userID := c.GetString("app_user_id")
@@ -119,6 +173,16 @@ func (h *Handler) ChangePassword(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "password changed"})
 }
 
+// ForgotPassword godoc
+// @Summary Solicitar reset de senha
+// @Description Envia email com link para reset de senha
+// @Tags Auth
+// @Accept json
+// @Produce json
+// @Param url_code path string true "URL code do tenant"
+// @Param request body swagger.AppForgotPasswordRequest true "Email"
+// @Success 200 {object} swagger.MessageResponse
+// @Router /{url_code}/auth/forgot-password [post]
 func (h *Handler) ForgotPassword(c *gin.Context) {
 	tenantID := c.GetString("tenant_id")
 	var req struct {
@@ -133,6 +197,17 @@ func (h *Handler) ForgotPassword(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "if the email exists, a reset link was sent"})
 }
 
+// ResetPassword godoc
+// @Summary Resetar senha
+// @Description Reseta a senha usando token recebido por email
+// @Tags Auth
+// @Accept json
+// @Produce json
+// @Param url_code path string true "URL code do tenant"
+// @Param request body swagger.AppResetPasswordRequest true "Token e nova senha"
+// @Success 200 {object} swagger.MessageResponse
+// @Failure 400 {object} swagger.ErrorResponse
+// @Router /{url_code}/auth/reset-password [post]
 func (h *Handler) ResetPassword(c *gin.Context) {
 	tenantID := c.GetString("tenant_id")
 	var req struct {
@@ -153,6 +228,16 @@ func (h *Handler) ResetPassword(c *gin.Context) {
 
 // ==================== PROFILE ====================
 
+// GetProfile godoc
+// @Summary Obter perfil do app user
+// @Description Retorna o perfil completo do app user autenticado
+// @Tags Profile
+// @Produce json
+// @Security BearerAuth
+// @Param url_code path string true "URL code do tenant"
+// @Success 200 {object} swagger.AppUserProfileDTO
+// @Failure 404 {object} swagger.ErrorResponse
+// @Router /{url_code}/profile [get]
 func (h *Handler) GetProfile(c *gin.Context) {
 	userID := c.GetString("app_user_id")
 	profile, err := h.repo.GetAppUserProfile(c.Request.Context(), userID)
@@ -170,6 +255,18 @@ func (h *Handler) GetProfile(c *gin.Context) {
 	})
 }
 
+// UpdateProfile godoc
+// @Summary Atualizar perfil do app user
+// @Description Atualiza campos do perfil do app user
+// @Tags Profile
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param url_code path string true "URL code do tenant"
+// @Param request body swagger.AppUpdateProfileRequest true "Dados do perfil"
+// @Success 200 {object} swagger.MessageResponse
+// @Failure 400 {object} swagger.ErrorResponse
+// @Router /{url_code}/profile [put]
 func (h *Handler) UpdateProfile(c *gin.Context) {
 	userID := c.GetString("app_user_id")
 	var req struct {
@@ -191,6 +288,18 @@ func (h *Handler) UpdateProfile(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "profile updated"})
 }
 
+// UploadAvatar godoc
+// @Summary Upload de avatar do app user
+// @Description Faz upload da foto de perfil do app user
+// @Tags Profile
+// @Accept multipart/form-data
+// @Produce json
+// @Security BearerAuth
+// @Param url_code path string true "URL code do tenant"
+// @Param avatar formData file true "Imagem do avatar"
+// @Success 200 {object} swagger.UploadResponse
+// @Failure 400 {object} swagger.ErrorResponse
+// @Router /{url_code}/profile/avatar [put]
 func (h *Handler) UploadAvatar(c *gin.Context) {
 	userID := c.GetString("app_user_id")
 	file, header, err := c.Request.FormFile("avatar")
@@ -212,6 +321,17 @@ func (h *Handler) UploadAvatar(c *gin.Context) {
 
 // ==================== CATALOG (Public) ====================
 
+// ListProducts godoc
+// @Summary Listar produtos
+// @Description Retorna produtos ativos do tenant paginados
+// @Tags Catalog
+// @Produce json
+// @Param url_code path string true "URL code do tenant"
+// @Param page query int false "Página" default(1)
+// @Param page_size query int false "Itens por página" default(20)
+// @Success 200 {object} swagger.PaginatedResponse
+// @Failure 500 {object} swagger.ErrorResponse
+// @Router /{url_code}/catalog/products [get]
 func (h *Handler) ListProducts(c *gin.Context) {
 	tenantID := c.GetString("tenant_id")
 	pag := utils.GetPagination(c)
@@ -229,6 +349,16 @@ func (h *Handler) ListProducts(c *gin.Context) {
 	})
 }
 
+// GetProduct godoc
+// @Summary Obter produto
+// @Description Retorna detalhes de um produto ativo
+// @Tags Catalog
+// @Produce json
+// @Param url_code path string true "URL code do tenant"
+// @Param id path string true "ID do produto"
+// @Success 200 {object} swagger.ProductResponse
+// @Failure 404 {object} swagger.ErrorResponse
+// @Router /{url_code}/catalog/products/{id} [get]
 func (h *Handler) GetProduct(c *gin.Context) {
 	tenantID := c.GetString("tenant_id")
 	productID := c.Param("id")
@@ -240,6 +370,17 @@ func (h *Handler) GetProduct(c *gin.Context) {
 	c.JSON(http.StatusOK, product)
 }
 
+// ListServices godoc
+// @Summary Listar serviços
+// @Description Retorna serviços ativos do tenant paginados
+// @Tags Catalog
+// @Produce json
+// @Param url_code path string true "URL code do tenant"
+// @Param page query int false "Página" default(1)
+// @Param page_size query int false "Itens por página" default(20)
+// @Success 200 {object} swagger.PaginatedResponse
+// @Failure 500 {object} swagger.ErrorResponse
+// @Router /{url_code}/catalog/services [get]
 func (h *Handler) ListServices(c *gin.Context) {
 	tenantID := c.GetString("tenant_id")
 	pag := utils.GetPagination(c)
@@ -257,6 +398,16 @@ func (h *Handler) ListServices(c *gin.Context) {
 	})
 }
 
+// GetServiceDetail godoc
+// @Summary Obter serviço
+// @Description Retorna detalhes de um serviço ativo
+// @Tags Catalog
+// @Produce json
+// @Param url_code path string true "URL code do tenant"
+// @Param id path string true "ID do serviço"
+// @Success 200 {object} swagger.ServiceResponse
+// @Failure 404 {object} swagger.ErrorResponse
+// @Router /{url_code}/catalog/services/{id} [get]
 func (h *Handler) GetServiceDetail(c *gin.Context) {
 	tenantID := c.GetString("tenant_id")
 	serviceID := c.Param("id")

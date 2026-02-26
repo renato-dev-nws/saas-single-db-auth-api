@@ -5,6 +5,8 @@ import (
 	"log"
 
 	"github.com/gin-gonic/gin"
+	swaggerFiles "github.com/swaggo/files"
+	ginSwagger "github.com/swaggo/gin-swagger"
 
 	"github.com/saas-single-db-api/internal/cache"
 	"github.com/saas-single-db-api/internal/config"
@@ -15,7 +17,21 @@ import (
 	tenantRepo "github.com/saas-single-db-api/internal/repository/tenant"
 	tenantSvc "github.com/saas-single-db-api/internal/services/tenant"
 	"github.com/saas-single-db-api/internal/storage"
+
+	_ "github.com/saas-single-db-api/docs/tenant"
 )
+
+// @title Tenant API
+// @version 1.0
+// @description API de backoffice para tenants do sistema SaaS multi-tenant. Gerencia assinatura, autenticação, membros, produtos, serviços, configurações e muito mais.
+
+// @host localhost:8080
+// @BasePath /api/v1
+
+// @securityDefinitions.apikey BearerAuth
+// @in header
+// @name Authorization
+// @description JWT token de autenticação do usuário. Formato: Bearer {token}
 
 func main() {
 	cfg := config.Load()
@@ -186,6 +202,9 @@ func main() {
 
 	// Serve uploaded files
 	r.Static("/uploads", cfg.StorageLocalPath)
+
+	// Swagger UI
+	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
 	fmt.Printf("🚀 Tenant API starting on port %s\n", cfg.TenantAPIPort)
 	if err := r.Run(":" + cfg.TenantAPIPort); err != nil {

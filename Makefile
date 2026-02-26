@@ -61,3 +61,9 @@ clean:
 	rm -rf bin/
 	rm -rf uploads/*
 	docker compose down -v
+
+# Swagger
+swagger:
+	swag init -g cmd/admin-api/main.go -o docs/admin --parseDependency --parseInternal --exclude ./internal/handlers/tenant,./internal/handlers/app,./cmd/tenant-api,./cmd/app-api
+	swag init -g cmd/tenant-api/main.go -o docs/tenant --parseDependency --parseInternal --exclude ./internal/handlers/admin,./internal/handlers/app,./cmd/admin-api,./cmd/app-api
+	swag init -g cmd/app-api/main.go -o docs/app --parseDependency --parseInternal --exclude ./internal/handlers/admin,./internal/handlers/tenant,./cmd/admin-api,./cmd/tenant-api

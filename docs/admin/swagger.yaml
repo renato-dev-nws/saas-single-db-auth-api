@@ -1,0 +1,2004 @@
+basePath: /api/v1/admin
+definitions:
+  github_com_saas-single-db-api_internal_models_admin.AssignRoleRequest:
+    properties:
+      role_id:
+        type: integer
+    required:
+    - role_id
+    type: object
+  github_com_saas-single-db-api_internal_models_admin.ChangePasswordRequest:
+    properties:
+      current_password:
+        type: string
+      new_password:
+        minLength: 6
+        type: string
+    required:
+    - current_password
+    - new_password
+    type: object
+  github_com_saas-single-db-api_internal_models_admin.CreateAdminRequest:
+    properties:
+      email:
+        type: string
+      full_name:
+        type: string
+      password:
+        minLength: 6
+        type: string
+      role_slug:
+        type: string
+    required:
+    - email
+    - password
+    type: object
+  github_com_saas-single-db-api_internal_models_admin.CreateRoleRequest:
+    properties:
+      description:
+        type: string
+      slug:
+        type: string
+      title:
+        type: string
+    required:
+    - slug
+    - title
+    type: object
+  github_com_saas-single-db-api_internal_models_admin.LoginRequest:
+    properties:
+      email:
+        type: string
+      password:
+        type: string
+    required:
+    - email
+    - password
+    type: object
+  github_com_saas-single-db-api_internal_models_admin.UpdateAdminRequest:
+    properties:
+      email:
+        type: string
+      name:
+        type: string
+      status:
+        type: string
+    type: object
+  github_com_saas-single-db-api_internal_models_admin.UpdateProfileRequest:
+    properties:
+      bio:
+        type: string
+      full_name:
+        type: string
+      social_links: {}
+      title:
+        type: string
+    type: object
+  github_com_saas-single-db-api_internal_models_admin.UpdateRoleRequest:
+    properties:
+      description:
+        type: string
+      title:
+        type: string
+    type: object
+  github_com_saas-single-db-api_internal_models_swagger.AdminLoginResponse:
+    properties:
+      admin:
+        $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.AdminUserDTO'
+      token:
+        example: eyJhbGciOiJIUzI1NiIs...
+        type: string
+    type: object
+  github_com_saas-single-db-api_internal_models_swagger.AdminPermissionDTO:
+    properties:
+      description:
+        example: Can manage system users
+        type: string
+      id:
+        example: 1
+        type: integer
+      slug:
+        example: manage_sys_users
+        type: string
+      title:
+        example: Manage Users
+        type: string
+    type: object
+  github_com_saas-single-db-api_internal_models_swagger.AdminPermissionListResponse:
+    properties:
+      data:
+        items:
+          $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.AdminPermissionDTO'
+        type: array
+    type: object
+  github_com_saas-single-db-api_internal_models_swagger.AdminProfileDTO:
+    properties:
+      avatar_url:
+        example: https://example.com/avatar.jpg
+        type: string
+      bio:
+        example: Bio text
+        type: string
+      full_name:
+        example: John Admin
+        type: string
+      social_links: {}
+      title:
+        example: System Administrator
+        type: string
+    type: object
+  github_com_saas-single-db-api_internal_models_swagger.AdminRoleDTO:
+    properties:
+      description:
+        example: Full system access
+        type: string
+      id:
+        example: 1
+        type: integer
+      slug:
+        example: super_admin
+        type: string
+      title:
+        example: Super Admin
+        type: string
+    type: object
+  github_com_saas-single-db-api_internal_models_swagger.AdminRoleListResponse:
+    properties:
+      data:
+        items:
+          $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.AdminRoleDTO'
+        type: array
+    type: object
+  github_com_saas-single-db-api_internal_models_swagger.AdminUserDTO:
+    properties:
+      email:
+        example: admin@example.com
+        type: string
+      id:
+        example: uuid
+        type: string
+      name:
+        example: John Admin
+        type: string
+      profile:
+        $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.AdminProfileDTO'
+      roles:
+        items:
+          $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.AdminRoleDTO'
+        type: array
+      status:
+        example: active
+        type: string
+    type: object
+  github_com_saas-single-db-api_internal_models_swagger.CreateTenantResponse:
+    properties:
+      owner:
+        $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.OwnerBrief'
+      tenant:
+        $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.TenantResponse'
+    type: object
+  github_com_saas-single-db-api_internal_models_swagger.ErrorResponse:
+    properties:
+      error:
+        example: error_message
+        type: string
+    type: object
+  github_com_saas-single-db-api_internal_models_swagger.FeatureListResponse:
+    properties:
+      data:
+        items:
+          $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.FeatureResponse'
+        type: array
+    type: object
+  github_com_saas-single-db-api_internal_models_swagger.FeatureResponse:
+    properties:
+      code:
+        example: products
+        type: string
+      created_at:
+        type: string
+      description:
+        example: Product management feature
+        type: string
+      id:
+        example: uuid
+        type: string
+      is_active:
+        example: true
+        type: boolean
+      slug:
+        example: products
+        type: string
+      title:
+        example: Products
+        type: string
+      updated_at:
+        type: string
+    type: object
+  github_com_saas-single-db-api_internal_models_swagger.MessageResponse:
+    properties:
+      message:
+        example: operation_successful
+        type: string
+    type: object
+  github_com_saas-single-db-api_internal_models_swagger.OwnerBrief:
+    properties:
+      email:
+        example: owner@example.com
+        type: string
+      id:
+        example: uuid
+        type: string
+    type: object
+  github_com_saas-single-db-api_internal_models_swagger.PaginatedResponse:
+    properties:
+      data: {}
+      page:
+        example: 1
+        type: integer
+      page_size:
+        example: 20
+        type: integer
+      total:
+        example: 100
+        type: integer
+    type: object
+  github_com_saas-single-db-api_internal_models_swagger.PlanListResponse:
+    properties:
+      data:
+        items:
+          $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.PlanResponse'
+        type: array
+    type: object
+  github_com_saas-single-db-api_internal_models_swagger.PlanResponse:
+    properties:
+      created_at:
+        type: string
+      description:
+        example: Business plan with all features
+        type: string
+      features:
+        items:
+          $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.FeatureResponse'
+        type: array
+      id:
+        example: uuid
+        type: string
+      is_active:
+        example: true
+        type: boolean
+      is_multilang:
+        example: true
+        type: boolean
+      max_users:
+        example: 5
+        type: integer
+      name:
+        example: Business Pro
+        type: string
+      plan_type:
+        example: business
+        type: string
+      price:
+        example: 99.9
+        type: number
+      updated_at:
+        type: string
+    type: object
+  github_com_saas-single-db-api_internal_models_swagger.PromotionListResponse:
+    properties:
+      data:
+        items:
+          $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.PromotionResponse'
+        type: array
+    type: object
+  github_com_saas-single-db-api_internal_models_swagger.PromotionResponse:
+    properties:
+      created_at:
+        type: string
+      description:
+        example: 50% off for 3 months
+        type: string
+      discount_type:
+        example: percentage
+        type: string
+      discount_value:
+        example: 50
+        type: number
+      duration_months:
+        example: 3
+        type: integer
+      id:
+        example: uuid
+        type: string
+      is_active:
+        example: true
+        type: boolean
+      name:
+        example: Launch Discount
+        type: string
+      updated_at:
+        type: string
+      valid_from:
+        type: string
+      valid_until:
+        type: string
+    type: object
+  github_com_saas-single-db-api_internal_models_swagger.SysUserDetailResponse:
+    properties:
+      email:
+        example: admin@example.com
+        type: string
+      id:
+        example: uuid
+        type: string
+      name:
+        example: John
+        type: string
+      profile:
+        $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.AdminProfileDTO'
+      roles:
+        items:
+          $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.AdminRoleDTO'
+        type: array
+      status:
+        example: active
+        type: string
+    type: object
+  github_com_saas-single-db-api_internal_models_swagger.TenantMemberDTO:
+    properties:
+      email:
+        example: user@example.com
+        type: string
+      is_owner:
+        example: false
+        type: boolean
+      name:
+        example: John
+        type: string
+      user_id:
+        example: uuid
+        type: string
+    type: object
+  github_com_saas-single-db-api_internal_models_swagger.TenantMemberListResponse:
+    properties:
+      data:
+        items:
+          $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.TenantMemberDTO'
+        type: array
+    type: object
+  github_com_saas-single-db-api_internal_models_swagger.TenantPlanDTO:
+    properties:
+      base_price:
+        example: 99.9
+        type: number
+      billing_cycle:
+        example: monthly
+        type: string
+      contracted_price:
+        example: 99.9
+        type: number
+      ended_at:
+        type: string
+      id:
+        example: uuid
+        type: string
+      is_active:
+        example: true
+        type: boolean
+      plan_id:
+        example: uuid
+        type: string
+      promo_expires_at:
+        type: string
+      promo_price:
+        type: number
+      promotion_id:
+        type: string
+      started_at:
+        type: string
+      tenant_id:
+        example: uuid
+        type: string
+    type: object
+  github_com_saas-single-db-api_internal_models_swagger.TenantPlanHistoryResponse:
+    properties:
+      data:
+        items:
+          $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.TenantPlanDTO'
+        type: array
+    type: object
+  github_com_saas-single-db-api_internal_models_swagger.TenantResponse:
+    properties:
+      company_name:
+        example: My Company Ltd
+        type: string
+      created_at:
+        type: string
+      custom_domain:
+        type: string
+      id:
+        example: uuid
+        type: string
+      is_company:
+        example: true
+        type: boolean
+      name:
+        example: My Company
+        type: string
+      status:
+        example: active
+        type: string
+      subdomain:
+        example: mycompany
+        type: string
+      updated_at:
+        type: string
+      url_code:
+        example: HRP1ZYERFVA
+        type: string
+    type: object
+  github_com_saas-single-db-api_internal_models_tenant.ChangePlanRequest:
+    properties:
+      billing_cycle:
+        type: string
+      plan_id:
+        type: string
+      promotion_id:
+        type: string
+      reason:
+        type: string
+    required:
+    - billing_cycle
+    - plan_id
+    type: object
+  github_com_saas-single-db-api_internal_models_tenant.CreateFeatureRequest:
+    properties:
+      code:
+        type: string
+      description:
+        type: string
+      is_active:
+        type: boolean
+      slug:
+        type: string
+      title:
+        type: string
+    required:
+    - code
+    - slug
+    - title
+    type: object
+  github_com_saas-single-db-api_internal_models_tenant.CreatePlanRequest:
+    properties:
+      description:
+        type: string
+      feature_ids:
+        items:
+          type: string
+        type: array
+      is_multilang:
+        type: boolean
+      max_users:
+        type: integer
+      name:
+        type: string
+      plan_type:
+        type: string
+      price:
+        type: number
+    required:
+    - name
+    - plan_type
+    - price
+    type: object
+  github_com_saas-single-db-api_internal_models_tenant.CreatePromotionRequest:
+    properties:
+      description:
+        type: string
+      discount_type:
+        type: string
+      discount_value:
+        type: number
+      duration_months:
+        type: integer
+      name:
+        type: string
+      valid_from:
+        type: string
+      valid_until:
+        type: string
+    required:
+    - discount_type
+    - discount_value
+    - duration_months
+    - name
+    type: object
+  github_com_saas-single-db-api_internal_models_tenant.CreateTenantRequest:
+    properties:
+      billing_cycle:
+        type: string
+      company_name:
+        type: string
+      is_company:
+        type: boolean
+      name:
+        type: string
+      owner_email:
+        type: string
+      owner_full_name:
+        type: string
+      owner_password:
+        type: string
+      plan_id:
+        type: string
+      promotion_id:
+        type: string
+      subdomain:
+        type: string
+    required:
+    - billing_cycle
+    - name
+    - plan_id
+    - subdomain
+    type: object
+  github_com_saas-single-db-api_internal_models_tenant.PlanFeatureRequest:
+    properties:
+      feature_id:
+        type: string
+    required:
+    - feature_id
+    type: object
+  github_com_saas-single-db-api_internal_models_tenant.UpdateFeatureRequest:
+    properties:
+      description:
+        type: string
+      is_active:
+        type: boolean
+      title:
+        type: string
+    type: object
+  github_com_saas-single-db-api_internal_models_tenant.UpdatePlanRequest:
+    properties:
+      description:
+        type: string
+      is_active:
+        type: boolean
+      is_multilang:
+        type: boolean
+      max_users:
+        type: integer
+      name:
+        type: string
+      price:
+        type: number
+    type: object
+  github_com_saas-single-db-api_internal_models_tenant.UpdatePromotionRequest:
+    properties:
+      description:
+        type: string
+      discount_type:
+        type: string
+      discount_value:
+        type: number
+      duration_months:
+        type: integer
+      is_active:
+        type: boolean
+      name:
+        type: string
+      valid_from:
+        type: string
+      valid_until:
+        type: string
+    type: object
+  github_com_saas-single-db-api_internal_models_tenant.UpdateTenantRequest:
+    properties:
+      company_name:
+        type: string
+      custom_domain:
+        type: string
+      is_company:
+        type: boolean
+      name:
+        type: string
+    type: object
+  github_com_saas-single-db-api_internal_models_tenant.UpdateTenantStatusRequest:
+    properties:
+      status:
+        type: string
+    required:
+    - status
+    type: object
+host: localhost:8081
+info:
+  contact: {}
+  description: API de administração do sistema SaaS multi-tenant. Gerencia tenants,
+    planos, features, promoções, usuários do sistema e permissões.
+  title: Admin API
+  version: "1.0"
+paths:
+  /auth/login:
+    post:
+      consumes:
+      - application/json
+      description: Autentica um administrador do sistema com email e senha
+      parameters:
+      - description: Credenciais de login
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_saas-single-db-api_internal_models_admin.LoginRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.AdminLoginResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.ErrorResponse'
+      summary: Login de administrador
+      tags:
+      - Auth
+  /auth/logout:
+    post:
+      description: Invalida o token JWT do administrador
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.MessageResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Logout de administrador
+      tags:
+      - Auth
+  /auth/me:
+    get:
+      description: Retorna os dados do administrador logado
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.AdminUserDTO'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Dados do administrador autenticado
+      tags:
+      - Auth
+  /auth/password:
+    put:
+      consumes:
+      - application/json
+      description: Altera a senha do administrador autenticado
+      parameters:
+      - description: Senhas atual e nova
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_saas-single-db-api_internal_models_admin.ChangePasswordRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.MessageResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Alterar senha do administrador
+      tags:
+      - Auth
+  /features:
+    get:
+      description: Retorna todas as features do sistema
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.FeatureListResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Listar features
+      tags:
+      - Features
+    post:
+      consumes:
+      - application/json
+      description: Cria uma nova feature no sistema
+      parameters:
+      - description: Dados da feature
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_saas-single-db-api_internal_models_tenant.CreateFeatureRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.FeatureResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.ErrorResponse'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Criar feature
+      tags:
+      - Features
+  /features/{id}:
+    delete:
+      description: Remove uma feature do sistema
+      parameters:
+      - description: ID da feature
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.MessageResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Remover feature
+      tags:
+      - Features
+    get:
+      description: Retorna uma feature específica
+      parameters:
+      - description: ID da feature
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.FeatureResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Obter feature por ID
+      tags:
+      - Features
+    put:
+      consumes:
+      - application/json
+      description: Atualiza uma feature existente
+      parameters:
+      - description: ID da feature
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Dados para atualização
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_saas-single-db-api_internal_models_tenant.UpdateFeatureRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.MessageResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Atualizar feature
+      tags:
+      - Features
+  /permissions:
+    get:
+      description: Retorna todas as permissões do sistema
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.AdminPermissionListResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Listar permissões
+      tags:
+      - Permissions
+  /plans:
+    get:
+      description: Retorna todos os planos com suas features
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.PlanListResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Listar planos
+      tags:
+      - Plans
+    post:
+      consumes:
+      - application/json
+      description: Cria um novo plano com features opcionais
+      parameters:
+      - description: Dados do plano
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_saas-single-db-api_internal_models_tenant.CreatePlanRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.PlanResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Criar plano
+      tags:
+      - Plans
+  /plans/{id}:
+    delete:
+      description: Remove um plano do sistema
+      parameters:
+      - description: ID do plano
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.MessageResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Remover plano
+      tags:
+      - Plans
+    get:
+      description: Retorna um plano específico com suas features
+      parameters:
+      - description: ID do plano
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.PlanResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Obter plano por ID
+      tags:
+      - Plans
+    put:
+      consumes:
+      - application/json
+      description: Atualiza um plano existente
+      parameters:
+      - description: ID do plano
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Dados para atualização
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_saas-single-db-api_internal_models_tenant.UpdatePlanRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.MessageResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Atualizar plano
+      tags:
+      - Plans
+  /plans/{id}/features:
+    post:
+      consumes:
+      - application/json
+      description: Adiciona uma feature a um plano existente
+      parameters:
+      - description: ID do plano
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: ID da feature
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_saas-single-db-api_internal_models_tenant.PlanFeatureRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.MessageResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Adicionar feature ao plano
+      tags:
+      - Plans
+  /plans/{id}/features/{feat_id}:
+    delete:
+      description: Remove uma feature de um plano
+      parameters:
+      - description: ID do plano
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: ID da feature
+        in: path
+        name: feat_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.MessageResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Remover feature do plano
+      tags:
+      - Plans
+  /promotions:
+    get:
+      description: Retorna todas as promoções do sistema
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.PromotionListResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Listar promoções
+      tags:
+      - Promotions
+    post:
+      consumes:
+      - application/json
+      description: Cria uma nova promoção
+      parameters:
+      - description: Dados da promoção
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_saas-single-db-api_internal_models_tenant.CreatePromotionRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.PromotionResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Criar promoção
+      tags:
+      - Promotions
+  /promotions/{id}:
+    delete:
+      description: Desativa uma promoção (soft delete)
+      parameters:
+      - description: ID da promoção
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.MessageResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Desativar promoção
+      tags:
+      - Promotions
+    get:
+      description: Retorna uma promoção específica
+      parameters:
+      - description: ID da promoção
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.PromotionResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Obter promoção por ID
+      tags:
+      - Promotions
+    put:
+      consumes:
+      - application/json
+      description: Atualiza uma promoção existente
+      parameters:
+      - description: ID da promoção
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Dados para atualização
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_saas-single-db-api_internal_models_tenant.UpdatePromotionRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.MessageResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Atualizar promoção
+      tags:
+      - Promotions
+  /roles:
+    get:
+      description: Retorna todas as roles de administradores
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.AdminRoleListResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Listar roles do sistema
+      tags:
+      - Roles
+    post:
+      consumes:
+      - application/json
+      description: Cria uma nova role de administrador
+      parameters:
+      - description: Dados da role
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_saas-single-db-api_internal_models_admin.CreateRoleRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.AdminRoleDTO'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.ErrorResponse'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Criar role
+      tags:
+      - Roles
+  /roles/{id}:
+    delete:
+      description: Remove uma role do sistema
+      parameters:
+      - description: ID da role
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.MessageResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Remover role
+      tags:
+      - Roles
+    get:
+      description: Retorna uma role específica
+      parameters:
+      - description: ID da role
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.AdminRoleDTO'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Obter role por ID
+      tags:
+      - Roles
+    put:
+      consumes:
+      - application/json
+      description: Atualiza uma role existente
+      parameters:
+      - description: ID da role
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Dados para atualização
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_saas-single-db-api_internal_models_admin.UpdateRoleRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.MessageResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Atualizar role
+      tags:
+      - Roles
+  /sys-users:
+    get:
+      description: Retorna lista paginada de administradores. Requer permissão manage_sys_users.
+      parameters:
+      - default: 1
+        description: Página
+        in: query
+        name: page
+        type: integer
+      - default: 20
+        description: Itens por página
+        in: query
+        name: page_size
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.PaginatedResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Listar administradores do sistema
+      tags:
+      - Sys Users
+    post:
+      consumes:
+      - application/json
+      description: Cria um novo administrador. Requer permissão manage_sys_users.
+      parameters:
+      - description: Dados do administrador
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_saas-single-db-api_internal_models_admin.CreateAdminRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.AdminUserDTO'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.ErrorResponse'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Criar administrador do sistema
+      tags:
+      - Sys Users
+  /sys-users/{id}:
+    delete:
+      description: Remove (soft delete) um administrador. Requer permissão manage_sys_users.
+      parameters:
+      - description: ID do administrador
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.MessageResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Remover administrador
+      tags:
+      - Sys Users
+    get:
+      description: Retorna detalhes de um administrador específico. Requer permissão
+        manage_sys_users.
+      parameters:
+      - description: ID do administrador
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.SysUserDetailResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Obter administrador por ID
+      tags:
+      - Sys Users
+    put:
+      consumes:
+      - application/json
+      description: Atualiza dados de um administrador. Requer permissão manage_sys_users.
+      parameters:
+      - description: ID do administrador
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Dados para atualização
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_saas-single-db-api_internal_models_admin.UpdateAdminRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.MessageResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Atualizar administrador
+      tags:
+      - Sys Users
+  /sys-users/{id}/profile:
+    get:
+      description: Retorna o perfil de um administrador por ID. Requer permissão manage_sys_users.
+      parameters:
+      - description: ID do administrador
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.AdminProfileDTO'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Obter perfil de administrador
+      tags:
+      - Sys Users
+    put:
+      consumes:
+      - application/json
+      description: Atualiza o perfil de um administrador por ID. Requer permissão
+        manage_sys_users.
+      parameters:
+      - description: ID do administrador
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Dados do perfil
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_saas-single-db-api_internal_models_admin.UpdateProfileRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.MessageResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Atualizar perfil de administrador
+      tags:
+      - Sys Users
+  /sys-users/{id}/roles:
+    post:
+      consumes:
+      - application/json
+      description: Atribui uma role a um administrador
+      parameters:
+      - description: ID do administrador
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: ID da role
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_saas-single-db-api_internal_models_admin.AssignRoleRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.MessageResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Atribuir role a administrador
+      tags:
+      - Sys Users
+  /sys-users/{id}/roles/{role_id}:
+    delete:
+      description: Remove a atribuição de uma role de um administrador
+      parameters:
+      - description: ID do administrador
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: ID da role
+        in: path
+        name: role_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.MessageResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Remover role de administrador
+      tags:
+      - Sys Users
+  /sys-users/profile:
+    get:
+      description: Retorna o perfil do administrador autenticado
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.AdminProfileDTO'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Obter meu perfil
+      tags:
+      - Sys Users
+    put:
+      consumes:
+      - application/json
+      description: Atualiza o perfil do administrador autenticado
+      parameters:
+      - description: Dados do perfil
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_saas-single-db-api_internal_models_admin.UpdateProfileRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.MessageResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Atualizar meu perfil
+      tags:
+      - Sys Users
+  /tenants:
+    get:
+      description: Retorna lista paginada de tenants. Requer permissão view_tenants.
+      parameters:
+      - default: 1
+        description: Página
+        in: query
+        name: page
+        type: integer
+      - default: 20
+        description: Itens por página
+        in: query
+        name: page_size
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.PaginatedResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Listar tenants
+      tags:
+      - Tenants
+    post:
+      consumes:
+      - application/json
+      description: Cria um novo tenant com plano e owner. URL code gerado automaticamente.
+        Requer permissão manage_tenants.
+      parameters:
+      - description: Dados do tenant
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_saas-single-db-api_internal_models_tenant.CreateTenantRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.CreateTenantResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.ErrorResponse'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Criar tenant
+      tags:
+      - Tenants
+  /tenants/{id}:
+    delete:
+      description: Remove (soft delete) um tenant. Requer permissão manage_tenants.
+      parameters:
+      - description: ID do tenant
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.MessageResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Remover tenant
+      tags:
+      - Tenants
+    get:
+      description: Retorna detalhes de um tenant. Requer permissão view_tenants.
+      parameters:
+      - description: ID do tenant
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.TenantResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Obter tenant por ID
+      tags:
+      - Tenants
+    put:
+      consumes:
+      - application/json
+      description: Atualiza dados de um tenant. Requer permissão manage_tenants.
+      parameters:
+      - description: ID do tenant
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Dados para atualização
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_saas-single-db-api_internal_models_tenant.UpdateTenantRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.MessageResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Atualizar tenant
+      tags:
+      - Tenants
+  /tenants/{id}/members:
+    get:
+      description: Retorna os membros de um tenant. Requer permissão view_tenants.
+      parameters:
+      - description: ID do tenant
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.TenantMemberListResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Listar membros do tenant
+      tags:
+      - Tenants
+  /tenants/{id}/plan:
+    put:
+      consumes:
+      - application/json
+      description: Altera o plano de um tenant, com opção de promoção. Requer permissão
+        manage_plans.
+      parameters:
+      - description: ID do tenant
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Dados do novo plano
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_saas-single-db-api_internal_models_tenant.ChangePlanRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.MessageResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Alterar plano do tenant
+      tags:
+      - Tenants
+  /tenants/{id}/plan-history:
+    get:
+      description: Retorna o histórico de planos de um tenant. Requer permissão view_tenants.
+      parameters:
+      - description: ID do tenant
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.TenantPlanHistoryResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Histórico de planos do tenant
+      tags:
+      - Tenants
+  /tenants/{id}/status:
+    put:
+      consumes:
+      - application/json
+      description: Atualiza o status de um tenant (active, suspended, etc). Requer
+        permissão manage_tenants.
+      parameters:
+      - description: ID do tenant
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Novo status
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_saas-single-db-api_internal_models_tenant.UpdateTenantStatusRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.MessageResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Atualizar status do tenant
+      tags:
+      - Tenants
+securityDefinitions:
+  BearerAuth:
+    description: 'JWT token de autenticação. Formato: Bearer {token}'
+    in: header
+    name: Authorization
+    type: apiKey
+swagger: "2.0"

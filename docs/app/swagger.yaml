@@ -1,0 +1,650 @@
+basePath: /api/v1
+definitions:
+  github_com_saas-single-db-api_internal_models_swagger.AppAuthResponse:
+    properties:
+      token:
+        example: eyJhbGciOiJIUzI1NiIs...
+        type: string
+      user:
+        $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.AppUserDTO'
+    type: object
+  github_com_saas-single-db-api_internal_models_swagger.AppChangePasswordRequest:
+    properties:
+      current_password:
+        example: old_password
+        type: string
+      new_password:
+        example: new_password
+        minLength: 6
+        type: string
+    required:
+    - current_password
+    - new_password
+    type: object
+  github_com_saas-single-db-api_internal_models_swagger.AppForgotPasswordRequest:
+    properties:
+      email:
+        example: user@example.com
+        type: string
+    required:
+    - email
+    type: object
+  github_com_saas-single-db-api_internal_models_swagger.AppLoginRequest:
+    properties:
+      email:
+        example: user@example.com
+        type: string
+      password:
+        example: secret123
+        type: string
+    required:
+    - email
+    - password
+    type: object
+  github_com_saas-single-db-api_internal_models_swagger.AppRegisterRequest:
+    properties:
+      email:
+        example: john@example.com
+        type: string
+      name:
+        example: John Doe
+        type: string
+      password:
+        example: secret123
+        minLength: 6
+        type: string
+    required:
+    - email
+    - name
+    - password
+    type: object
+  github_com_saas-single-db-api_internal_models_swagger.AppResetPasswordRequest:
+    properties:
+      new_password:
+        example: new_password
+        minLength: 6
+        type: string
+      token:
+        example: reset-token-string
+        type: string
+    required:
+    - new_password
+    - token
+    type: object
+  github_com_saas-single-db-api_internal_models_swagger.AppUpdateProfileRequest:
+    properties:
+      address:
+        example: Rua A, 123
+        type: string
+      document:
+        example: 123.456.789-00
+        type: string
+      full_name:
+        example: John Doe
+        type: string
+      notes:
+        example: Some notes
+        type: string
+      phone:
+        example: "+5511999999999"
+        type: string
+    type: object
+  github_com_saas-single-db-api_internal_models_swagger.AppUserDTO:
+    properties:
+      email:
+        example: user@example.com
+        type: string
+      id:
+        example: uuid
+        type: string
+      name:
+        example: John
+        type: string
+      profile:
+        $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.AppUserProfileDTO'
+      status:
+        example: active
+        type: string
+    type: object
+  github_com_saas-single-db-api_internal_models_swagger.AppUserProfileDTO:
+    properties:
+      address: {}
+      avatar_url:
+        example: https://example.com/avatar.jpg
+        type: string
+      birth_date:
+        example: "1990-01-01"
+        type: string
+      document:
+        example: 123.456.789-00
+        type: string
+      full_name:
+        example: John Doe
+        type: string
+      metadata: {}
+      phone:
+        example: "+5511999999999"
+        type: string
+    type: object
+  github_com_saas-single-db-api_internal_models_swagger.ErrorResponse:
+    properties:
+      error:
+        example: error_message
+        type: string
+    type: object
+  github_com_saas-single-db-api_internal_models_swagger.MessageResponse:
+    properties:
+      message:
+        example: operation_successful
+        type: string
+    type: object
+  github_com_saas-single-db-api_internal_models_swagger.PaginatedResponse:
+    properties:
+      data: {}
+      page:
+        example: 1
+        type: integer
+      page_size:
+        example: 20
+        type: integer
+      total:
+        example: 100
+        type: integer
+    type: object
+  github_com_saas-single-db-api_internal_models_swagger.ProductResponse:
+    properties:
+      created_at:
+        type: string
+      description:
+        example: A premium widget
+        type: string
+      id:
+        example: uuid
+        type: string
+      image_url:
+        type: string
+      is_active:
+        example: true
+        type: boolean
+      name:
+        example: Premium Widget
+        type: string
+      price:
+        example: 29.9
+        type: number
+      sku:
+        example: WDG-001
+        type: string
+      stock:
+        example: 100
+        type: integer
+      tenant_id:
+        example: uuid
+        type: string
+      updated_at:
+        type: string
+    type: object
+  github_com_saas-single-db-api_internal_models_swagger.ServiceResponse:
+    properties:
+      created_at:
+        type: string
+      description:
+        example: 1h consulting session
+        type: string
+      duration:
+        example: 60
+        type: integer
+      id:
+        example: uuid
+        type: string
+      image_url:
+        type: string
+      is_active:
+        example: true
+        type: boolean
+      name:
+        example: Consulting
+        type: string
+      price:
+        example: 150
+        type: number
+      tenant_id:
+        example: uuid
+        type: string
+      updated_at:
+        type: string
+    type: object
+  github_com_saas-single-db-api_internal_models_swagger.UploadResponse:
+    properties:
+      path:
+        example: /uploads/tenant/file.jpg
+        type: string
+      public_url:
+        example: http://localhost:8080/uploads/tenant/file.jpg
+        type: string
+    type: object
+host: localhost:8082
+info:
+  contact: {}
+  description: API pública para usuários finais (app users) dos tenants. Gerencia
+    registro, autenticação, perfil e catálogo de produtos/serviços.
+  title: App API
+  version: "1.0"
+paths:
+  /{url_code}/auth/change-password:
+    post:
+      consumes:
+      - application/json
+      description: Altera a senha do app user autenticado
+      parameters:
+      - description: URL code do tenant
+        in: path
+        name: url_code
+        required: true
+        type: string
+      - description: Senhas
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.AppChangePasswordRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.MessageResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Alterar senha do app user
+      tags:
+      - Auth
+  /{url_code}/auth/forgot-password:
+    post:
+      consumes:
+      - application/json
+      description: Envia email com link para reset de senha
+      parameters:
+      - description: URL code do tenant
+        in: path
+        name: url_code
+        required: true
+        type: string
+      - description: Email
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.AppForgotPasswordRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.MessageResponse'
+      summary: Solicitar reset de senha
+      tags:
+      - Auth
+  /{url_code}/auth/login:
+    post:
+      consumes:
+      - application/json
+      description: Autentica um app user e retorna token JWT
+      parameters:
+      - description: URL code do tenant
+        in: path
+        name: url_code
+        required: true
+        type: string
+      - description: Credenciais
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.AppLoginRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.AppAuthResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.ErrorResponse'
+      summary: Login de app user
+      tags:
+      - Auth
+  /{url_code}/auth/logout:
+    post:
+      description: Invalida o token JWT do app user
+      parameters:
+      - description: URL code do tenant
+        in: path
+        name: url_code
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.MessageResponse'
+      security:
+      - BearerAuth: []
+      summary: Logout de app user
+      tags:
+      - Auth
+  /{url_code}/auth/me:
+    get:
+      description: Retorna os dados do app user autenticado
+      parameters:
+      - description: URL code do tenant
+        in: path
+        name: url_code
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.AppUserDTO'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Dados do app user logado
+      tags:
+      - Auth
+  /{url_code}/auth/register:
+    post:
+      consumes:
+      - application/json
+      description: Registra um novo usuário no app do tenant
+      parameters:
+      - description: URL code do tenant
+        in: path
+        name: url_code
+        required: true
+        type: string
+      - description: Dados de registro
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.AppRegisterRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.AppAuthResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.ErrorResponse'
+      summary: Registrar app user
+      tags:
+      - Auth
+  /{url_code}/auth/reset-password:
+    post:
+      consumes:
+      - application/json
+      description: Reseta a senha usando token recebido por email
+      parameters:
+      - description: URL code do tenant
+        in: path
+        name: url_code
+        required: true
+        type: string
+      - description: Token e nova senha
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.AppResetPasswordRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.MessageResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.ErrorResponse'
+      summary: Resetar senha
+      tags:
+      - Auth
+  /{url_code}/catalog/products:
+    get:
+      description: Retorna produtos ativos do tenant paginados
+      parameters:
+      - description: URL code do tenant
+        in: path
+        name: url_code
+        required: true
+        type: string
+      - default: 1
+        description: Página
+        in: query
+        name: page
+        type: integer
+      - default: 20
+        description: Itens por página
+        in: query
+        name: page_size
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.PaginatedResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.ErrorResponse'
+      summary: Listar produtos
+      tags:
+      - Catalog
+  /{url_code}/catalog/products/{id}:
+    get:
+      description: Retorna detalhes de um produto ativo
+      parameters:
+      - description: URL code do tenant
+        in: path
+        name: url_code
+        required: true
+        type: string
+      - description: ID do produto
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.ProductResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.ErrorResponse'
+      summary: Obter produto
+      tags:
+      - Catalog
+  /{url_code}/catalog/services:
+    get:
+      description: Retorna serviços ativos do tenant paginados
+      parameters:
+      - description: URL code do tenant
+        in: path
+        name: url_code
+        required: true
+        type: string
+      - default: 1
+        description: Página
+        in: query
+        name: page
+        type: integer
+      - default: 20
+        description: Itens por página
+        in: query
+        name: page_size
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.PaginatedResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.ErrorResponse'
+      summary: Listar serviços
+      tags:
+      - Catalog
+  /{url_code}/catalog/services/{id}:
+    get:
+      description: Retorna detalhes de um serviço ativo
+      parameters:
+      - description: URL code do tenant
+        in: path
+        name: url_code
+        required: true
+        type: string
+      - description: ID do serviço
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.ServiceResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.ErrorResponse'
+      summary: Obter serviço
+      tags:
+      - Catalog
+  /{url_code}/profile:
+    get:
+      description: Retorna o perfil completo do app user autenticado
+      parameters:
+      - description: URL code do tenant
+        in: path
+        name: url_code
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.AppUserProfileDTO'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Obter perfil do app user
+      tags:
+      - Profile
+    put:
+      consumes:
+      - application/json
+      description: Atualiza campos do perfil do app user
+      parameters:
+      - description: URL code do tenant
+        in: path
+        name: url_code
+        required: true
+        type: string
+      - description: Dados do perfil
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.AppUpdateProfileRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.MessageResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Atualizar perfil do app user
+      tags:
+      - Profile
+  /{url_code}/profile/avatar:
+    put:
+      consumes:
+      - multipart/form-data
+      description: Faz upload da foto de perfil do app user
+      parameters:
+      - description: URL code do tenant
+        in: path
+        name: url_code
+        required: true
+        type: string
+      - description: Imagem do avatar
+        in: formData
+        name: avatar
+        required: true
+        type: file
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.UploadResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Upload de avatar do app user
+      tags:
+      - Profile
+securityDefinitions:
+  BearerAuth:
+    description: 'JWT token de autenticação do app user. Formato: Bearer {token}'
+    in: header
+    name: Authorization
+    type: apiKey
+swagger: "2.0"

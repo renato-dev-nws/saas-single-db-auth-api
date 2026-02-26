@@ -1,0 +1,2373 @@
+basePath: /api/v1
+definitions:
+  github_com_saas-single-db-api_internal_models_swagger.AppUserListDTO:
+    properties:
+      created_at:
+        type: string
+      email:
+        example: appuser@example.com
+        type: string
+      id:
+        example: uuid
+        type: string
+      name:
+        example: App User
+        type: string
+      status:
+        example: active
+        type: string
+    type: object
+  github_com_saas-single-db-api_internal_models_swagger.AssignPermissionRequest:
+    properties:
+      permission_id:
+        example: uuid
+        type: string
+    required:
+    - permission_id
+    type: object
+  github_com_saas-single-db-api_internal_models_swagger.BackofficeUserDTO:
+    properties:
+      email:
+        example: user@example.com
+        type: string
+      id:
+        example: uuid
+        type: string
+      name:
+        example: John
+        type: string
+      profile:
+        $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.UserProfileDTO'
+      status:
+        example: active
+        type: string
+    type: object
+  github_com_saas-single-db-api_internal_models_swagger.CanAddMemberResponse:
+    properties:
+      available_slots:
+        example: 3
+        type: integer
+      can_add:
+        example: true
+        type: boolean
+      current_users:
+        example: 2
+        type: integer
+      max_users:
+        example: 5
+        type: integer
+      reason:
+        type: string
+      upgrade_hint:
+        type: string
+    type: object
+  github_com_saas-single-db-api_internal_models_swagger.ChangePasswordRequest:
+    properties:
+      current_password:
+        example: old_password
+        type: string
+      new_password:
+        example: new_password
+        minLength: 6
+        type: string
+    required:
+    - current_password
+    - new_password
+    type: object
+  github_com_saas-single-db-api_internal_models_swagger.CreateIDResponse:
+    properties:
+      id:
+        example: uuid
+        type: string
+    type: object
+  github_com_saas-single-db-api_internal_models_swagger.CreateProductRequest:
+    properties:
+      description:
+        example: A premium widget
+        type: string
+      is_active:
+        example: true
+        type: boolean
+      name:
+        example: Premium Widget
+        type: string
+      price:
+        example: 29.9
+        type: number
+      sku:
+        example: WDG-001
+        type: string
+      stock:
+        example: 100
+        type: integer
+    required:
+    - name
+    - price
+    type: object
+  github_com_saas-single-db-api_internal_models_swagger.CreateRoleRequest:
+    properties:
+      slug:
+        example: editor
+        type: string
+      title:
+        example: Editor
+        type: string
+    required:
+    - slug
+    - title
+    type: object
+  github_com_saas-single-db-api_internal_models_swagger.CreateServiceRequest:
+    properties:
+      description:
+        example: 1h consulting session
+        type: string
+      duration:
+        example: 60
+        type: integer
+      is_active:
+        example: true
+        type: boolean
+      name:
+        example: Consulting
+        type: string
+      price:
+        example: 150
+        type: number
+    required:
+    - name
+    - price
+    type: object
+  github_com_saas-single-db-api_internal_models_swagger.ErrorResponse:
+    properties:
+      error:
+        example: error_message
+        type: string
+    type: object
+  github_com_saas-single-db-api_internal_models_swagger.FeatureResponse:
+    properties:
+      code:
+        example: products
+        type: string
+      created_at:
+        type: string
+      description:
+        example: Product management feature
+        type: string
+      id:
+        example: uuid
+        type: string
+      is_active:
+        example: true
+        type: boolean
+      slug:
+        example: products
+        type: string
+      title:
+        example: Products
+        type: string
+      updated_at:
+        type: string
+    type: object
+  github_com_saas-single-db-api_internal_models_swagger.ImageResponse:
+    properties:
+      id:
+        example: uuid
+        type: string
+      path:
+        example: /uploads/tenant/image.jpg
+        type: string
+      public_url:
+        example: http://localhost:8080/uploads/tenant/image.jpg
+        type: string
+    type: object
+  github_com_saas-single-db-api_internal_models_swagger.InviteMemberRequest:
+    properties:
+      email:
+        example: member@example.com
+        type: string
+      name:
+        example: Jane Doe
+        type: string
+      role_id:
+        example: uuid
+        type: string
+    required:
+    - email
+    - name
+    type: object
+  github_com_saas-single-db-api_internal_models_swagger.InviteMemberResponse:
+    properties:
+      message:
+        example: member_invited
+        type: string
+      user_id:
+        example: uuid
+        type: string
+    type: object
+  github_com_saas-single-db-api_internal_models_swagger.MemberDTO:
+    properties:
+      created_at:
+        type: string
+      email:
+        example: member@example.com
+        type: string
+      is_owner:
+        example: false
+        type: boolean
+      name:
+        example: Jane Doe
+        type: string
+      profile:
+        $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.UserProfileDTO'
+      role:
+        $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.RoleBriefDTO'
+      status:
+        example: active
+        type: string
+      user_id:
+        example: uuid
+        type: string
+    type: object
+  github_com_saas-single-db-api_internal_models_swagger.MessageResponse:
+    properties:
+      message:
+        example: operation_successful
+        type: string
+    type: object
+  github_com_saas-single-db-api_internal_models_swagger.PaginatedResponse:
+    properties:
+      data: {}
+      page:
+        example: 1
+        type: integer
+      page_size:
+        example: 20
+        type: integer
+      total:
+        example: 100
+        type: integer
+    type: object
+  github_com_saas-single-db-api_internal_models_swagger.PlanConfigDTO:
+    properties:
+      active_price:
+        example: 99.9
+        type: number
+      available_slots:
+        example: 3
+        type: integer
+      billing_cycle:
+        example: monthly
+        type: string
+      contracted_price:
+        example: 99.9
+        type: number
+      current_users:
+        example: 2
+        type: integer
+      is_multilang:
+        example: true
+        type: boolean
+      max_users:
+        example: 5
+        type: integer
+      name:
+        example: Business Pro
+        type: string
+      price_updated_at:
+        type: string
+      promo_expires_at:
+        type: string
+    type: object
+  github_com_saas-single-db-api_internal_models_swagger.PlanResponse:
+    properties:
+      created_at:
+        type: string
+      description:
+        example: Business plan with all features
+        type: string
+      features:
+        items:
+          $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.FeatureResponse'
+        type: array
+      id:
+        example: uuid
+        type: string
+      is_active:
+        example: true
+        type: boolean
+      is_multilang:
+        example: true
+        type: boolean
+      max_users:
+        example: 5
+        type: integer
+      name:
+        example: Business Pro
+        type: string
+      plan_type:
+        example: business
+        type: string
+      price:
+        example: 99.9
+        type: number
+      updated_at:
+        type: string
+    type: object
+  github_com_saas-single-db-api_internal_models_swagger.ProductResponse:
+    properties:
+      created_at:
+        type: string
+      description:
+        example: A premium widget
+        type: string
+      id:
+        example: uuid
+        type: string
+      image_url:
+        type: string
+      is_active:
+        example: true
+        type: boolean
+      name:
+        example: Premium Widget
+        type: string
+      price:
+        example: 29.9
+        type: number
+      sku:
+        example: WDG-001
+        type: string
+      stock:
+        example: 100
+        type: integer
+      tenant_id:
+        example: uuid
+        type: string
+      updated_at:
+        type: string
+    type: object
+  github_com_saas-single-db-api_internal_models_swagger.RoleBriefDTO:
+    properties:
+      id:
+        example: uuid
+        type: string
+      slug:
+        example: editor
+        type: string
+      title:
+        example: Editor
+        type: string
+    type: object
+  github_com_saas-single-db-api_internal_models_swagger.RoleDetailResponse:
+    properties:
+      permissions:
+        items:
+          $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.UserPermissionResponse'
+        type: array
+      role:
+        $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.UserRoleResponse'
+    type: object
+  github_com_saas-single-db-api_internal_models_swagger.ServiceResponse:
+    properties:
+      created_at:
+        type: string
+      description:
+        example: 1h consulting session
+        type: string
+      duration:
+        example: 60
+        type: integer
+      id:
+        example: uuid
+        type: string
+      image_url:
+        type: string
+      is_active:
+        example: true
+        type: boolean
+      name:
+        example: Consulting
+        type: string
+      price:
+        example: 150
+        type: number
+      tenant_id:
+        example: uuid
+        type: string
+      updated_at:
+        type: string
+    type: object
+  github_com_saas-single-db-api_internal_models_swagger.SettingResponse:
+    properties:
+      category:
+        example: appearance
+        type: string
+      created_at:
+        type: string
+      data: {}
+      id:
+        example: uuid
+        type: string
+      tenant_id:
+        example: uuid
+        type: string
+      updated_at:
+        type: string
+    type: object
+  github_com_saas-single-db-api_internal_models_swagger.SubscribeRequest:
+    properties:
+      billing_cycle:
+        example: monthly
+        type: string
+      company_name:
+        example: My Company
+        type: string
+      email:
+        example: john@example.com
+        type: string
+      is_company:
+        example: true
+        type: boolean
+      name:
+        example: John Doe
+        type: string
+      password:
+        example: secret123
+        minLength: 6
+        type: string
+      plan_id:
+        example: uuid
+        type: string
+      promo_code:
+        example: LAUNCH50
+        type: string
+      subdomain:
+        example: mycompany
+        type: string
+    required:
+    - billing_cycle
+    - email
+    - name
+    - password
+    - plan_id
+    - subdomain
+    type: object
+  github_com_saas-single-db-api_internal_models_swagger.SubscriptionInfoDTO:
+    properties:
+      billing_cycle:
+        example: monthly
+        type: string
+      contracted_price:
+        example: 99.9
+        type: number
+      plan:
+        example: Business Pro
+        type: string
+      promo_expires_at:
+        type: string
+      promo_price:
+        type: number
+      promotion:
+        type: string
+    type: object
+  github_com_saas-single-db-api_internal_models_swagger.SubscriptionResponse:
+    properties:
+      subscription:
+        $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.SubscriptionInfoDTO'
+      tenant:
+        $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.TenantBriefDTO'
+      token:
+        example: eyJhbGciOiJIUzI1NiIs...
+        type: string
+      user:
+        $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.UserBriefDTO'
+    type: object
+  github_com_saas-single-db-api_internal_models_swagger.SwitchTenantResponse:
+    properties:
+      tenant_id:
+        example: uuid
+        type: string
+      token:
+        example: eyJhbGciOiJIUzI1NiIs...
+        type: string
+      url_code:
+        example: HRP1ZYERFVA
+        type: string
+    type: object
+  github_com_saas-single-db-api_internal_models_swagger.TenantBrief:
+    properties:
+      id:
+        example: uuid
+        type: string
+      is_owner:
+        example: true
+        type: boolean
+      name:
+        example: My Company
+        type: string
+      url_code:
+        example: HRP1ZYERFVA
+        type: string
+    type: object
+  github_com_saas-single-db-api_internal_models_swagger.TenantBriefDTO:
+    properties:
+      id:
+        example: uuid
+        type: string
+      name:
+        example: My Company
+        type: string
+      status:
+        example: active
+        type: string
+      subdomain:
+        example: mycompany
+        type: string
+      url_code:
+        example: HRP1ZYERFVA
+        type: string
+    type: object
+  github_com_saas-single-db-api_internal_models_swagger.TenantConfigDTO:
+    properties:
+      company_name:
+        type: string
+      id:
+        example: uuid
+        type: string
+      name:
+        example: My Company
+        type: string
+      url_code:
+        example: HRP1ZYERFVA
+        type: string
+    type: object
+  github_com_saas-single-db-api_internal_models_swagger.TenantConfigResponse:
+    properties:
+      features:
+        items:
+          type: string
+        type: array
+      permissions:
+        items:
+          type: string
+        type: array
+      plan:
+        $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.PlanConfigDTO'
+      tenant:
+        $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.TenantConfigDTO'
+    type: object
+  github_com_saas-single-db-api_internal_models_swagger.TenantInfoDTO:
+    properties:
+      company_name:
+        type: string
+      features:
+        items:
+          type: string
+        type: array
+      id:
+        example: uuid
+        type: string
+      name:
+        example: My Company
+        type: string
+      permissions:
+        items:
+          type: string
+        type: array
+      url_code:
+        example: HRP1ZYERFVA
+        type: string
+    type: object
+  github_com_saas-single-db-api_internal_models_swagger.TenantProfileResponse:
+    properties:
+      about:
+        example: About our company
+        type: string
+      custom_settings: {}
+      logo_url:
+        example: https://example.com/logo.jpg
+        type: string
+      tenant_id:
+        example: uuid
+        type: string
+    type: object
+  github_com_saas-single-db-api_internal_models_swagger.UpdateAppUserStatusRequest:
+    properties:
+      status:
+        example: blocked
+        type: string
+    required:
+    - status
+    type: object
+  github_com_saas-single-db-api_internal_models_swagger.UpdateMemberRoleRequest:
+    properties:
+      role_id:
+        example: uuid
+        type: string
+    required:
+    - role_id
+    type: object
+  github_com_saas-single-db-api_internal_models_swagger.UpdateProductRequest:
+    properties:
+      description:
+        example: Updated description
+        type: string
+      is_active:
+        example: true
+        type: boolean
+      name:
+        example: Updated Widget
+        type: string
+      price:
+        example: 39.9
+        type: number
+      sku:
+        example: WDG-002
+        type: string
+      stock:
+        example: 50
+        type: integer
+    type: object
+  github_com_saas-single-db-api_internal_models_swagger.UpdateRoleRequest:
+    properties:
+      title:
+        example: Editor
+        type: string
+    required:
+    - title
+    type: object
+  github_com_saas-single-db-api_internal_models_swagger.UpdateServiceRequest:
+    properties:
+      description:
+        example: Updated description
+        type: string
+      duration:
+        example: 90
+        type: integer
+      is_active:
+        example: true
+        type: boolean
+      name:
+        example: Updated Service
+        type: string
+      price:
+        example: 200
+        type: number
+    type: object
+  github_com_saas-single-db-api_internal_models_swagger.UpdateTenantProfileRequest:
+    properties:
+      about:
+        example: About our company
+        type: string
+      custom_settings: {}
+    type: object
+  github_com_saas-single-db-api_internal_models_swagger.UpdateUserProfileRequest:
+    properties:
+      about:
+        example: About me
+        type: string
+      full_name:
+        example: John Doe
+        type: string
+    type: object
+  github_com_saas-single-db-api_internal_models_swagger.UploadResponse:
+    properties:
+      path:
+        example: /uploads/tenant/file.jpg
+        type: string
+      public_url:
+        example: http://localhost:8080/uploads/tenant/file.jpg
+        type: string
+    type: object
+  github_com_saas-single-db-api_internal_models_swagger.UpsertSettingRequest:
+    properties:
+      data: {}
+    required:
+    - data
+    type: object
+  github_com_saas-single-db-api_internal_models_swagger.UserBriefDTO:
+    properties:
+      email:
+        example: user@example.com
+        type: string
+      id:
+        example: uuid
+        type: string
+    type: object
+  github_com_saas-single-db-api_internal_models_swagger.UserLoginRequest:
+    properties:
+      email:
+        example: user@example.com
+        type: string
+      password:
+        example: secret123
+        type: string
+    required:
+    - email
+    - password
+    type: object
+  github_com_saas-single-db-api_internal_models_swagger.UserLoginResponse:
+    properties:
+      current_tenant:
+        $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.TenantInfoDTO'
+      tenants:
+        items:
+          $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.TenantBrief'
+        type: array
+      token:
+        example: eyJhbGciOiJIUzI1NiIs...
+        type: string
+      user:
+        $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.BackofficeUserDTO'
+    type: object
+  github_com_saas-single-db-api_internal_models_swagger.UserPermissionResponse:
+    properties:
+      description:
+        type: string
+      feature_id:
+        type: string
+      id:
+        example: uuid
+        type: string
+      slug:
+        example: prod_c
+        type: string
+      title:
+        example: Create Products
+        type: string
+    type: object
+  github_com_saas-single-db-api_internal_models_swagger.UserProfileDTO:
+    properties:
+      about:
+        example: About me
+        type: string
+      avatar_url:
+        example: https://example.com/avatar.jpg
+        type: string
+      full_name:
+        example: John Doe
+        type: string
+    type: object
+  github_com_saas-single-db-api_internal_models_swagger.UserRoleResponse:
+    properties:
+      created_at:
+        type: string
+      id:
+        example: uuid
+        type: string
+      slug:
+        example: editor
+        type: string
+      tenant_id:
+        type: string
+      title:
+        example: Editor
+        type: string
+      updated_at:
+        type: string
+    type: object
+host: localhost:8080
+info:
+  contact: {}
+  description: API de backoffice para tenants do sistema SaaS multi-tenant. Gerencia
+    assinatura, autenticação, membros, produtos, serviços, configurações e muito mais.
+  title: Tenant API
+  version: "1.0"
+paths:
+  /{url_code}/app-users:
+    get:
+      description: Retorna app users do tenant paginados
+      parameters:
+      - description: URL code do tenant
+        in: path
+        name: url_code
+        required: true
+        type: string
+      - default: 1
+        description: Página
+        in: query
+        name: page
+        type: integer
+      - default: 20
+        description: Itens por página
+        in: query
+        name: page_size
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.PaginatedResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Listar app users
+      tags:
+      - App Users
+  /{url_code}/app-users/{id}:
+    delete:
+      description: Remove (soft delete) um app user
+      parameters:
+      - description: URL code do tenant
+        in: path
+        name: url_code
+        required: true
+        type: string
+      - description: ID do app user
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.MessageResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Remover app user
+      tags:
+      - App Users
+    get:
+      description: Retorna um app user específico
+      parameters:
+      - description: URL code do tenant
+        in: path
+        name: url_code
+        required: true
+        type: string
+      - description: ID do app user
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.AppUserListDTO'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Obter app user
+      tags:
+      - App Users
+  /{url_code}/app-users/{id}/status:
+    put:
+      consumes:
+      - application/json
+      description: Atualiza o status de um app user (active/blocked)
+      parameters:
+      - description: URL code do tenant
+        in: path
+        name: url_code
+        required: true
+        type: string
+      - description: ID do app user
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Novo status
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.UpdateAppUserStatusRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.MessageResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Atualizar status do app user
+      tags:
+      - App Users
+  /{url_code}/config:
+    get:
+      description: 'Retorna configuração completa do tenant: dados, features, permissões,
+        plano e perfil'
+      parameters:
+      - description: URL code do tenant
+        in: path
+        name: url_code
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.TenantConfigResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Obter configuração do tenant
+      tags:
+      - Tenant Config
+  /{url_code}/images:
+    get:
+      description: Retorna imagens do tenant paginadas
+      parameters:
+      - description: URL code do tenant
+        in: path
+        name: url_code
+        required: true
+        type: string
+      - default: 1
+        description: Página
+        in: query
+        name: page
+        type: integer
+      - default: 20
+        description: Itens por página
+        in: query
+        name: page_size
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.PaginatedResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Listar imagens
+      tags:
+      - Images
+    post:
+      consumes:
+      - multipart/form-data
+      description: Faz upload de uma imagem com entity_type e entity_id opcionais
+      parameters:
+      - description: URL code do tenant
+        in: path
+        name: url_code
+        required: true
+        type: string
+      - description: Imagem
+        in: formData
+        name: image
+        required: true
+        type: file
+      - description: Tipo da entidade
+        in: formData
+        name: entity_type
+        type: string
+      - description: ID da entidade
+        in: formData
+        name: entity_id
+        type: string
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.ImageResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Upload de imagem genérica
+      tags:
+      - Images
+  /{url_code}/images/{id}:
+    delete:
+      description: Remove uma imagem do tenant
+      parameters:
+      - description: URL code do tenant
+        in: path
+        name: url_code
+        required: true
+        type: string
+      - description: ID da imagem
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.MessageResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Remover imagem
+      tags:
+      - Images
+  /{url_code}/members:
+    get:
+      description: Retorna todos os membros do tenant
+      parameters:
+      - description: URL code do tenant
+        in: path
+        name: url_code
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.MemberDTO'
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Listar membros do tenant
+      tags:
+      - Members
+    post:
+      consumes:
+      - application/json
+      description: Adiciona um novo membro ao tenant. Requer permissão user_m ou ser
+        owner.
+      parameters:
+      - description: URL code do tenant
+        in: path
+        name: url_code
+        required: true
+        type: string
+      - description: Dados do membro
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.InviteMemberRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.InviteMemberResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Convidar membro
+      tags:
+      - Members
+  /{url_code}/members/{id}:
+    delete:
+      description: Remove um membro do tenant. Apenas o owner pode remover.
+      parameters:
+      - description: URL code do tenant
+        in: path
+        name: url_code
+        required: true
+        type: string
+      - description: ID do membro
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.MessageResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Remover membro
+      tags:
+      - Members
+    get:
+      description: Retorna detalhes de um membro específico
+      parameters:
+      - description: URL code do tenant
+        in: path
+        name: url_code
+        required: true
+        type: string
+      - description: ID do membro
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.MemberDTO'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Obter membro por ID
+      tags:
+      - Members
+  /{url_code}/members/{id}/role:
+    put:
+      consumes:
+      - application/json
+      description: Atualiza a role de um membro. Requer permissão user_m ou ser owner.
+      parameters:
+      - description: URL code do tenant
+        in: path
+        name: url_code
+        required: true
+        type: string
+      - description: ID do membro
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Nova role
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.UpdateMemberRoleRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.MessageResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Atualizar role do membro
+      tags:
+      - Members
+  /{url_code}/members/can-add:
+    get:
+      description: Verifica se o tenant pode adicionar mais membros baseado no plano
+      parameters:
+      - description: URL code do tenant
+        in: path
+        name: url_code
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.CanAddMemberResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Verificar se pode adicionar membro
+      tags:
+      - Members
+  /{url_code}/products:
+    get:
+      description: Retorna produtos do tenant paginados. Requer feature 'products'.
+      parameters:
+      - description: URL code do tenant
+        in: path
+        name: url_code
+        required: true
+        type: string
+      - default: 1
+        description: Página
+        in: query
+        name: page
+        type: integer
+      - default: 20
+        description: Itens por página
+        in: query
+        name: page_size
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.PaginatedResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Listar produtos
+      tags:
+      - Products
+    post:
+      consumes:
+      - application/json
+      description: Cria um novo produto. Requer feature 'products' e permissão 'prod_c'.
+      parameters:
+      - description: URL code do tenant
+        in: path
+        name: url_code
+        required: true
+        type: string
+      - description: Dados do produto
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.CreateProductRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.CreateIDResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Criar produto
+      tags:
+      - Products
+  /{url_code}/products/{id}:
+    delete:
+      description: Remove um produto. Requer feature 'products' e permissão 'prod_d'.
+      parameters:
+      - description: URL code do tenant
+        in: path
+        name: url_code
+        required: true
+        type: string
+      - description: ID do produto
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.MessageResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Remover produto
+      tags:
+      - Products
+    get:
+      description: Retorna um produto específico. Requer feature 'products'.
+      parameters:
+      - description: URL code do tenant
+        in: path
+        name: url_code
+        required: true
+        type: string
+      - description: ID do produto
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.ProductResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Obter produto
+      tags:
+      - Products
+    put:
+      consumes:
+      - application/json
+      description: Atualiza um produto. Requer feature 'products' e permissão 'prod_u'.
+      parameters:
+      - description: URL code do tenant
+        in: path
+        name: url_code
+        required: true
+        type: string
+      - description: ID do produto
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Dados para atualização
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.UpdateProductRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.MessageResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Atualizar produto
+      tags:
+      - Products
+  /{url_code}/products/{id}/image:
+    post:
+      consumes:
+      - multipart/form-data
+      description: Faz upload de imagem para um produto. Requer feature 'products'
+        e permissão 'prod_u'.
+      parameters:
+      - description: URL code do tenant
+        in: path
+        name: url_code
+        required: true
+        type: string
+      - description: ID do produto
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Imagem do produto
+        in: formData
+        name: image
+        required: true
+        type: file
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.UploadResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Upload de imagem do produto
+      tags:
+      - Products
+  /{url_code}/roles:
+    get:
+      description: Retorna todas as roles do tenant
+      parameters:
+      - description: URL code do tenant
+        in: path
+        name: url_code
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.UserRoleResponse'
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Listar roles do tenant
+      tags:
+      - Roles
+    post:
+      consumes:
+      - application/json
+      description: Cria uma nova role no tenant. Apenas o owner pode criar.
+      parameters:
+      - description: URL code do tenant
+        in: path
+        name: url_code
+        required: true
+        type: string
+      - description: Dados da role
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.CreateRoleRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.UserRoleResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Criar role
+      tags:
+      - Roles
+  /{url_code}/roles/{id}:
+    delete:
+      description: Remove uma role do tenant. Apenas o owner pode remover.
+      parameters:
+      - description: URL code do tenant
+        in: path
+        name: url_code
+        required: true
+        type: string
+      - description: ID da role
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.MessageResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Remover role
+      tags:
+      - Roles
+    get:
+      description: Retorna uma role do tenant com suas permissões
+      parameters:
+      - description: URL code do tenant
+        in: path
+        name: url_code
+        required: true
+        type: string
+      - description: ID da role
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.RoleDetailResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Obter role com permissões
+      tags:
+      - Roles
+    put:
+      consumes:
+      - application/json
+      description: Atualiza uma role do tenant. Apenas o owner pode atualizar.
+      parameters:
+      - description: URL code do tenant
+        in: path
+        name: url_code
+        required: true
+        type: string
+      - description: ID da role
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Dados para atualização
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.UpdateRoleRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.MessageResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Atualizar role
+      tags:
+      - Roles
+  /{url_code}/roles/{id}/permissions:
+    post:
+      consumes:
+      - application/json
+      description: Atribui uma permissão a uma role do tenant. Apenas o owner.
+      parameters:
+      - description: URL code do tenant
+        in: path
+        name: url_code
+        required: true
+        type: string
+      - description: ID da role
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: ID da permissão
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.AssignPermissionRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.MessageResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Atribuir permissão a role
+      tags:
+      - Roles
+  /{url_code}/roles/{id}/permissions/{permId}:
+    delete:
+      description: Remove uma permissão de uma role do tenant. Apenas o owner.
+      parameters:
+      - description: URL code do tenant
+        in: path
+        name: url_code
+        required: true
+        type: string
+      - description: ID da role
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: ID da permissão
+        in: path
+        name: permId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.MessageResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Remover permissão da role
+      tags:
+      - Roles
+  /{url_code}/services:
+    get:
+      description: Retorna serviços do tenant paginados. Requer feature 'services'.
+      parameters:
+      - description: URL code do tenant
+        in: path
+        name: url_code
+        required: true
+        type: string
+      - default: 1
+        description: Página
+        in: query
+        name: page
+        type: integer
+      - default: 20
+        description: Itens por página
+        in: query
+        name: page_size
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.PaginatedResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Listar serviços
+      tags:
+      - Services
+    post:
+      consumes:
+      - application/json
+      description: Cria um novo serviço. Requer feature 'services' e permissão 'serv_c'.
+      parameters:
+      - description: URL code do tenant
+        in: path
+        name: url_code
+        required: true
+        type: string
+      - description: Dados do serviço
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.CreateServiceRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.CreateIDResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Criar serviço
+      tags:
+      - Services
+  /{url_code}/services/{id}:
+    delete:
+      description: Remove um serviço. Requer feature 'services' e permissão 'serv_d'.
+      parameters:
+      - description: URL code do tenant
+        in: path
+        name: url_code
+        required: true
+        type: string
+      - description: ID do serviço
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.MessageResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Remover serviço
+      tags:
+      - Services
+    get:
+      description: Retorna um serviço específico. Requer feature 'services'.
+      parameters:
+      - description: URL code do tenant
+        in: path
+        name: url_code
+        required: true
+        type: string
+      - description: ID do serviço
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.ServiceResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Obter serviço
+      tags:
+      - Services
+    put:
+      consumes:
+      - application/json
+      description: Atualiza um serviço. Requer feature 'services' e permissão 'serv_u'.
+      parameters:
+      - description: URL code do tenant
+        in: path
+        name: url_code
+        required: true
+        type: string
+      - description: ID do serviço
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Dados para atualização
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.UpdateServiceRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.MessageResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Atualizar serviço
+      tags:
+      - Services
+  /{url_code}/services/{id}/image:
+    post:
+      consumes:
+      - multipart/form-data
+      description: Faz upload de imagem para um serviço. Requer feature 'services'
+        e permissão 'serv_u'.
+      parameters:
+      - description: URL code do tenant
+        in: path
+        name: url_code
+        required: true
+        type: string
+      - description: ID do serviço
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Imagem do serviço
+        in: formData
+        name: image
+        required: true
+        type: file
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.UploadResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Upload de imagem do serviço
+      tags:
+      - Services
+  /{url_code}/settings:
+    get:
+      description: Retorna todas as configurações do tenant
+      parameters:
+      - description: URL code do tenant
+        in: path
+        name: url_code
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.SettingResponse'
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Listar configurações
+      tags:
+      - Settings
+  /{url_code}/settings/{category}:
+    get:
+      description: Retorna uma configuração específica do tenant por categoria
+      parameters:
+      - description: URL code do tenant
+        in: path
+        name: url_code
+        required: true
+        type: string
+      - description: Categoria da configuração
+        in: path
+        name: category
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.SettingResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Obter configuração por categoria
+      tags:
+      - Settings
+    put:
+      consumes:
+      - application/json
+      description: Cria ou atualiza uma configuração. Requer permissão 'setg_m' ou
+        ser owner.
+      parameters:
+      - description: URL code do tenant
+        in: path
+        name: url_code
+        required: true
+        type: string
+      - description: Categoria da configuração
+        in: path
+        name: category
+        required: true
+        type: string
+      - description: Dados da configuração
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.UpsertSettingRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.MessageResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Salvar configuração
+      tags:
+      - Settings
+  /{url_code}/tenant:
+    get:
+      description: Retorna o perfil do tenant (about, logo, custom_settings)
+      parameters:
+      - description: URL code do tenant
+        in: path
+        name: url_code
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.TenantProfileResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Obter perfil do tenant
+      tags:
+      - Tenant Profile
+  /{url_code}/tenant/logo:
+    post:
+      consumes:
+      - multipart/form-data
+      description: Faz upload do logo do tenant. Apenas o owner pode enviar.
+      parameters:
+      - description: URL code do tenant
+        in: path
+        name: url_code
+        required: true
+        type: string
+      - description: Imagem do logo
+        in: formData
+        name: logo
+        required: true
+        type: file
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.UploadResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Upload de logo do tenant
+      tags:
+      - Tenant Profile
+  /{url_code}/tenant/profile:
+    put:
+      consumes:
+      - application/json
+      description: Atualiza o perfil do tenant. Apenas o owner pode atualizar.
+      parameters:
+      - description: URL code do tenant
+        in: path
+        name: url_code
+        required: true
+        type: string
+      - description: Dados do perfil
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.UpdateTenantProfileRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.MessageResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Atualizar perfil do tenant
+      tags:
+      - Tenant Profile
+  /auth/login:
+    post:
+      consumes:
+      - application/json
+      description: Autentica um usuário do backoffice com email e senha
+      parameters:
+      - description: Credenciais
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.UserLoginRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.UserLoginResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.ErrorResponse'
+      summary: Login de usuário
+      tags:
+      - Auth
+  /auth/logout:
+    post:
+      description: Invalida o token JWT do usuário
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.MessageResponse'
+      security:
+      - BearerAuth: []
+      summary: Logout de usuário
+      tags:
+      - Auth
+  /auth/me:
+    get:
+      description: Retorna os dados do usuário logado com seus tenants
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.BackofficeUserDTO'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Dados do usuário autenticado
+      tags:
+      - Auth
+  /auth/resend-verification:
+    post:
+      description: Reenvia o email de verificação para o usuário autenticado
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.MessageResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Reenviar email de verificação
+      tags:
+      - Auth
+  /auth/switch/{url_code}:
+    post:
+      description: Troca o contexto do usuário para outro tenant, retornando um novo
+        token com escopo
+      parameters:
+      - description: URL code do tenant
+        in: path
+        name: url_code
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.SwitchTenantResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Selecionar tenant
+      tags:
+      - Auth
+  /auth/verify-email:
+    get:
+      description: Valida o token de verificação de email e marca o email como verificado
+      parameters:
+      - description: Token de verificação
+        in: query
+        name: token
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.MessageResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.ErrorResponse'
+      summary: Verificar email
+      tags:
+      - Auth
+  /plans:
+    get:
+      description: Retorna todos os planos ativos disponíveis para assinatura
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.PlanResponse'
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.ErrorResponse'
+      summary: Listar planos ativos
+      tags:
+      - Plans
+  /profile:
+    get:
+      description: Retorna o perfil do usuário autenticado
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.UserProfileDTO'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Obter perfil do usuário
+      tags:
+      - Profile
+    put:
+      consumes:
+      - application/json
+      description: Atualiza o perfil do usuário autenticado
+      parameters:
+      - description: Dados do perfil
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.UpdateUserProfileRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.MessageResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Atualizar perfil do usuário
+      tags:
+      - Profile
+  /profile/avatar:
+    post:
+      consumes:
+      - multipart/form-data
+      description: Faz upload do avatar do usuário
+      parameters:
+      - description: Imagem do avatar
+        in: formData
+        name: avatar
+        required: true
+        type: file
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.UploadResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Upload de avatar
+      tags:
+      - Profile
+  /profile/password:
+    put:
+      consumes:
+      - application/json
+      description: Altera a senha do usuário autenticado
+      parameters:
+      - description: Senhas atual e nova
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.ChangePasswordRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.MessageResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Alterar senha
+      tags:
+      - Profile
+  /subscription:
+    post:
+      consumes:
+      - application/json
+      description: Cria um novo tenant com plano, owner e gera url_code automaticamente.
+        Envia email de verificação.
+      parameters:
+      - description: Dados da assinatura
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.SubscribeRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.SubscriptionResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.ErrorResponse'
+      summary: Criar assinatura (self-service)
+      tags:
+      - Subscription
+securityDefinitions:
+  BearerAuth:
+    description: 'JWT token de autenticação do usuário. Formato: Bearer {token}'
+    in: header
+    name: Authorization
+    type: apiKey
+swagger: "2.0"

@@ -8,6 +8,7 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"github.com/saas-single-db-api/internal/cache"
+	_ "github.com/saas-single-db-api/internal/models/swagger"
 	repo "github.com/saas-single-db-api/internal/repository/tenant"
 	svc "github.com/saas-single-db-api/internal/services/tenant"
 	"github.com/saas-single-db-api/internal/storage"
@@ -29,6 +30,14 @@ func NewHandler(s *svc.Service, r *repo.Repository, st storage.Provider, c *cach
 
 // ==================== PUBLIC: Subscription ====================
 
+// ListPlans godoc
+// @Summary Listar planos ativos
+// @Description Retorna todos os planos ativos disponíveis para assinatura
+// @Tags Plans
+// @Produce json
+// @Success 200 {array} swagger.PlanResponse
+// @Failure 500 {object} swagger.ErrorResponse
+// @Router /plans [get]
 func (h *Handler) ListPlans(c *gin.Context) {
 	plans, err := h.repo.ListActivePlans(c.Request.Context())
 	if err != nil {
@@ -38,6 +47,16 @@ func (h *Handler) ListPlans(c *gin.Context) {
 	c.JSON(http.StatusOK, plans)
 }
 
+// Subscribe godoc
+// @Summary Criar assinatura (self-service)
+// @Description Cria um novo tenant com plano, owner e gera url_code automaticamente. Envia email de verificação.
+// @Tags Subscription
+// @Accept json
+// @Produce json
+// @Param request body swagger.SubscribeRequest true "Dados da assinatura"
+// @Success 201 {object} swagger.SubscriptionResponse
+// @Failure 400 {object} swagger.ErrorResponse
+// @Router /subscription [post]
 func (h *Handler) Subscribe(c *gin.Context) {
 	var req struct {
 		TenantName   string  `json:"tenant_name" binding:"required"`
@@ -83,6 +102,15 @@ func (h *Handler) Subscribe(c *gin.Context) {
 	})
 }
 
+// VerifyEmail godoc
+// @Summary Verificar email
+// @Description Valida o token de verificação de email e marca o email como verificado
+// @Tags Auth
+// @Produce json
+// @Param token query string true "Token de verificação"
+// @Success 200 {object} swagger.MessageResponse
+// @Failure 400 {object} swagger.ErrorResponse
+// @Router /auth/verify-email [get]
 func (h *Handler) VerifyEmail(c *gin.Context) {
 	token := c.Query("token")
 	if token == "" {
@@ -98,6 +126,16 @@ func (h *Handler) VerifyEmail(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "email_verified"})
 }
 
+// ResendVerification godoc
+// @Summary Reenviar email de verificação
+// @Description Reenvia o email de verificação para o usuário autenticado
+// @Tags Auth
+// @Produce json
+// @Security BearerAuth
+// @Success 200 {object} swagger.MessageResponse
+// @Failure 400 {object} swagger.ErrorResponse
+// @Failure 401 {object} swagger.ErrorResponse
+// @Router /auth/resend-verification [post]
 func (h *Handler) ResendVerification(c *gin.Context) {
 	userID := c.GetString("user_id")
 	if userID == "" {
@@ -115,6 +153,17 @@ func (h *Handler) ResendVerification(c *gin.Context) {
 
 // ==================== AUTH ====================
 
+// Login godoc
+// @Summary Login de usuário
+// @Description Autentica um usuário do backoffice com email e senha
+// @Tags Auth
+// @Accept json
+// @Produce json
+// @Param request body swagger.UserLoginRequest true "Credenciais"
+// @Success 200 {object} swagger.UserLoginResponse
+// @Failure 400 {object} swagger.ErrorResponse
+// @Failure 401 {object} swagger.ErrorResponse
+// @Router /auth/login [post]
 func (h *Handler) Login(c *gin.Context) {
 	var req struct {
 		Email    string `json:"email" binding:"required,email"`
@@ -140,6 +189,14 @@ func (h *Handler) Login(c *gin.Context) {
 	})
 }
 
+// Logout godoc
+// @Summary Logout de usuário
+// @Description Invalida o token JWT do usuário
+// @Tags Auth
+// @Produce json
+// @Security BearerAuth
+// @Success 200 {object} swagger.MessageResponse
+// @Router /auth/logout [post]
 func (h *Handler) Logout(c *gin.Context) {
 	token := strings.TrimPrefix(c.GetHeader("Authorization"), "Bearer ")
 	if token != "" {
@@ -148,6 +205,15 @@ func (h *Handler) Logout(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "logged out"})
 }
 
+// Me godoc
+// @Summary Dados do usuário autenticado
+// @Description Retorna os dados do usuário logado com seus tenants
+// @Tags Auth
+// @Produce json
+// @Security BearerAuth
+// @Success 200 {object} swagger.BackofficeUserDTO
+// @Failure 404 {object} swagger.ErrorResponse
+// @Router /auth/me [get]
 func (h *Handler) Me(c *gin.Context) {
 	userID := c.GetString("user_id")
 	result, err := h.service.GetMe(c.Request.Context(), userID)
@@ -158,6 +224,17 @@ func (h *Handler) Me(c *gin.Context) {
 	c.JSON(http.StatusOK, result)
 }
 
+// ChangePassword godoc
+// @Summary Alterar senha
+// @Description Altera a senha do usuário autenticado
+// @Tags Profile
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param request body swagger.ChangePasswordRequest true "Senhas atual e nova"
+// @Success 200 {object} swagger.MessageResponse
+// @Failure 400 {object} swagger.ErrorResponse
+// @Router /profile/password [put]
 func (h *Handler) ChangePassword(c *gin.Context) {
 	userID := c.GetString("user_id")
 	var req struct {
@@ -187,6 +264,17 @@ func (h *Handler) ChangePassword(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "password changed"})
 }
 
+// SelectTenant godoc
+// @Summary Selecionar tenant
+// @Description Troca o contexto do usuário para outro tenant, retornando um novo token com escopo
+// @Tags Auth
+// @Produce json
+// @Security BearerAuth
+// @Param url_code path string true "URL code do tenant"
+// @Success 200 {object} swagger.SwitchTenantResponse
+// @Failure 403 {object} swagger.ErrorResponse
+// @Failure 404 {object} swagger.ErrorResponse
+// @Router /auth/switch/{url_code} [post]
 func (h *Handler) SelectTenant(c *gin.Context) {
 	userID := c.GetString("user_id")
 	urlCode := c.Param("url_code")
@@ -219,6 +307,15 @@ func (h *Handler) SelectTenant(c *gin.Context) {
 
 // ==================== PROFILE ====================
 
+// GetProfile godoc
+// @Summary Obter perfil do usuário
+// @Description Retorna o perfil do usuário autenticado
+// @Tags Profile
+// @Produce json
+// @Security BearerAuth
+// @Success 200 {object} swagger.UserProfileDTO
+// @Failure 404 {object} swagger.ErrorResponse
+// @Router /profile [get]
 func (h *Handler) GetProfile(c *gin.Context) {
 	userID := c.GetString("user_id")
 	profile, err := h.repo.GetUserProfile(c.Request.Context(), userID)
@@ -229,6 +326,17 @@ func (h *Handler) GetProfile(c *gin.Context) {
 	c.JSON(http.StatusOK, profile)
 }
 
+// UpdateProfile godoc
+// @Summary Atualizar perfil do usuário
+// @Description Atualiza o perfil do usuário autenticado
+// @Tags Profile
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param request body swagger.UpdateUserProfileRequest true "Dados do perfil"
+// @Success 200 {object} swagger.MessageResponse
+// @Failure 400 {object} swagger.ErrorResponse
+// @Router /profile [put]
 func (h *Handler) UpdateProfile(c *gin.Context) {
 	userID := c.GetString("user_id")
 	var req struct {
@@ -246,6 +354,17 @@ func (h *Handler) UpdateProfile(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "profile updated"})
 }
 
+// UploadAvatar godoc
+// @Summary Upload de avatar
+// @Description Faz upload do avatar do usuário
+// @Tags Profile
+// @Accept multipart/form-data
+// @Produce json
+// @Security BearerAuth
+// @Param avatar formData file true "Imagem do avatar"
+// @Success 200 {object} swagger.UploadResponse
+// @Failure 400 {object} swagger.ErrorResponse
+// @Router /profile/avatar [post]
 func (h *Handler) UploadAvatar(c *gin.Context) {
 	userID := c.GetString("user_id")
 	file, header, err := c.Request.FormFile("avatar")
@@ -271,6 +390,16 @@ func (h *Handler) UploadAvatar(c *gin.Context) {
 
 // ==================== TENANT CONFIG ====================
 
+// GetConfig godoc
+// @Summary Obter configuração do tenant
+// @Description Retorna configuração completa do tenant: dados, features, permissões, plano e perfil
+// @Tags Tenant Config
+// @Produce json
+// @Security BearerAuth
+// @Param url_code path string true "URL code do tenant"
+// @Success 200 {object} swagger.TenantConfigResponse
+// @Failure 404 {object} swagger.ErrorResponse
+// @Router /{url_code}/config [get]
 func (h *Handler) GetConfig(c *gin.Context) {
 	tenantID := c.GetString("tenant_id")
 	userID := c.GetString("user_id")
@@ -320,6 +449,16 @@ func (h *Handler) GetConfig(c *gin.Context) {
 
 // ==================== TENANT PROFILE ====================
 
+// GetTenantProfile godoc
+// @Summary Obter perfil do tenant
+// @Description Retorna o perfil do tenant (about, logo, custom_settings)
+// @Tags Tenant Profile
+// @Produce json
+// @Security BearerAuth
+// @Param url_code path string true "URL code do tenant"
+// @Success 200 {object} swagger.TenantProfileResponse
+// @Failure 404 {object} swagger.ErrorResponse
+// @Router /{url_code}/tenant [get]
 func (h *Handler) GetTenantProfile(c *gin.Context) {
 	tenantID := c.GetString("tenant_id")
 	profile, err := h.repo.GetTenantProfile(c.Request.Context(), tenantID)
@@ -330,6 +469,18 @@ func (h *Handler) GetTenantProfile(c *gin.Context) {
 	c.JSON(http.StatusOK, profile)
 }
 
+// UpdateTenantProfile godoc
+// @Summary Atualizar perfil do tenant
+// @Description Atualiza o perfil do tenant. Apenas o owner pode atualizar.
+// @Tags Tenant Profile
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param url_code path string true "URL code do tenant"
+// @Param request body swagger.UpdateTenantProfileRequest true "Dados do perfil"
+// @Success 200 {object} swagger.MessageResponse
+// @Failure 403 {object} swagger.ErrorResponse
+// @Router /{url_code}/tenant/profile [put]
 func (h *Handler) UpdateTenantProfile(c *gin.Context) {
 	tenantID := c.GetString("tenant_id")
 	userID := c.GetString("user_id")
@@ -354,6 +505,18 @@ func (h *Handler) UpdateTenantProfile(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "tenant profile updated"})
 }
 
+// UploadLogo godoc
+// @Summary Upload de logo do tenant
+// @Description Faz upload do logo do tenant. Apenas o owner pode enviar.
+// @Tags Tenant Profile
+// @Accept multipart/form-data
+// @Produce json
+// @Security BearerAuth
+// @Param url_code path string true "URL code do tenant"
+// @Param logo formData file true "Imagem do logo"
+// @Success 200 {object} swagger.UploadResponse
+// @Failure 403 {object} swagger.ErrorResponse
+// @Router /{url_code}/tenant/logo [post]
 func (h *Handler) UploadLogo(c *gin.Context) {
 	tenantID := c.GetString("tenant_id")
 	userID := c.GetString("user_id")
@@ -384,6 +547,16 @@ func (h *Handler) UploadLogo(c *gin.Context) {
 
 // ==================== MEMBERS ====================
 
+// ListMembers godoc
+// @Summary Listar membros do tenant
+// @Description Retorna todos os membros do tenant
+// @Tags Members
+// @Produce json
+// @Security BearerAuth
+// @Param url_code path string true "URL code do tenant"
+// @Success 200 {array} swagger.MemberDTO
+// @Failure 500 {object} swagger.ErrorResponse
+// @Router /{url_code}/members [get]
 func (h *Handler) ListMembers(c *gin.Context) {
 	tenantID := c.GetString("tenant_id")
 	members, err := h.repo.ListTenantMembers(c.Request.Context(), tenantID)
@@ -394,6 +567,17 @@ func (h *Handler) ListMembers(c *gin.Context) {
 	c.JSON(http.StatusOK, members)
 }
 
+// GetMember godoc
+// @Summary Obter membro por ID
+// @Description Retorna detalhes de um membro específico
+// @Tags Members
+// @Produce json
+// @Security BearerAuth
+// @Param url_code path string true "URL code do tenant"
+// @Param id path string true "ID do membro"
+// @Success 200 {object} swagger.MemberDTO
+// @Failure 404 {object} swagger.ErrorResponse
+// @Router /{url_code}/members/{id} [get]
 func (h *Handler) GetMember(c *gin.Context) {
 	tenantID := c.GetString("tenant_id")
 	memberID := c.Param("id")
@@ -405,6 +589,16 @@ func (h *Handler) GetMember(c *gin.Context) {
 	c.JSON(http.StatusOK, member)
 }
 
+// CanAddMember godoc
+// @Summary Verificar se pode adicionar membro
+// @Description Verifica se o tenant pode adicionar mais membros baseado no plano
+// @Tags Members
+// @Produce json
+// @Security BearerAuth
+// @Param url_code path string true "URL code do tenant"
+// @Success 200 {object} swagger.CanAddMemberResponse
+// @Failure 500 {object} swagger.ErrorResponse
+// @Router /{url_code}/members/can-add [get]
 func (h *Handler) CanAddMember(c *gin.Context) {
 	tenantID := c.GetString("tenant_id")
 	canAdd, maxUsers, current, err := h.service.CanAddMember(c.Request.Context(), tenantID)
@@ -419,6 +613,19 @@ func (h *Handler) CanAddMember(c *gin.Context) {
 	})
 }
 
+// InviteMember godoc
+// @Summary Convidar membro
+// @Description Adiciona um novo membro ao tenant. Requer permissão user_m ou ser owner.
+// @Tags Members
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param url_code path string true "URL code do tenant"
+// @Param request body swagger.InviteMemberRequest true "Dados do membro"
+// @Success 201 {object} swagger.InviteMemberResponse
+// @Failure 400 {object} swagger.ErrorResponse
+// @Failure 403 {object} swagger.ErrorResponse
+// @Router /{url_code}/members [post]
 func (h *Handler) InviteMember(c *gin.Context) {
 	tenantID := c.GetString("tenant_id")
 	userID := c.GetString("user_id")
@@ -449,6 +656,20 @@ func (h *Handler) InviteMember(c *gin.Context) {
 	c.JSON(http.StatusCreated, gin.H{"user_id": newUserID, "message": "member added"})
 }
 
+// UpdateMemberRole godoc
+// @Summary Atualizar role do membro
+// @Description Atualiza a role de um membro. Requer permissão user_m ou ser owner.
+// @Tags Members
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param url_code path string true "URL code do tenant"
+// @Param id path string true "ID do membro"
+// @Param request body swagger.UpdateMemberRoleRequest true "Nova role"
+// @Success 200 {object} swagger.MessageResponse
+// @Failure 400 {object} swagger.ErrorResponse
+// @Failure 403 {object} swagger.ErrorResponse
+// @Router /{url_code}/members/{id}/role [put]
 func (h *Handler) UpdateMemberRole(c *gin.Context) {
 	tenantID := c.GetString("tenant_id")
 	userID := c.GetString("user_id")
@@ -475,6 +696,18 @@ func (h *Handler) UpdateMemberRole(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "member role updated"})
 }
 
+// RemoveMember godoc
+// @Summary Remover membro
+// @Description Remove um membro do tenant. Apenas o owner pode remover.
+// @Tags Members
+// @Produce json
+// @Security BearerAuth
+// @Param url_code path string true "URL code do tenant"
+// @Param id path string true "ID do membro"
+// @Success 200 {object} swagger.MessageResponse
+// @Failure 400 {object} swagger.ErrorResponse
+// @Failure 403 {object} swagger.ErrorResponse
+// @Router /{url_code}/members/{id} [delete]
 func (h *Handler) RemoveMember(c *gin.Context) {
 	tenantID := c.GetString("tenant_id")
 	userID := c.GetString("user_id")
@@ -498,6 +731,16 @@ func (h *Handler) RemoveMember(c *gin.Context) {
 
 // ==================== ROLES ====================
 
+// ListRoles godoc
+// @Summary Listar roles do tenant
+// @Description Retorna todas as roles do tenant
+// @Tags Roles
+// @Produce json
+// @Security BearerAuth
+// @Param url_code path string true "URL code do tenant"
+// @Success 200 {array} swagger.UserRoleResponse
+// @Failure 500 {object} swagger.ErrorResponse
+// @Router /{url_code}/roles [get]
 func (h *Handler) ListRoles(c *gin.Context) {
 	tenantID := c.GetString("tenant_id")
 	roles, err := h.repo.ListTenantRoles(c.Request.Context(), tenantID)
@@ -508,6 +751,17 @@ func (h *Handler) ListRoles(c *gin.Context) {
 	c.JSON(http.StatusOK, roles)
 }
 
+// GetRole godoc
+// @Summary Obter role com permissões
+// @Description Retorna uma role do tenant com suas permissões
+// @Tags Roles
+// @Produce json
+// @Security BearerAuth
+// @Param url_code path string true "URL code do tenant"
+// @Param id path string true "ID da role"
+// @Success 200 {object} swagger.RoleDetailResponse
+// @Failure 404 {object} swagger.ErrorResponse
+// @Router /{url_code}/roles/{id} [get]
 func (h *Handler) GetRole(c *gin.Context) {
 	tenantID := c.GetString("tenant_id")
 	roleID := c.Param("id")
@@ -523,6 +777,19 @@ func (h *Handler) GetRole(c *gin.Context) {
 	})
 }
 
+// CreateRole godoc
+// @Summary Criar role
+// @Description Cria uma nova role no tenant. Apenas o owner pode criar.
+// @Tags Roles
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param url_code path string true "URL code do tenant"
+// @Param request body swagger.CreateRoleRequest true "Dados da role"
+// @Success 201 {object} swagger.UserRoleResponse
+// @Failure 400 {object} swagger.ErrorResponse
+// @Failure 403 {object} swagger.ErrorResponse
+// @Router /{url_code}/roles [post]
 func (h *Handler) CreateRole(c *gin.Context) {
 	tenantID := c.GetString("tenant_id")
 	userID := c.GetString("user_id")
@@ -548,6 +815,19 @@ func (h *Handler) CreateRole(c *gin.Context) {
 	c.JSON(http.StatusCreated, role)
 }
 
+// UpdateRole godoc
+// @Summary Atualizar role
+// @Description Atualiza uma role do tenant. Apenas o owner pode atualizar.
+// @Tags Roles
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param url_code path string true "URL code do tenant"
+// @Param id path string true "ID da role"
+// @Param request body swagger.UpdateRoleRequest true "Dados para atualização"
+// @Success 200 {object} swagger.MessageResponse
+// @Failure 403 {object} swagger.ErrorResponse
+// @Router /{url_code}/roles/{id} [put]
 func (h *Handler) UpdateRole(c *gin.Context) {
 	tenantID := c.GetString("tenant_id")
 	userID := c.GetString("user_id")
@@ -572,6 +852,17 @@ func (h *Handler) UpdateRole(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "role updated"})
 }
 
+// DeleteRole godoc
+// @Summary Remover role
+// @Description Remove uma role do tenant. Apenas o owner pode remover.
+// @Tags Roles
+// @Produce json
+// @Security BearerAuth
+// @Param url_code path string true "URL code do tenant"
+// @Param id path string true "ID da role"
+// @Success 200 {object} swagger.MessageResponse
+// @Failure 403 {object} swagger.ErrorResponse
+// @Router /{url_code}/roles/{id} [delete]
 func (h *Handler) DeleteRole(c *gin.Context) {
 	tenantID := c.GetString("tenant_id")
 	userID := c.GetString("user_id")
@@ -588,6 +879,19 @@ func (h *Handler) DeleteRole(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "role deleted"})
 }
 
+// AssignPermission godoc
+// @Summary Atribuir permissão a role
+// @Description Atribui uma permissão a uma role do tenant. Apenas o owner.
+// @Tags Roles
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param url_code path string true "URL code do tenant"
+// @Param id path string true "ID da role"
+// @Param request body swagger.AssignPermissionRequest true "ID da permissão"
+// @Success 200 {object} swagger.MessageResponse
+// @Failure 403 {object} swagger.ErrorResponse
+// @Router /{url_code}/roles/{id}/permissions [post]
 func (h *Handler) AssignPermission(c *gin.Context) {
 	tenantID := c.GetString("tenant_id")
 	userID := c.GetString("user_id")
@@ -612,6 +916,18 @@ func (h *Handler) AssignPermission(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "permission assigned"})
 }
 
+// RemovePermission godoc
+// @Summary Remover permissão da role
+// @Description Remove uma permissão de uma role do tenant. Apenas o owner.
+// @Tags Roles
+// @Produce json
+// @Security BearerAuth
+// @Param url_code path string true "URL code do tenant"
+// @Param id path string true "ID da role"
+// @Param permId path string true "ID da permissão"
+// @Success 200 {object} swagger.MessageResponse
+// @Failure 403 {object} swagger.ErrorResponse
+// @Router /{url_code}/roles/{id}/permissions/{permId} [delete]
 func (h *Handler) RemovePermission(c *gin.Context) {
 	tenantID := c.GetString("tenant_id")
 	userID := c.GetString("user_id")
@@ -657,6 +973,18 @@ func (h *Handler) requirePermission(c *gin.Context, permSlug string) bool {
 	return false
 }
 
+// ListProducts godoc
+// @Summary Listar produtos
+// @Description Retorna produtos do tenant paginados. Requer feature 'products'.
+// @Tags Products
+// @Produce json
+// @Security BearerAuth
+// @Param url_code path string true "URL code do tenant"
+// @Param page query int false "Página" default(1)
+// @Param page_size query int false "Itens por página" default(20)
+// @Success 200 {object} swagger.PaginatedResponse
+// @Failure 403 {object} swagger.ErrorResponse
+// @Router /{url_code}/products [get]
 func (h *Handler) ListProducts(c *gin.Context) {
 	if !h.requireFeature(c, "products") {
 		return
@@ -677,6 +1005,17 @@ func (h *Handler) ListProducts(c *gin.Context) {
 	})
 }
 
+// GetProduct godoc
+// @Summary Obter produto
+// @Description Retorna um produto específico. Requer feature 'products'.
+// @Tags Products
+// @Produce json
+// @Security BearerAuth
+// @Param url_code path string true "URL code do tenant"
+// @Param id path string true "ID do produto"
+// @Success 200 {object} swagger.ProductResponse
+// @Failure 404 {object} swagger.ErrorResponse
+// @Router /{url_code}/products/{id} [get]
 func (h *Handler) GetProduct(c *gin.Context) {
 	if !h.requireFeature(c, "products") {
 		return
@@ -691,6 +1030,19 @@ func (h *Handler) GetProduct(c *gin.Context) {
 	c.JSON(http.StatusOK, product)
 }
 
+// CreateProduct godoc
+// @Summary Criar produto
+// @Description Cria um novo produto. Requer feature 'products' e permissão 'prod_c'.
+// @Tags Products
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param url_code path string true "URL code do tenant"
+// @Param request body swagger.CreateProductRequest true "Dados do produto"
+// @Success 201 {object} swagger.CreateIDResponse
+// @Failure 400 {object} swagger.ErrorResponse
+// @Failure 403 {object} swagger.ErrorResponse
+// @Router /{url_code}/products [post]
 func (h *Handler) CreateProduct(c *gin.Context) {
 	if !h.requireFeature(c, "products") || !h.requirePermission(c, "prod_c") {
 		return
@@ -716,6 +1068,20 @@ func (h *Handler) CreateProduct(c *gin.Context) {
 	c.JSON(http.StatusCreated, gin.H{"id": id})
 }
 
+// UpdateProduct godoc
+// @Summary Atualizar produto
+// @Description Atualiza um produto. Requer feature 'products' e permissão 'prod_u'.
+// @Tags Products
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param url_code path string true "URL code do tenant"
+// @Param id path string true "ID do produto"
+// @Param request body swagger.UpdateProductRequest true "Dados para atualização"
+// @Success 200 {object} swagger.MessageResponse
+// @Failure 400 {object} swagger.ErrorResponse
+// @Failure 403 {object} swagger.ErrorResponse
+// @Router /{url_code}/products/{id} [put]
 func (h *Handler) UpdateProduct(c *gin.Context) {
 	if !h.requireFeature(c, "products") || !h.requirePermission(c, "prod_u") {
 		return
@@ -742,6 +1108,17 @@ func (h *Handler) UpdateProduct(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "product updated"})
 }
 
+// DeleteProduct godoc
+// @Summary Remover produto
+// @Description Remove um produto. Requer feature 'products' e permissão 'prod_d'.
+// @Tags Products
+// @Produce json
+// @Security BearerAuth
+// @Param url_code path string true "URL code do tenant"
+// @Param id path string true "ID do produto"
+// @Success 200 {object} swagger.MessageResponse
+// @Failure 403 {object} swagger.ErrorResponse
+// @Router /{url_code}/products/{id} [delete]
 func (h *Handler) DeleteProduct(c *gin.Context) {
 	if !h.requireFeature(c, "products") || !h.requirePermission(c, "prod_d") {
 		return
@@ -755,6 +1132,20 @@ func (h *Handler) DeleteProduct(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "product deleted"})
 }
 
+// UploadProductImage godoc
+// @Summary Upload de imagem do produto
+// @Description Faz upload de imagem para um produto. Requer feature 'products' e permissão 'prod_u'.
+// @Tags Products
+// @Accept multipart/form-data
+// @Produce json
+// @Security BearerAuth
+// @Param url_code path string true "URL code do tenant"
+// @Param id path string true "ID do produto"
+// @Param image formData file true "Imagem do produto"
+// @Success 200 {object} swagger.UploadResponse
+// @Failure 400 {object} swagger.ErrorResponse
+// @Failure 403 {object} swagger.ErrorResponse
+// @Router /{url_code}/products/{id}/image [post]
 func (h *Handler) UploadProductImage(c *gin.Context) {
 	if !h.requireFeature(c, "products") || !h.requirePermission(c, "prod_u") {
 		return
@@ -781,6 +1172,18 @@ func (h *Handler) UploadProductImage(c *gin.Context) {
 
 // ==================== SERVICES ====================
 
+// ListServices godoc
+// @Summary Listar serviços
+// @Description Retorna serviços do tenant paginados. Requer feature 'services'.
+// @Tags Services
+// @Produce json
+// @Security BearerAuth
+// @Param url_code path string true "URL code do tenant"
+// @Param page query int false "Página" default(1)
+// @Param page_size query int false "Itens por página" default(20)
+// @Success 200 {object} swagger.PaginatedResponse
+// @Failure 403 {object} swagger.ErrorResponse
+// @Router /{url_code}/services [get]
 func (h *Handler) ListServices(c *gin.Context) {
 	if !h.requireFeature(c, "services") {
 		return
@@ -801,6 +1204,17 @@ func (h *Handler) ListServices(c *gin.Context) {
 	})
 }
 
+// GetService godoc
+// @Summary Obter serviço
+// @Description Retorna um serviço específico. Requer feature 'services'.
+// @Tags Services
+// @Produce json
+// @Security BearerAuth
+// @Param url_code path string true "URL code do tenant"
+// @Param id path string true "ID do serviço"
+// @Success 200 {object} swagger.ServiceResponse
+// @Failure 404 {object} swagger.ErrorResponse
+// @Router /{url_code}/services/{id} [get]
 func (h *Handler) GetService(c *gin.Context) {
 	if !h.requireFeature(c, "services") {
 		return
@@ -815,6 +1229,19 @@ func (h *Handler) GetService(c *gin.Context) {
 	c.JSON(http.StatusOK, service)
 }
 
+// CreateService godoc
+// @Summary Criar serviço
+// @Description Cria um novo serviço. Requer feature 'services' e permissão 'serv_c'.
+// @Tags Services
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param url_code path string true "URL code do tenant"
+// @Param request body swagger.CreateServiceRequest true "Dados do serviço"
+// @Success 201 {object} swagger.CreateIDResponse
+// @Failure 400 {object} swagger.ErrorResponse
+// @Failure 403 {object} swagger.ErrorResponse
+// @Router /{url_code}/services [post]
 func (h *Handler) CreateService(c *gin.Context) {
 	if !h.requireFeature(c, "services") || !h.requirePermission(c, "serv_c") {
 		return
@@ -839,6 +1266,20 @@ func (h *Handler) CreateService(c *gin.Context) {
 	c.JSON(http.StatusCreated, gin.H{"id": id})
 }
 
+// UpdateService godoc
+// @Summary Atualizar serviço
+// @Description Atualiza um serviço. Requer feature 'services' e permissão 'serv_u'.
+// @Tags Services
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param url_code path string true "URL code do tenant"
+// @Param id path string true "ID do serviço"
+// @Param request body swagger.UpdateServiceRequest true "Dados para atualização"
+// @Success 200 {object} swagger.MessageResponse
+// @Failure 400 {object} swagger.ErrorResponse
+// @Failure 403 {object} swagger.ErrorResponse
+// @Router /{url_code}/services/{id} [put]
 func (h *Handler) UpdateService(c *gin.Context) {
 	if !h.requireFeature(c, "services") || !h.requirePermission(c, "serv_u") {
 		return
@@ -864,6 +1305,17 @@ func (h *Handler) UpdateService(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "service updated"})
 }
 
+// DeleteService godoc
+// @Summary Remover serviço
+// @Description Remove um serviço. Requer feature 'services' e permissão 'serv_d'.
+// @Tags Services
+// @Produce json
+// @Security BearerAuth
+// @Param url_code path string true "URL code do tenant"
+// @Param id path string true "ID do serviço"
+// @Success 200 {object} swagger.MessageResponse
+// @Failure 403 {object} swagger.ErrorResponse
+// @Router /{url_code}/services/{id} [delete]
 func (h *Handler) DeleteService(c *gin.Context) {
 	if !h.requireFeature(c, "services") || !h.requirePermission(c, "serv_d") {
 		return
@@ -877,6 +1329,20 @@ func (h *Handler) DeleteService(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "service deleted"})
 }
 
+// UploadServiceImage godoc
+// @Summary Upload de imagem do serviço
+// @Description Faz upload de imagem para um serviço. Requer feature 'services' e permissão 'serv_u'.
+// @Tags Services
+// @Accept multipart/form-data
+// @Produce json
+// @Security BearerAuth
+// @Param url_code path string true "URL code do tenant"
+// @Param id path string true "ID do serviço"
+// @Param image formData file true "Imagem do serviço"
+// @Success 200 {object} swagger.UploadResponse
+// @Failure 400 {object} swagger.ErrorResponse
+// @Failure 403 {object} swagger.ErrorResponse
+// @Router /{url_code}/services/{id}/image [post]
 func (h *Handler) UploadServiceImage(c *gin.Context) {
 	if !h.requireFeature(c, "services") || !h.requirePermission(c, "serv_u") {
 		return
@@ -902,6 +1368,16 @@ func (h *Handler) UploadServiceImage(c *gin.Context) {
 
 // ==================== SETTINGS ====================
 
+// ListSettings godoc
+// @Summary Listar configurações
+// @Description Retorna todas as configurações do tenant
+// @Tags Settings
+// @Produce json
+// @Security BearerAuth
+// @Param url_code path string true "URL code do tenant"
+// @Success 200 {array} swagger.SettingResponse
+// @Failure 500 {object} swagger.ErrorResponse
+// @Router /{url_code}/settings [get]
 func (h *Handler) ListSettings(c *gin.Context) {
 	tenantID := c.GetString("tenant_id")
 	settings, err := h.repo.ListSettings(c.Request.Context(), tenantID)
@@ -912,6 +1388,17 @@ func (h *Handler) ListSettings(c *gin.Context) {
 	c.JSON(http.StatusOK, settings)
 }
 
+// GetSetting godoc
+// @Summary Obter configuração por categoria
+// @Description Retorna uma configuração específica do tenant por categoria
+// @Tags Settings
+// @Produce json
+// @Security BearerAuth
+// @Param url_code path string true "URL code do tenant"
+// @Param category path string true "Categoria da configuração"
+// @Success 200 {object} swagger.SettingResponse
+// @Failure 404 {object} swagger.ErrorResponse
+// @Router /{url_code}/settings/{category} [get]
 func (h *Handler) GetSetting(c *gin.Context) {
 	tenantID := c.GetString("tenant_id")
 	category := c.Param("category")
@@ -923,6 +1410,20 @@ func (h *Handler) GetSetting(c *gin.Context) {
 	c.JSON(http.StatusOK, setting)
 }
 
+// UpsertSetting godoc
+// @Summary Salvar configuração
+// @Description Cria ou atualiza uma configuração. Requer permissão 'setg_m' ou ser owner.
+// @Tags Settings
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param url_code path string true "URL code do tenant"
+// @Param category path string true "Categoria da configuração"
+// @Param request body swagger.UpsertSettingRequest true "Dados da configuração"
+// @Success 200 {object} swagger.MessageResponse
+// @Failure 400 {object} swagger.ErrorResponse
+// @Failure 403 {object} swagger.ErrorResponse
+// @Router /{url_code}/settings/{category} [put]
 func (h *Handler) UpsertSetting(c *gin.Context) {
 	tenantID := c.GetString("tenant_id")
 	userID := c.GetString("user_id")
@@ -951,6 +1452,18 @@ func (h *Handler) UpsertSetting(c *gin.Context) {
 
 // ==================== IMAGES ====================
 
+// ListImages godoc
+// @Summary Listar imagens
+// @Description Retorna imagens do tenant paginadas
+// @Tags Images
+// @Produce json
+// @Security BearerAuth
+// @Param url_code path string true "URL code do tenant"
+// @Param page query int false "Página" default(1)
+// @Param page_size query int false "Itens por página" default(20)
+// @Success 200 {object} swagger.PaginatedResponse
+// @Failure 500 {object} swagger.ErrorResponse
+// @Router /{url_code}/images [get]
 func (h *Handler) ListImages(c *gin.Context) {
 	tenantID := c.GetString("tenant_id")
 	pag := utils.GetPagination(c)
@@ -968,6 +1481,20 @@ func (h *Handler) ListImages(c *gin.Context) {
 	})
 }
 
+// UploadImage godoc
+// @Summary Upload de imagem genérica
+// @Description Faz upload de uma imagem com entity_type e entity_id opcionais
+// @Tags Images
+// @Accept multipart/form-data
+// @Produce json
+// @Security BearerAuth
+// @Param url_code path string true "URL code do tenant"
+// @Param image formData file true "Imagem"
+// @Param entity_type formData string false "Tipo da entidade"
+// @Param entity_id formData string false "ID da entidade"
+// @Success 201 {object} swagger.ImageResponse
+// @Failure 400 {object} swagger.ErrorResponse
+// @Router /{url_code}/images [post]
 func (h *Handler) UploadImage(c *gin.Context) {
 	tenantID := c.GetString("tenant_id")
 	userID := c.GetString("user_id")
@@ -1015,6 +1542,17 @@ func (h *Handler) UploadImage(c *gin.Context) {
 	})
 }
 
+// DeleteImage godoc
+// @Summary Remover imagem
+// @Description Remove uma imagem do tenant
+// @Tags Images
+// @Produce json
+// @Security BearerAuth
+// @Param url_code path string true "URL code do tenant"
+// @Param id path string true "ID da imagem"
+// @Success 200 {object} swagger.MessageResponse
+// @Failure 404 {object} swagger.ErrorResponse
+// @Router /{url_code}/images/{id} [delete]
 func (h *Handler) DeleteImage(c *gin.Context) {
 	tenantID := c.GetString("tenant_id")
 	imageID := c.Param("id")
@@ -1031,6 +1569,18 @@ func (h *Handler) DeleteImage(c *gin.Context) {
 
 // ==================== APP USERS (managed from backoffice) ====================
 
+// ListAppUsers godoc
+// @Summary Listar app users
+// @Description Retorna app users do tenant paginados
+// @Tags App Users
+// @Produce json
+// @Security BearerAuth
+// @Param url_code path string true "URL code do tenant"
+// @Param page query int false "Página" default(1)
+// @Param page_size query int false "Itens por página" default(20)
+// @Success 200 {object} swagger.PaginatedResponse
+// @Failure 500 {object} swagger.ErrorResponse
+// @Router /{url_code}/app-users [get]
 func (h *Handler) ListAppUsers(c *gin.Context) {
 	tenantID := c.GetString("tenant_id")
 	pag := utils.GetPagination(c)
@@ -1048,6 +1598,17 @@ func (h *Handler) ListAppUsers(c *gin.Context) {
 	})
 }
 
+// GetAppUser godoc
+// @Summary Obter app user
+// @Description Retorna um app user específico
+// @Tags App Users
+// @Produce json
+// @Security BearerAuth
+// @Param url_code path string true "URL code do tenant"
+// @Param id path string true "ID do app user"
+// @Success 200 {object} swagger.AppUserListDTO
+// @Failure 404 {object} swagger.ErrorResponse
+// @Router /{url_code}/app-users/{id} [get]
 func (h *Handler) GetAppUser(c *gin.Context) {
 	tenantID := c.GetString("tenant_id")
 	appUserID := c.Param("id")
@@ -1059,6 +1620,19 @@ func (h *Handler) GetAppUser(c *gin.Context) {
 	c.JSON(http.StatusOK, user)
 }
 
+// UpdateAppUserStatus godoc
+// @Summary Atualizar status do app user
+// @Description Atualiza o status de um app user (active/blocked)
+// @Tags App Users
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param url_code path string true "URL code do tenant"
+// @Param id path string true "ID do app user"
+// @Param request body swagger.UpdateAppUserStatusRequest true "Novo status"
+// @Success 200 {object} swagger.MessageResponse
+// @Failure 400 {object} swagger.ErrorResponse
+// @Router /{url_code}/app-users/{id}/status [put]
 func (h *Handler) UpdateAppUserStatus(c *gin.Context) {
 	tenantID := c.GetString("tenant_id")
 	appUserID := c.Param("id")
@@ -1076,6 +1650,17 @@ func (h *Handler) UpdateAppUserStatus(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "status updated"})
 }
 
+// DeleteAppUser godoc
+// @Summary Remover app user
+// @Description Remove (soft delete) um app user
+// @Tags App Users
+// @Produce json
+// @Security BearerAuth
+// @Param url_code path string true "URL code do tenant"
+// @Param id path string true "ID do app user"
+// @Success 200 {object} swagger.MessageResponse
+// @Failure 500 {object} swagger.ErrorResponse
+// @Router /{url_code}/app-users/{id} [delete]
 func (h *Handler) DeleteAppUser(c *gin.Context) {
 	tenantID := c.GetString("tenant_id")
 	appUserID := c.Param("id")
