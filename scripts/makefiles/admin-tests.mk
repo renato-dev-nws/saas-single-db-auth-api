@@ -1,99 +1,126 @@
-ADMIN_URL=http://localhost:8081
-ADMIN_EMAIL=admin@saas.com
-ADMIN_PASS=admin123
+.PHONY: test-admin-login test-admin-me test-sysusers-list test-sysusers-create \
+        test-plans-list test-plans-create test-features-list test-features-create \
+        test-tenants-list test-tenants-create test-promotions-list test-promotions-create
 
-# ─── Helpers ───────────────────────────────────────────────
-define get_admin_token
-$(shell curl -s -X POST $(ADMIN_URL)/api/v1/admin/auth/login \
-    -H "Content-Type: application/json" \
-    -d '{"email":"$(ADMIN_EMAIL)","password":"$(ADMIN_PASS)"}' \
-    | grep -o '"token":"[^"]*' | cut -d'"' -f4)
-endef
-
-# ─── Auth ──────────────────────────────────────────────────
+# Test admin login
 test-admin-login:
-	@curl -s -X POST $(ADMIN_URL)/api/v1/admin/auth/login \
+	@echo "Testing admin login..."
+	@curl -X POST http://localhost:8081/api/v1/admin/auth/login \
 		-H "Content-Type: application/json" \
-		-d '{"email":"$(ADMIN_EMAIL)","password":"$(ADMIN_PASS)"}' | jq .
+		-d '{"email":"admin@saas.com","password":"admin123"}'
 	@echo ""
 
+# Test admin me
 test-admin-me:
-	@TOKEN=$(call get_admin_token); \
-	curl -s $(ADMIN_URL)/api/v1/admin/auth/me \
-		-H "Authorization: Bearer $$TOKEN" | jq .
+	@echo "Testing admin /me..."
+	@TOKEN=$$(curl -s -X POST http://localhost:8081/api/v1/admin/auth/login \
+		-H "Content-Type: application/json" \
+		-d '{"email":"admin@saas.com","password":"admin123"}' | grep -o '"token":"[^"]*' | cut -d'"' -f4); \
+	curl -X GET http://localhost:8081/api/v1/admin/auth/me \
+		-H "Authorization: Bearer $$TOKEN"
 	@echo ""
 
-# ─── Sys Users ─────────────────────────────────────────────
+# Test sys users
 test-sysusers-list:
-	@TOKEN=$(call get_admin_token); \
-	curl -s $(ADMIN_URL)/api/v1/admin/sys-users \
-		-H "Authorization: Bearer $$TOKEN" | jq .
+	@echo "Testing sys users list..."
+	@TOKEN=$$(curl -s -X POST http://localhost:8081/api/v1/admin/auth/login \
+		-H "Content-Type: application/json" \
+		-d '{"email":"admin@saas.com","password":"admin123"}' | grep -o '"token":"[^"]*' | cut -d'"' -f4); \
+	curl -X GET http://localhost:8081/api/v1/admin/sys-users \
+		-H "Authorization: Bearer $$TOKEN"
 	@echo ""
 
 test-sysusers-create:
-	@TOKEN=$(call get_admin_token); \
-	curl -s -X POST $(ADMIN_URL)/api/v1/admin/sys-users \
+	@echo "Testing sys user create..."
+	@TOKEN=$$(curl -s -X POST http://localhost:8081/api/v1/admin/auth/login \
+		-H "Content-Type: application/json" \
+		-d '{"email":"admin@saas.com","password":"admin123"}' | grep -o '"token":"[^"]*' | cut -d'"' -f4); \
+	curl -X POST http://localhost:8081/api/v1/admin/sys-users \
 		-H "Content-Type: application/json" \
 		-H "Authorization: Bearer $$TOKEN" \
-		-d '{"email":"support@saas.com","password":"suporte123","full_name":"Suporte SaaS","role_slug":"support"}' | jq .
+		-d '{"name":"Admin Teste","email":"admin2@saas.com","password":"admin123"}'
 	@echo ""
 
-# ─── Plans ─────────────────────────────────────────────────
+# Test plans
 test-plans-list:
-	@TOKEN=$(call get_admin_token); \
-	curl -s $(ADMIN_URL)/api/v1/admin/plans \
-		-H "Authorization: Bearer $$TOKEN" | jq .
+	@echo "Testing plans list..."
+	@TOKEN=$$(curl -s -X POST http://localhost:8081/api/v1/admin/auth/login \
+		-H "Content-Type: application/json" \
+		-d '{"email":"admin@saas.com","password":"admin123"}' | grep -o '"token":"[^"]*' | cut -d'"' -f4); \
+	curl -X GET http://localhost:8081/api/v1/admin/plans \
+		-H "Authorization: Bearer $$TOKEN"
 	@echo ""
 
 test-plans-create:
-	@TOKEN=$(call get_admin_token); \
-	curl -s -X POST $(ADMIN_URL)/api/v1/admin/plans \
+	@echo "Testing plan create..."
+	@TOKEN=$$(curl -s -X POST http://localhost:8081/api/v1/admin/auth/login \
+		-H "Content-Type: application/json" \
+		-d '{"email":"admin@saas.com","password":"admin123"}' | grep -o '"token":"[^"]*' | cut -d'"' -f4); \
+	curl -X POST http://localhost:8081/api/v1/admin/plans \
 		-H "Content-Type: application/json" \
 		-H "Authorization: Bearer $$TOKEN" \
-		-d '{"name":"Enterprise","description":"Plano completo","price":199.90,"feature_ids":["aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa","bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb"]}' | jq .
+		-d '{"name":"Plano Teste","slug":"plano-teste","price":99.90,"max_users":10,"is_active":true}'
 	@echo ""
 
-# ─── Features ──────────────────────────────────────────────
+# Test features
 test-features-list:
-	@TOKEN=$(call get_admin_token); \
-	curl -s $(ADMIN_URL)/api/v1/admin/features \
-		-H "Authorization: Bearer $$TOKEN" | jq .
+	@echo "Testing features list..."
+	@TOKEN=$$(curl -s -X POST http://localhost:8081/api/v1/admin/auth/login \
+		-H "Content-Type: application/json" \
+		-d '{"email":"admin@saas.com","password":"admin123"}' | grep -o '"token":"[^"]*' | cut -d'"' -f4); \
+	curl -X GET http://localhost:8081/api/v1/admin/features \
+		-H "Authorization: Bearer $$TOKEN"
 	@echo ""
 
 test-features-create:
-	@TOKEN=$(call get_admin_token); \
-	curl -s -X POST $(ADMIN_URL)/api/v1/admin/features \
+	@echo "Testing feature create..."
+	@TOKEN=$$(curl -s -X POST http://localhost:8081/api/v1/admin/auth/login \
+		-H "Content-Type: application/json" \
+		-d '{"email":"admin@saas.com","password":"admin123"}' | grep -o '"token":"[^"]*' | cut -d'"' -f4); \
+	curl -X POST http://localhost:8081/api/v1/admin/features \
 		-H "Content-Type: application/json" \
 		-H "Authorization: Bearer $$TOKEN" \
-		-d '{"title":"Blog","slug":"blog","code":"blog","description":"Módulo de blog","is_active":true}' | jq .
+		-d '{"name":"Feature Teste","slug":"feature-teste","description":"Teste"}'
 	@echo ""
 
-# ─── Tenants ───────────────────────────────────────────────
+# Test tenants
 test-tenants-list:
-	@TOKEN=$(call get_admin_token); \
-	curl -s "$(ADMIN_URL)/api/v1/admin/tenants?page=1&page_size=10" \
-		-H "Authorization: Bearer $$TOKEN" | jq .
+	@echo "Testing tenants list..."
+	@TOKEN=$$(curl -s -X POST http://localhost:8081/api/v1/admin/auth/login \
+		-H "Content-Type: application/json" \
+		-d '{"email":"admin@saas.com","password":"admin123"}' | grep -o '"token":"[^"]*' | cut -d'"' -f4); \
+	curl -X GET http://localhost:8081/api/v1/admin/tenants \
+		-H "Authorization: Bearer $$TOKEN"
 	@echo ""
 
 test-tenants-create:
-	@TOKEN=$(call get_admin_token); \
-	curl -s -X POST $(ADMIN_URL)/api/v1/admin/tenants \
+	@echo "Testing tenant create via admin..."
+	@TOKEN=$$(curl -s -X POST http://localhost:8081/api/v1/admin/auth/login \
+		-H "Content-Type: application/json" \
+		-d '{"email":"admin@saas.com","password":"admin123"}' | grep -o '"token":"[^"]*' | cut -d'"' -f4); \
+	curl -X POST http://localhost:8081/api/v1/admin/tenants \
 		-H "Content-Type: application/json" \
 		-H "Authorization: Bearer $$TOKEN" \
-		-d '{"url_code":"empresa-teste","subdomain":"empresa-teste","plan_id":"33333333-3333-3333-3333-333333333333","billing_cycle":"monthly","company_name":"Empresa Teste Ltda","is_company":true,"owner_email":"dono@empresa-teste.com","owner_full_name":"Dono Empresa","owner_password":"senha12345"}' | jq .
+		-d '{"name":"Test Company","url_code":"testco","subdomain":"testco","plan_id":"11111111-1111-1111-1111-111111111111","billing_cycle":"monthly","owner_email":"owner@testco.com","owner_full_name":"Test Owner","owner_password":"pass12345"}'
 	@echo ""
 
-# ─── Promotions ────────────────────────────────────────────
+# Test promotions
 test-promotions-list:
-	@TOKEN=$(call get_admin_token); \
-	curl -s $(ADMIN_URL)/api/v1/admin/promotions \
-		-H "Authorization: Bearer $$TOKEN" | jq .
+	@echo "Testing promotions list..."
+	@TOKEN=$$(curl -s -X POST http://localhost:8081/api/v1/admin/auth/login \
+		-H "Content-Type: application/json" \
+		-d '{"email":"admin@saas.com","password":"admin123"}' | grep -o '"token":"[^"]*' | cut -d'"' -f4); \
+	curl -X GET http://localhost:8081/api/v1/admin/promotions \
+		-H "Authorization: Bearer $$TOKEN"
 	@echo ""
 
 test-promotions-create:
-	@TOKEN=$(call get_admin_token); \
-	curl -s -X POST $(ADMIN_URL)/api/v1/admin/promotions \
+	@echo "Testing promotion create..."
+	@TOKEN=$$(curl -s -X POST http://localhost:8081/api/v1/admin/auth/login \
+		-H "Content-Type: application/json" \
+		-d '{"email":"admin@saas.com","password":"admin123"}' | grep -o '"token":"[^"]*' | cut -d'"' -f4); \
+	curl -X POST http://localhost:8081/api/v1/admin/promotions \
 		-H "Content-Type: application/json" \
 		-H "Authorization: Bearer $$TOKEN" \
-		-d '{"name":"Black Friday 30%","description":"30% off por 2 meses","discount_type":"percent","discount_value":30.00,"duration_months":2,"valid_from":"2026-11-01T00:00:00Z","valid_until":"2026-11-30T23:59:59Z"}' | jq .
+		-d '{"name":"Promo Teste","slug":"promo-teste","discount_type":"percent","discount_value":10,"duration_months":3,"is_active":true}'
 	@echo ""

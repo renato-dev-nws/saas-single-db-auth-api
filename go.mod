@@ -1,6 +1,6 @@
 module github.com/saas-single-db-api
 
-go 1.25.6
+go 1.24.0
 
 require (
 	github.com/aws/aws-sdk-go v1.55.8

@@ -398,7 +398,7 @@ WHERE r.slug = 'viewer' AND p.slug IN ('view_tenants', 'view_analytics');
 -- Default admin user (admin@saas.com / admin123)
 -- bcrypt hash of 'admin123' with cost 12
 INSERT INTO system_admin_users (name, email, hash_pass) VALUES
-    ('System Administrator', 'admin@saas.com', '$2a$12$LJ3m4ys3uz3s2u8mOxD1dOSbGiAQoVAeMFBtirrSqsVmgWT/gXJIC');
+    ('System Administrator', 'admin@saas.com', '$2a$12$ns1YP4G3P8iRUKwREqMK8eGgIcxvPyAzXxmNibXydt5GRD6LslLG.');
 
 INSERT INTO system_admin_profiles (admin_user_id, full_name, title)
     SELECT id, 'System Administrator', 'Platform Admin' FROM system_admin_users WHERE email = 'admin@saas.com';
@@ -447,9 +447,10 @@ INSERT INTO user_permissions (id, title, slug, feature_id) VALUES
 
 -- Global user roles (tenant_id NULL = templates copied when creating a tenant)
 INSERT INTO user_roles (id, tenant_id, title, slug) VALUES
-    (uuid_generate_v4(), NULL, 'Owner',  'owner'),
-    (uuid_generate_v4(), NULL, 'Admin',  'admin'),
-    (uuid_generate_v4(), NULL, 'Member', 'member');
+    ('eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee', NULL, 'Owner',  'owner'),
+    ('ffffffff-ffff-ffff-ffff-ffffffffffff', NULL, 'Admin',  'admin'),
+    ('gggggggg-gggg-gggg-gggg-gggggggggggg', NULL, 'Member', 'member')
+ON CONFLICT (id) DO NOTHING;
 
 -- Assign all permissions to owner template role
 INSERT INTO user_role_permissions (role_id, permission_id)

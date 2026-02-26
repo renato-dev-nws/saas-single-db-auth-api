@@ -1,56 +1,54 @@
-TENANT_URL=http://localhost:8080
+.PHONY: test-members-list test-members-can-add test-members-invite \
+        test-roles-list test-app-users-list
 
-# ─── Membros ────────────────────────────────────────────────
+# Test members list
 test-members-list:
-	@LOGIN=$$(curl -s -X POST $(TENANT_URL)/api/v1/auth/login \
+	@echo "Testing members list..."
+	@TOKEN=$$(curl -s -X POST http://localhost:8080/api/v1/auth/login \
 		-H "Content-Type: application/json" \
-		-d '{"email":"joao@minha-loja.com","password":"senha12345"}'); \
-	TOKEN=$$(echo "$$LOGIN" | grep -o '"token":"[^"]*' | cut -d'"' -f4); \
-	URL_CODE=$$(echo "$$LOGIN" | grep -o '"url_code":"[^"]*' | head -1 | cut -d'"' -f4); \
-	curl -s "$(TENANT_URL)/api/v1/$$URL_CODE/members" \
-		-H "Authorization: Bearer $$TOKEN" | jq .
+		-d '{"email":"joao@minha-loja.com","password":"senha12345"}' | grep -o '"token":"[^"]*' | cut -d'"' -f4); \
+	curl -X GET http://localhost:8080/api/v1/minha-loja/members \
+		-H "Authorization: Bearer $$TOKEN"
 	@echo ""
 
+# Test can-add member
 test-members-can-add:
-	@LOGIN=$$(curl -s -X POST $(TENANT_URL)/api/v1/auth/login \
+	@echo "Testing can-add member..."
+	@TOKEN=$$(curl -s -X POST http://localhost:8080/api/v1/auth/login \
 		-H "Content-Type: application/json" \
-		-d '{"email":"joao@minha-loja.com","password":"senha12345"}'); \
-	TOKEN=$$(echo "$$LOGIN" | grep -o '"token":"[^"]*' | cut -d'"' -f4); \
-	URL_CODE=$$(echo "$$LOGIN" | grep -o '"url_code":"[^"]*' | head -1 | cut -d'"' -f4); \
-	curl -s "$(TENANT_URL)/api/v1/$$URL_CODE/members/can-add" \
-		-H "Authorization: Bearer $$TOKEN" | jq .
+		-d '{"email":"joao@minha-loja.com","password":"senha12345"}' | grep -o '"token":"[^"]*' | cut -d'"' -f4); \
+	curl -X GET http://localhost:8080/api/v1/minha-loja/members/can-add \
+		-H "Authorization: Bearer $$TOKEN"
 	@echo ""
 
+# Test invite member
 test-members-invite:
-	@LOGIN=$$(curl -s -X POST $(TENANT_URL)/api/v1/auth/login \
+	@echo "Testing invite member..."
+	@TOKEN=$$(curl -s -X POST http://localhost:8080/api/v1/auth/login \
 		-H "Content-Type: application/json" \
-		-d '{"email":"joao@minha-loja.com","password":"senha12345"}'); \
-	TOKEN=$$(echo "$$LOGIN" | grep -o '"token":"[^"]*' | cut -d'"' -f4); \
-	URL_CODE=$$(echo "$$LOGIN" | grep -o '"url_code":"[^"]*' | head -1 | cut -d'"' -f4); \
-	curl -s -X POST "$(TENANT_URL)/api/v1/$$URL_CODE/members/invite" \
+		-d '{"email":"joao@minha-loja.com","password":"senha12345"}' | grep -o '"token":"[^"]*' | cut -d'"' -f4); \
+	curl -X POST http://localhost:8080/api/v1/minha-loja/members/invite \
+		-H "Content-Type: application/json" \
 		-H "Authorization: Bearer $$TOKEN" \
-		-H "Content-Type: application/json" \
-		-d '{"name":"Colaborador","email":"colab@minha-loja.com","password":"senha12345","role_slug":"member"}' | jq .
+		-d '{"name":"Colaborador","email":"colab@minha-loja.com","password":"senha12345","role_slug":"member"}'
 	@echo ""
 
-# ─── Roles ──────────────────────────────────────────────────
+# Test roles list
 test-roles-list:
-	@LOGIN=$$(curl -s -X POST $(TENANT_URL)/api/v1/auth/login \
+	@echo "Testing roles list..."
+	@TOKEN=$$(curl -s -X POST http://localhost:8080/api/v1/auth/login \
 		-H "Content-Type: application/json" \
-		-d '{"email":"joao@minha-loja.com","password":"senha12345"}'); \
-	TOKEN=$$(echo "$$LOGIN" | grep -o '"token":"[^"]*' | cut -d'"' -f4); \
-	URL_CODE=$$(echo "$$LOGIN" | grep -o '"url_code":"[^"]*' | head -1 | cut -d'"' -f4); \
-	curl -s "$(TENANT_URL)/api/v1/$$URL_CODE/roles" \
-		-H "Authorization: Bearer $$TOKEN" | jq .
+		-d '{"email":"joao@minha-loja.com","password":"senha12345"}' | grep -o '"token":"[^"]*' | cut -d'"' -f4); \
+	curl -X GET http://localhost:8080/api/v1/minha-loja/roles \
+		-H "Authorization: Bearer $$TOKEN"
 	@echo ""
 
-# ─── App Users ──────────────────────────────────────────────
+# Test app users list
 test-app-users-list:
-	@LOGIN=$$(curl -s -X POST $(TENANT_URL)/api/v1/auth/login \
+	@echo "Testing app users list..."
+	@TOKEN=$$(curl -s -X POST http://localhost:8080/api/v1/auth/login \
 		-H "Content-Type: application/json" \
-		-d '{"email":"joao@minha-loja.com","password":"senha12345"}'); \
-	TOKEN=$$(echo "$$LOGIN" | grep -o '"token":"[^"]*' | cut -d'"' -f4); \
-	URL_CODE=$$(echo "$$LOGIN" | grep -o '"url_code":"[^"]*' | head -1 | cut -d'"' -f4); \
-	curl -s "$(TENANT_URL)/api/v1/$$URL_CODE/app-users" \
-		-H "Authorization: Bearer $$TOKEN" | jq .
+		-d '{"email":"joao@minha-loja.com","password":"senha12345"}' | grep -o '"token":"[^"]*' | cut -d'"' -f4); \
+	curl -X GET http://localhost:8080/api/v1/minha-loja/app-users \
+		-H "Authorization: Bearer $$TOKEN"
 	@echo ""

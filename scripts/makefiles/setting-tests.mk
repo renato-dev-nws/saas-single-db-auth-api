@@ -1,34 +1,33 @@
-TENANT_URL=http://localhost:8080
+.PHONY: test-settings-list test-settings-get test-settings-update
 
-# ─── Settings ───────────────────────────────────────────────
+# Test settings list
 test-settings-list:
-	@LOGIN=$$(curl -s -X POST $(TENANT_URL)/api/v1/auth/login \
+	@echo "Testing settings list..."
+	@TOKEN=$$(curl -s -X POST http://localhost:8080/api/v1/auth/login \
 		-H "Content-Type: application/json" \
-		-d '{"email":"joao@minha-loja.com","password":"senha12345"}'); \
-	TOKEN=$$(echo "$$LOGIN" | grep -o '"token":"[^"]*' | cut -d'"' -f4); \
-	URL_CODE=$$(echo "$$LOGIN" | grep -o '"url_code":"[^"]*' | head -1 | cut -d'"' -f4); \
-	curl -s "$(TENANT_URL)/api/v1/$$URL_CODE/settings" \
-		-H "Authorization: Bearer $$TOKEN" | jq .
+		-d '{"email":"joao@minha-loja.com","password":"senha12345"}' | grep -o '"token":"[^"]*' | cut -d'"' -f4); \
+	curl -X GET http://localhost:8080/api/v1/minha-loja/settings \
+		-H "Authorization: Bearer $$TOKEN"
 	@echo ""
 
+# Test setting get
 test-settings-get:
-	@LOGIN=$$(curl -s -X POST $(TENANT_URL)/api/v1/auth/login \
+	@echo "Testing setting get..."
+	@TOKEN=$$(curl -s -X POST http://localhost:8080/api/v1/auth/login \
 		-H "Content-Type: application/json" \
-		-d '{"email":"joao@minha-loja.com","password":"senha12345"}'); \
-	TOKEN=$$(echo "$$LOGIN" | grep -o '"token":"[^"]*' | cut -d'"' -f4); \
-	URL_CODE=$$(echo "$$LOGIN" | grep -o '"url_code":"[^"]*' | head -1 | cut -d'"' -f4); \
-	curl -s "$(TENANT_URL)/api/v1/$$URL_CODE/settings/theme_color" \
-		-H "Authorization: Bearer $$TOKEN" | jq .
+		-d '{"email":"joao@minha-loja.com","password":"senha12345"}' | grep -o '"token":"[^"]*' | cut -d'"' -f4); \
+	curl -X GET http://localhost:8080/api/v1/minha-loja/settings/theme_color \
+		-H "Authorization: Bearer $$TOKEN"
 	@echo ""
 
+# Test setting update
 test-settings-update:
-	@LOGIN=$$(curl -s -X POST $(TENANT_URL)/api/v1/auth/login \
+	@echo "Testing setting update..."
+	@TOKEN=$$(curl -s -X POST http://localhost:8080/api/v1/auth/login \
 		-H "Content-Type: application/json" \
-		-d '{"email":"joao@minha-loja.com","password":"senha12345"}'); \
-	TOKEN=$$(echo "$$LOGIN" | grep -o '"token":"[^"]*' | cut -d'"' -f4); \
-	URL_CODE=$$(echo "$$LOGIN" | grep -o '"url_code":"[^"]*' | head -1 | cut -d'"' -f4); \
-	curl -s -X PUT "$(TENANT_URL)/api/v1/$$URL_CODE/settings/theme_color" \
+		-d '{"email":"joao@minha-loja.com","password":"senha12345"}' | grep -o '"token":"[^"]*' | cut -d'"' -f4); \
+	curl -X PUT http://localhost:8080/api/v1/minha-loja/settings/theme_color \
+		-H "Content-Type: application/json" \
 		-H "Authorization: Bearer $$TOKEN" \
-		-H "Content-Type: application/json" \
-		-d '{"value":"#FF5733"}' | jq .
+		-d '{"value":"#FF5733"}'
 	@echo ""

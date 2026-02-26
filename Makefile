@@ -1,3 +1,4 @@
+include scripts/makefiles/database.mk
 include scripts/makefiles/admin-tests.mk
 include scripts/makefiles/tenant-tests.mk
 include scripts/makefiles/user-tests.mk
@@ -6,8 +7,9 @@ include scripts/makefiles/product-tests.mk
 include scripts/makefiles/service-tests.mk
 include scripts/makefiles/setting-tests.mk
 
-.PHONY: up down migrate logs build dev-admin dev-tenant dev-app
+.PHONY: up down build logs logs-admin logs-tenant logs-app dev-admin dev-tenant dev-app
 
+# Docker compose
 up:
 	docker compose up -d
 
@@ -17,11 +19,8 @@ down:
 build:
 	docker compose build
 
-migrate:
-	docker compose exec postgres psql -U saasuser -d saasdb -f /migrations/001_initial_schema.up.sql
-
-migrate-down:
-	docker compose exec postgres psql -U saasuser -d saasdb -f /migrations/001_initial_schema.down.sql
+logs:
+	docker compose logs -f
 
 logs-admin:
 	docker compose logs -f admin-api
@@ -41,3 +40,24 @@ dev-tenant:
 
 dev-app:
 	go run ./cmd/app-api
+
+# Build binaries
+build-admin:
+	go build -buildvcs=false -o bin/admin-api ./cmd/admin-api
+
+build-tenant:
+	go build -buildvcs=false -o bin/tenant-api ./cmd/tenant-api
+
+build-app:
+	go build -buildvcs=false -o bin/app-api ./cmd/app-api
+
+build-all:
+	@$(MAKE) build-admin
+	@$(MAKE) build-tenant
+	@$(MAKE) build-app
+
+# Clean
+clean:
+	rm -rf bin/
+	rm -rf uploads/*
+	docker compose down -v

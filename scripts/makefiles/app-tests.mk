@@ -1,64 +1,57 @@
-APP_URL=http://localhost:8082
-URL_CODE=minha-loja
+.PHONY: test-app-register test-app-login test-app-catalog test-app-profile test-app-all
 
-# ─── Registro + Login ───────────────────────────────────────
+# Test app user register
 test-app-register:
-	@echo "Registrando app user..."
-	@curl -s -X POST $(APP_URL)/api/v1/$(URL_CODE)/auth/register \
+	@echo "Testing app user register..."
+	@curl -X POST http://localhost:8082/api/v1/minha-loja/auth/register \
 		-H "Content-Type: application/json" \
-		-d '{"name":"Cliente App","email":"cliente@app.com","password":"senha12345"}' | jq .
+		-d '{"name":"Cliente App","email":"cliente@app.com","password":"senha12345"}'
 	@echo ""
 
+# Test app user login
 test-app-login:
-	@curl -s -X POST $(APP_URL)/api/v1/$(URL_CODE)/auth/login \
+	@echo "Testing app user login..."
+	@curl -X POST http://localhost:8082/api/v1/minha-loja/auth/login \
 		-H "Content-Type: application/json" \
-		-d '{"email":"cliente@app.com","password":"senha12345"}' | jq .
+		-d '{"email":"cliente@app.com","password":"senha12345"}'
 	@echo ""
 
-# ─── Catálogo (público) ─────────────────────────────────────
+# Test catalog (public)
 test-app-catalog:
-	@echo "Produtos públicos:"
-	@curl -s "$(APP_URL)/api/v1/$(URL_CODE)/catalog/products" | jq .
+	@echo "Testing catalog products..."
+	@curl -X GET http://localhost:8082/api/v1/minha-loja/catalog/products
 	@echo ""
-	@echo "Serviços públicos:"
-	@curl -s "$(APP_URL)/api/v1/$(URL_CODE)/catalog/services" | jq .
+	@echo "Testing catalog services..."
+	@curl -X GET http://localhost:8082/api/v1/minha-loja/catalog/services
 	@echo ""
 
-# ─── Perfil (autenticado) ───────────────────────────────────
+# Test profile (protected)
 test-app-profile:
-	@LOGIN=$$(curl -s -X POST $(APP_URL)/api/v1/$(URL_CODE)/auth/login \
+	@echo "Testing app profile..."
+	@TOKEN=$$(curl -s -X POST http://localhost:8082/api/v1/minha-loja/auth/login \
 		-H "Content-Type: application/json" \
-		-d '{"email":"cliente@app.com","password":"senha12345"}'); \
-	TOKEN=$$(echo "$$LOGIN" | grep -o '"token":"[^"]*' | cut -d'"' -f4); \
-	echo "Perfil:"; \
-	curl -s "$(APP_URL)/api/v1/$(URL_CODE)/profile" \
-		-H "Authorization: Bearer $$TOKEN" | jq .
+		-d '{"email":"cliente@app.com","password":"senha12345"}' | grep -o '"token":"[^"]*' | cut -d'"' -f4); \
+	curl -X GET http://localhost:8082/api/v1/minha-loja/profile \
+		-H "Authorization: Bearer $$TOKEN"
 	@echo ""
 
-# ─── Teste E2E App ──────────────────────────────────────────
+# E2E app
 test-app-all:
 	@echo "========================================="
-	@echo "Teste E2E: App User Completo"
+	@echo "E2E: App User Complete"
 	@echo "========================================="
-	@echo ""
-	@echo "1. Registrar..."
-	@REGISTER=$$(curl -s -X POST $(APP_URL)/api/v1/$(URL_CODE)/auth/register \
+	@echo "1. Register:"
+	@RESPONSE=$$(curl -s -X POST http://localhost:8082/api/v1/minha-loja/auth/register \
 		-H "Content-Type: application/json" \
 		-d '{"name":"E2E User","email":"e2e@app.com","password":"senha12345"}'); \
-	echo "$$REGISTER" | jq .; \
-	TOKEN=$$(echo "$$REGISTER" | grep -o '"token":"[^"]*' | cut -d'"' -f4); \
-	echo ""; \
-	echo "2. Me..."; \
-	curl -s "$(APP_URL)/api/v1/$(URL_CODE)/auth/me" \
-		-H "Authorization: Bearer $$TOKEN" | jq .; \
-	echo ""; \
-	echo "3. Catálogo..."; \
-	curl -s "$(APP_URL)/api/v1/$(URL_CODE)/catalog/products" | jq .; \
-	echo ""; \
-	echo "4. Perfil..."; \
-	curl -s "$(APP_URL)/api/v1/$(URL_CODE)/profile" \
-		-H "Authorization: Bearer $$TOKEN" | jq .
-	@echo ""
-	@echo "========================================="
-	@echo "Teste concluído!"
+	echo "$$RESPONSE"; \
+	TOKEN=$$(echo "$$RESPONSE" | grep -o '"token":"[^"]*' | cut -d'"' -f4); \
+	echo ""; echo "2. Me:"; \
+	curl -s -X GET http://localhost:8082/api/v1/minha-loja/auth/me \
+		-H "Authorization: Bearer $$TOKEN"; \
+	echo ""; echo "3. Catalog:"; \
+	curl -s -X GET http://localhost:8082/api/v1/minha-loja/catalog/products; \
+	echo ""; echo "4. Profile:"; \
+	curl -s -X GET http://localhost:8082/api/v1/minha-loja/profile \
+		-H "Authorization: Bearer $$TOKEN"
 	@echo "========================================="
