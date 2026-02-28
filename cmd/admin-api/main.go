@@ -51,7 +51,7 @@ func main() {
 
 	// Router
 	r := gin.Default()
-
+	r.Use(middleware.CORSMiddleware())
 	r.Use(gin.Recovery())
 
 	api := r.Group("/api/v1/admin")
