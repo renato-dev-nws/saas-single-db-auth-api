@@ -671,21 +671,21 @@ const docTemplate = `{
                 }
             }
         },
-        "/{url_code}/config": {
+        "/{url_code}/bootstrap": {
             "get": {
                 "security": [
                     {
                         "BearerAuth": []
                     }
                 ],
-                "description": "Retorna configuração completa do tenant: dados, features, permissões, plano e perfil",
+                "description": "Retorna dados essenciais para inicializar o frontend: tenant, features, permissões, plano e layout",
                 "produces": [
                     "application/json"
                 ],
                 "tags": [
-                    "Tenant Config"
+                    "Bootstrap"
                 ],
-                "summary": "Obter configuração do tenant",
+                "summary": "Obter bootstrap do tenant",
                 "parameters": [
                     {
                         "type": "string",
@@ -699,7 +699,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_saas-single-db-api_internal_models_swagger.TenantConfigResponse"
+                            "$ref": "#/definitions/github_com_saas-single-db-api_internal_models_swagger.BootstrapResponse"
                         }
                     },
                     "404": {
@@ -2234,6 +2234,102 @@ const docTemplate = `{
                 }
             }
         },
+        "/{url_code}/settings/layout": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Retorna as configurações de layout do tenant (cores, logo, tema)",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Settings"
+                ],
+                "summary": "Obter configurações de layout",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "URL code do tenant",
+                        "name": "url_code",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_saas-single-db-api_internal_models_swagger.LayoutSettingsResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_saas-single-db-api_internal_models_swagger.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Atualiza cores, logo e tema do tenant. Requer permissão 'setg_m' ou ser owner.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Settings"
+                ],
+                "summary": "Atualizar configurações de layout",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "URL code do tenant",
+                        "name": "url_code",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Configurações de layout",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/github_com_saas-single-db-api_internal_models_swagger.LayoutSettingsRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_saas-single-db-api_internal_models_swagger.MessageResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_saas-single-db-api_internal_models_swagger.ErrorResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_saas-single-db-api_internal_models_swagger.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/{url_code}/settings/{category}": {
             "get": {
                 "security": [
@@ -2548,6 +2644,53 @@ const docTemplate = `{
                 }
             }
         },
+        "github_com_saas-single-db-api_internal_models_swagger.BootstrapPlanDTO": {
+            "type": "object",
+            "properties": {
+                "is_multilang": {
+                    "type": "boolean",
+                    "example": true
+                },
+                "max_users": {
+                    "type": "integer",
+                    "example": 5
+                },
+                "name": {
+                    "type": "string",
+                    "example": "Business Pro"
+                }
+            }
+        },
+        "github_com_saas-single-db-api_internal_models_swagger.BootstrapResponse": {
+            "type": "object",
+            "properties": {
+                "features": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "is_owner": {
+                    "type": "boolean",
+                    "example": true
+                },
+                "layout_settings": {
+                    "$ref": "#/definitions/github_com_saas-single-db-api_internal_models_swagger.LayoutSettingsDTO"
+                },
+                "permissions": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "plan": {
+                    "$ref": "#/definitions/github_com_saas-single-db-api_internal_models_swagger.BootstrapPlanDTO"
+                },
+                "tenant": {
+                    "$ref": "#/definitions/github_com_saas-single-db-api_internal_models_swagger.TenantConfigDTO"
+                }
+            }
+        },
         "github_com_saas-single-db-api_internal_models_swagger.CanAddMemberResponse": {
             "type": "object",
             "properties": {
@@ -2776,6 +2919,74 @@ const docTemplate = `{
                 }
             }
         },
+        "github_com_saas-single-db-api_internal_models_swagger.LayoutSettingsDTO": {
+            "type": "object",
+            "properties": {
+                "logo": {
+                    "type": "string",
+                    "example": "https://example.com/logo.png"
+                },
+                "primary_color": {
+                    "type": "string",
+                    "example": "#4F46E5"
+                },
+                "secondary_color": {
+                    "type": "string",
+                    "example": "#10B981"
+                },
+                "theme": {
+                    "type": "string",
+                    "example": "Aura"
+                }
+            }
+        },
+        "github_com_saas-single-db-api_internal_models_swagger.LayoutSettingsRequest": {
+            "type": "object",
+            "required": [
+                "primary_color",
+                "secondary_color",
+                "theme"
+            ],
+            "properties": {
+                "logo": {
+                    "type": "string",
+                    "example": "https://example.com/logo.png"
+                },
+                "primary_color": {
+                    "type": "string",
+                    "example": "#4F46E5"
+                },
+                "secondary_color": {
+                    "type": "string",
+                    "example": "#10B981"
+                },
+                "theme": {
+                    "type": "string",
+                    "example": "Aura"
+                }
+            }
+        },
+        "github_com_saas-single-db-api_internal_models_swagger.LayoutSettingsResponse": {
+            "type": "object",
+            "properties": {
+                "logo": {
+                    "type": "string",
+                    "example": "https://example.com/logo.png"
+                },
+                "primary_color": {
+                    "type": "string",
+                    "example": "#4F46E5"
+                },
+                "secondary_color": {
+                    "type": "string",
+                    "example": "#10B981"
+                },
+                "theme": {
+                    "type": "string",
+                    "example": "Aura"
+                }
+            }
+        },
         "github_com_saas-single-db-api_internal_models_swagger.MemberDTO": {
             "type": "object",
             "properties": {
@@ -2834,49 +3045,6 @@ const docTemplate = `{
                 "total": {
                     "type": "integer",
                     "example": 100
-                }
-            }
-        },
-        "github_com_saas-single-db-api_internal_models_swagger.PlanConfigDTO": {
-            "type": "object",
-            "properties": {
-                "active_price": {
-                    "type": "number",
-                    "example": 99.9
-                },
-                "available_slots": {
-                    "type": "integer",
-                    "example": 3
-                },
-                "billing_cycle": {
-                    "type": "string",
-                    "example": "monthly"
-                },
-                "contracted_price": {
-                    "type": "number",
-                    "example": 99.9
-                },
-                "current_users": {
-                    "type": "integer",
-                    "example": 2
-                },
-                "is_multilang": {
-                    "type": "boolean",
-                    "example": true
-                },
-                "max_users": {
-                    "type": "integer",
-                    "example": 5
-                },
-                "name": {
-                    "type": "string",
-                    "example": "Business Pro"
-                },
-                "price_updated_at": {
-                    "type": "string"
-                },
-                "promo_expires_at": {
-                    "type": "string"
                 }
             }
         },
@@ -3249,61 +3417,6 @@ const docTemplate = `{
                 }
             }
         },
-        "github_com_saas-single-db-api_internal_models_swagger.TenantConfigResponse": {
-            "type": "object",
-            "properties": {
-                "features": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                },
-                "permissions": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                },
-                "plan": {
-                    "$ref": "#/definitions/github_com_saas-single-db-api_internal_models_swagger.PlanConfigDTO"
-                },
-                "tenant": {
-                    "$ref": "#/definitions/github_com_saas-single-db-api_internal_models_swagger.TenantConfigDTO"
-                }
-            }
-        },
-        "github_com_saas-single-db-api_internal_models_swagger.TenantInfoDTO": {
-            "type": "object",
-            "properties": {
-                "company_name": {
-                    "type": "string"
-                },
-                "features": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                },
-                "id": {
-                    "type": "string",
-                    "example": "uuid"
-                },
-                "name": {
-                    "type": "string",
-                    "example": "My Company"
-                },
-                "permissions": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                },
-                "url_code": {
-                    "type": "string",
-                    "example": "HRP1ZYERFVA"
-                }
-            }
-        },
         "github_com_saas-single-db-api_internal_models_swagger.TenantProfileResponse": {
             "type": "object",
             "properties": {
@@ -3490,8 +3603,17 @@ const docTemplate = `{
         "github_com_saas-single-db-api_internal_models_swagger.UserLoginResponse": {
             "type": "object",
             "properties": {
-                "current_tenant": {
-                    "$ref": "#/definitions/github_com_saas-single-db-api_internal_models_swagger.TenantInfoDTO"
+                "current_tenant_code": {
+                    "type": "string",
+                    "example": "HRP1ZYERFVA"
+                },
+                "email": {
+                    "type": "string",
+                    "example": "user@example.com"
+                },
+                "name": {
+                    "type": "string",
+                    "example": "John"
                 },
                 "tenants": {
                     "type": "array",
@@ -3502,9 +3624,6 @@ const docTemplate = `{
                 "token": {
                     "type": "string",
                     "example": "eyJhbGciOiJIUzI1NiIs..."
-                },
-                "user": {
-                    "$ref": "#/definitions/github_com_saas-single-db-api_internal_models_swagger.BackofficeUserDTO"
                 }
             }
         },

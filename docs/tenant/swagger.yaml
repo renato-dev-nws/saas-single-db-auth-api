@@ -42,6 +42,38 @@ definitions:
         example: active
         type: string
     type: object
+  github_com_saas-single-db-api_internal_models_swagger.BootstrapPlanDTO:
+    properties:
+      is_multilang:
+        example: true
+        type: boolean
+      max_users:
+        example: 5
+        type: integer
+      name:
+        example: Business Pro
+        type: string
+    type: object
+  github_com_saas-single-db-api_internal_models_swagger.BootstrapResponse:
+    properties:
+      features:
+        items:
+          type: string
+        type: array
+      is_owner:
+        example: true
+        type: boolean
+      layout_settings:
+        $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.LayoutSettingsDTO'
+      permissions:
+        items:
+          type: string
+        type: array
+      plan:
+        $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.BootstrapPlanDTO'
+      tenant:
+        $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.TenantConfigDTO'
+    type: object
   github_com_saas-single-db-api_internal_models_swagger.CanAddMemberResponse:
     properties:
       available_slots:
@@ -204,6 +236,55 @@ definitions:
         example: uuid
         type: string
     type: object
+  github_com_saas-single-db-api_internal_models_swagger.LayoutSettingsDTO:
+    properties:
+      logo:
+        example: https://example.com/logo.png
+        type: string
+      primary_color:
+        example: '#4F46E5'
+        type: string
+      secondary_color:
+        example: '#10B981'
+        type: string
+      theme:
+        example: Aura
+        type: string
+    type: object
+  github_com_saas-single-db-api_internal_models_swagger.LayoutSettingsRequest:
+    properties:
+      logo:
+        example: https://example.com/logo.png
+        type: string
+      primary_color:
+        example: '#4F46E5'
+        type: string
+      secondary_color:
+        example: '#10B981'
+        type: string
+      theme:
+        example: Aura
+        type: string
+    required:
+    - primary_color
+    - secondary_color
+    - theme
+    type: object
+  github_com_saas-single-db-api_internal_models_swagger.LayoutSettingsResponse:
+    properties:
+      logo:
+        example: https://example.com/logo.png
+        type: string
+      primary_color:
+        example: '#4F46E5'
+        type: string
+      secondary_color:
+        example: '#10B981'
+        type: string
+      theme:
+        example: Aura
+        type: string
+    type: object
   github_com_saas-single-db-api_internal_models_swagger.MemberDTO:
     properties:
       created_at:
@@ -246,37 +327,6 @@ definitions:
       total:
         example: 100
         type: integer
-    type: object
-  github_com_saas-single-db-api_internal_models_swagger.PlanConfigDTO:
-    properties:
-      active_price:
-        example: 99.9
-        type: number
-      available_slots:
-        example: 3
-        type: integer
-      billing_cycle:
-        example: monthly
-        type: string
-      contracted_price:
-        example: 99.9
-        type: number
-      current_users:
-        example: 2
-        type: integer
-      is_multilang:
-        example: true
-        type: boolean
-      max_users:
-        example: 5
-        type: integer
-      name:
-        example: Business Pro
-        type: string
-      price_updated_at:
-        type: string
-      promo_expires_at:
-        type: string
     type: object
   github_com_saas-single-db-api_internal_models_swagger.PlanResponse:
     properties:
@@ -541,43 +591,6 @@ definitions:
         example: HRP1ZYERFVA
         type: string
     type: object
-  github_com_saas-single-db-api_internal_models_swagger.TenantConfigResponse:
-    properties:
-      features:
-        items:
-          type: string
-        type: array
-      permissions:
-        items:
-          type: string
-        type: array
-      plan:
-        $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.PlanConfigDTO'
-      tenant:
-        $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.TenantConfigDTO'
-    type: object
-  github_com_saas-single-db-api_internal_models_swagger.TenantInfoDTO:
-    properties:
-      company_name:
-        type: string
-      features:
-        items:
-          type: string
-        type: array
-      id:
-        example: uuid
-        type: string
-      name:
-        example: My Company
-        type: string
-      permissions:
-        items:
-          type: string
-        type: array
-      url_code:
-        example: HRP1ZYERFVA
-        type: string
-    type: object
   github_com_saas-single-db-api_internal_models_swagger.TenantProfileResponse:
     properties:
       about:
@@ -708,8 +721,15 @@ definitions:
     type: object
   github_com_saas-single-db-api_internal_models_swagger.UserLoginResponse:
     properties:
-      current_tenant:
-        $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.TenantInfoDTO'
+      current_tenant_code:
+        example: HRP1ZYERFVA
+        type: string
+      email:
+        example: user@example.com
+        type: string
+      name:
+        example: John
+        type: string
       tenants:
         items:
           $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.TenantBrief'
@@ -717,8 +737,6 @@ definitions:
       token:
         example: eyJhbGciOiJIUzI1NiIs...
         type: string
-      user:
-        $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.BackofficeUserDTO'
     type: object
   github_com_saas-single-db-api_internal_models_swagger.UserPermissionResponse:
     properties:
@@ -906,10 +924,10 @@ paths:
       summary: Atualizar status do app user
       tags:
       - App Users
-  /{url_code}/config:
+  /{url_code}/bootstrap:
     get:
-      description: 'Retorna configuração completa do tenant: dados, features, permissões,
-        plano e perfil'
+      description: 'Retorna dados essenciais para inicializar o frontend: tenant,
+        features, permissões, plano e layout'
       parameters:
       - description: URL code do tenant
         in: path
@@ -922,16 +940,16 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.TenantConfigResponse'
+            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.BootstrapResponse'
         "404":
           description: Not Found
           schema:
             $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.ErrorResponse'
       security:
       - BearerAuth: []
-      summary: Obter configuração do tenant
+      summary: Obter bootstrap do tenant
       tags:
-      - Tenant Config
+      - Bootstrap
   /{url_code}/images:
     get:
       description: Retorna imagens do tenant paginadas
@@ -1985,6 +2003,68 @@ paths:
       security:
       - BearerAuth: []
       summary: Salvar configuração
+      tags:
+      - Settings
+  /{url_code}/settings/layout:
+    get:
+      description: Retorna as configurações de layout do tenant (cores, logo, tema)
+      parameters:
+      - description: URL code do tenant
+        in: path
+        name: url_code
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.LayoutSettingsResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Obter configurações de layout
+      tags:
+      - Settings
+    put:
+      consumes:
+      - application/json
+      description: Atualiza cores, logo e tema do tenant. Requer permissão 'setg_m'
+        ou ser owner.
+      parameters:
+      - description: URL code do tenant
+        in: path
+        name: url_code
+        required: true
+        type: string
+      - description: Configurações de layout
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.LayoutSettingsRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.MessageResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Atualizar configurações de layout
       tags:
       - Settings
   /{url_code}/tenant:

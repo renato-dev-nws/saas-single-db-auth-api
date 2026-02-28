@@ -8,7 +8,7 @@ test-members-list:
 		-H "Content-Type: application/json" \
 		-d '{"email":"joao@minha-loja.com","password":"senha12345"}'); \
 	TOKEN=$$(echo "$$LOGIN" | grep -o '"token":"[^"]*' | cut -d'"' -f4); \
-	URL_CODE=$$(echo "$$LOGIN" | grep -o '"url_code":"[^"]*' | head -1 | cut -d'"' -f4); \
+	URL_CODE=$$(echo "$$LOGIN" | grep -o '"current_tenant_code":"[^"]*' | cut -d'"' -f4); \
 	curl -s -X GET http://localhost:8080/api/v1/$$URL_CODE/members \
 		-H "Authorization: Bearer $$TOKEN"
 	@echo ""
@@ -20,7 +20,7 @@ test-members-can-add:
 		-H "Content-Type: application/json" \
 		-d '{"email":"joao@minha-loja.com","password":"senha12345"}'); \
 	TOKEN=$$(echo "$$LOGIN" | grep -o '"token":"[^"]*' | cut -d'"' -f4); \
-	URL_CODE=$$(echo "$$LOGIN" | grep -o '"url_code":"[^"]*' | head -1 | cut -d'"' -f4); \
+	URL_CODE=$$(echo "$$LOGIN" | grep -o '"current_tenant_code":"[^"]*' | cut -d'"' -f4); \
 	curl -s -X GET http://localhost:8080/api/v1/$$URL_CODE/members/can-add \
 		-H "Authorization: Bearer $$TOKEN"
 	@echo ""
@@ -32,7 +32,7 @@ test-members-invite:
 		-H "Content-Type: application/json" \
 		-d '{"email":"joao@minha-loja.com","password":"senha12345"}'); \
 	TOKEN=$$(echo "$$LOGIN" | grep -o '"token":"[^"]*' | cut -d'"' -f4); \
-	URL_CODE=$$(echo "$$LOGIN" | grep -o '"url_code":"[^"]*' | head -1 | cut -d'"' -f4); \
+	URL_CODE=$$(echo "$$LOGIN" | grep -o '"current_tenant_code":"[^"]*' | cut -d'"' -f4); \
 	curl -s -X POST http://localhost:8080/api/v1/$$URL_CODE/members/invite \
 		-H "Content-Type: application/json" \
 		-H "Authorization: Bearer $$TOKEN" \
@@ -46,7 +46,7 @@ test-roles-list:
 		-H "Content-Type: application/json" \
 		-d '{"email":"joao@minha-loja.com","password":"senha12345"}'); \
 	TOKEN=$$(echo "$$LOGIN" | grep -o '"token":"[^"]*' | cut -d'"' -f4); \
-	URL_CODE=$$(echo "$$LOGIN" | grep -o '"url_code":"[^"]*' | head -1 | cut -d'"' -f4); \
+	URL_CODE=$$(echo "$$LOGIN" | grep -o '"current_tenant_code":"[^"]*' | cut -d'"' -f4); \
 	curl -s -X GET http://localhost:8080/api/v1/$$URL_CODE/roles \
 		-H "Authorization: Bearer $$TOKEN"
 	@echo ""
@@ -58,7 +58,7 @@ test-app-users-list:
 		-H "Content-Type: application/json" \
 		-d '{"email":"joao@minha-loja.com","password":"senha12345"}'); \
 	TOKEN=$$(echo "$$LOGIN" | grep -o '"token":"[^"]*' | cut -d'"' -f4); \
-	URL_CODE=$$(echo "$$LOGIN" | grep -o '"url_code":"[^"]*' | head -1 | cut -d'"' -f4); \
+	URL_CODE=$$(echo "$$LOGIN" | grep -o '"current_tenant_code":"[^"]*' | cut -d'"' -f4); \
 	curl -s -X GET http://localhost:8080/api/v1/$$URL_CODE/app-users \
 		-H "Authorization: Bearer $$TOKEN"
 	@echo ""

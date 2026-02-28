@@ -1,6 +1,6 @@
 .PHONY: test-plans-public test-subscription test-subscription-with-promo \
         test-login test-tenant-login test-tenant test-user-me test-switch-tenant \
-        test-tenant-config test-new-tenant test-testenovo
+        test-tenant-bootstrap test-new-tenant test-testenovo
 
 # Test list plans (public)
 test-plans-public:
@@ -51,22 +51,22 @@ test-switch-tenant:
 		-H "Content-Type: application/json" \
 		-d '{"email":"joao@minha-loja.com","password":"senha12345"}'); \
 	TOKEN=$$(echo "$$LOGIN" | grep -o '"token":"[^"]*' | cut -d'"' -f4); \
-	URL_CODE=$$(echo "$$LOGIN" | grep -o '"url_code":"[^"]*' | head -1 | cut -d'"' -f4); \
+	URL_CODE=$$(echo "$$LOGIN" | grep -o '"current_tenant_code":"[^"]*' | cut -d'"' -f4); \
 	echo "URL_CODE=$$URL_CODE"; \
 	curl -X POST http://localhost:8080/api/v1/auth/switch/$$URL_CODE \
 		-H "Authorization: Bearer $$TOKEN"
 	@echo ""
 
-# Test tenant config (requires test-subscription to have been run first)
-test-tenant-config:
-	@echo "Testing tenant config..."
+# Test tenant bootstrap (requires test-subscription to have been run first)
+test-tenant-bootstrap:
+	@echo "Testing tenant bootstrap..."
 	@LOGIN=$$(curl -s -X POST http://localhost:8080/api/v1/auth/login \
 		-H "Content-Type: application/json" \
 		-d '{"email":"joao@minha-loja.com","password":"senha12345"}'); \
 	TOKEN=$$(echo "$$LOGIN" | grep -o '"token":"[^"]*' | cut -d'"' -f4); \
-	URL_CODE=$$(echo "$$LOGIN" | grep -o '"url_code":"[^"]*' | head -1 | cut -d'"' -f4); \
+	URL_CODE=$$(echo "$$LOGIN" | grep -o '"current_tenant_code":"[^"]*' | cut -d'"' -f4); \
 	echo "URL_CODE=$$URL_CODE"; \
-	curl -X GET http://localhost:8080/api/v1/$$URL_CODE/config \
+	curl -X GET http://localhost:8080/api/v1/$$URL_CODE/bootstrap \
 		-H "Authorization: Bearer $$TOKEN"
 	@echo ""
 
@@ -75,7 +75,7 @@ test-new-tenant: test-testenovo
 
 test-testenovo:
 	@echo "========================================="
-	@echo "E2E: Create Tenant + Login + Config"
+	@echo "E2E: Create Tenant + Login + Bootstrap"
 	@echo "========================================="
 	@RESPONSE=$$(curl -s -X POST http://localhost:8080/api/v1/subscription \
 		-H "Content-Type: application/json" \
@@ -83,8 +83,8 @@ test-testenovo:
 	echo "1. Subscription:"; echo "$$RESPONSE"; \
 	TOKEN=$$(echo "$$RESPONSE" | grep -o '"token":"[^"]*' | cut -d'"' -f4); \
 	URL_CODE=$$(echo "$$RESPONSE" | grep -o '"url_code":"[^"]*' | cut -d'"' -f4); \
-	echo ""; echo "2. Config:"; \
-	curl -X GET http://localhost:8080/api/v1/$$URL_CODE/config \
+	echo ""; echo "2. Bootstrap:"; \
+	curl -X GET http://localhost:8080/api/v1/$$URL_CODE/bootstrap \
 		-H "Authorization: Bearer $$TOKEN"; \
 	echo ""; echo "3. Products:"; \
 	curl -X GET http://localhost:8080/api/v1/$$URL_CODE/products \

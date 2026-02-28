@@ -260,10 +260,11 @@ type UserBriefDTO struct {
 
 // UserLoginResponse is the response for backoffice user login
 type UserLoginResponse struct {
-	Token         string            `json:"token" example:"eyJhbGciOiJIUzI1NiIs..."`
-	User          BackofficeUserDTO `json:"user"`
-	CurrentTenant *TenantInfoDTO    `json:"current_tenant"`
-	Tenants       []TenantBrief     `json:"tenants"`
+	Token             string        `json:"token" example:"eyJhbGciOiJIUzI1NiIs..."`
+	Name              string        `json:"name" example:"John"`
+	Email             string        `json:"email" example:"user@example.com"`
+	CurrentTenantCode string        `json:"current_tenant_code" example:"HRP1ZYERFVA"`
+	Tenants           []TenantBrief `json:"tenants"`
 }
 
 // BackofficeUserDTO is a safe representation of a backoffice user
@@ -307,12 +308,29 @@ type SwitchTenantResponse struct {
 	URLCode  string `json:"url_code" example:"HRP1ZYERFVA"`
 }
 
-// TenantConfigResponse is the full config response
-type TenantConfigResponse struct {
-	Tenant      TenantConfigDTO `json:"tenant"`
-	Features    []string        `json:"features"`
-	Permissions []string        `json:"permissions"`
-	Plan        PlanConfigDTO   `json:"plan"`
+// BootstrapResponse is the full bootstrap response for initializing the frontend
+type BootstrapResponse struct {
+	Tenant         TenantConfigDTO   `json:"tenant"`
+	Features       []string          `json:"features"`
+	Permissions    []string          `json:"permissions"`
+	IsOwner        bool              `json:"is_owner" example:"true"`
+	Plan           BootstrapPlanDTO  `json:"plan"`
+	LayoutSettings LayoutSettingsDTO `json:"layout_settings"`
+}
+
+// BootstrapPlanDTO is the simplified plan info returned in bootstrap
+type BootstrapPlanDTO struct {
+	Name        string `json:"name" example:"Business Pro"`
+	MaxUsers    int    `json:"max_users" example:"5"`
+	IsMultilang bool   `json:"is_multilang" example:"true"`
+}
+
+// LayoutSettingsDTO represents the tenant layout/theme settings
+type LayoutSettingsDTO struct {
+	PrimaryColor   string `json:"primary_color" example:"#4F46E5"`
+	SecondaryColor string `json:"secondary_color" example:"#10B981"`
+	Logo           string `json:"logo" example:"https://example.com/logo.png"`
+	Theme          string `json:"theme" example:"Aura"`
 }
 
 // TenantConfigDTO is the tenant config info
@@ -323,18 +341,20 @@ type TenantConfigDTO struct {
 	CompanyName *string `json:"company_name"`
 }
 
-// PlanConfigDTO is the plan config info
-type PlanConfigDTO struct {
-	Name            string     `json:"name" example:"Business Pro"`
-	MaxUsers        int        `json:"max_users" example:"5"`
-	CurrentUsers    int        `json:"current_users" example:"2"`
-	AvailableSlots  int        `json:"available_slots" example:"3"`
-	IsMultilang     bool       `json:"is_multilang" example:"true"`
-	BillingCycle    string     `json:"billing_cycle" example:"monthly"`
-	ContractedPrice float64    `json:"contracted_price" example:"99.90"`
-	ActivePrice     float64    `json:"active_price" example:"99.90"`
-	PromoExpiresAt  *time.Time `json:"promo_expires_at"`
-	PriceUpdatedAt  time.Time  `json:"price_updated_at"`
+// LayoutSettingsRequest is the request for updating layout settings
+type LayoutSettingsRequest struct {
+	PrimaryColor   string `json:"primary_color" binding:"required" example:"#4F46E5"`
+	SecondaryColor string `json:"secondary_color" binding:"required" example:"#10B981"`
+	Logo           string `json:"logo" example:"https://example.com/logo.png"`
+	Theme          string `json:"theme" binding:"required" example:"Aura"`
+}
+
+// LayoutSettingsResponse is the response for layout settings
+type LayoutSettingsResponse struct {
+	PrimaryColor   string `json:"primary_color" example:"#4F46E5"`
+	SecondaryColor string `json:"secondary_color" example:"#10B981"`
+	Logo           string `json:"logo" example:"https://example.com/logo.png"`
+	Theme          string `json:"theme" example:"Aura"`
 }
 
 // TenantProfileResponse represents a tenant profile

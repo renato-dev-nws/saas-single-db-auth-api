@@ -13,11 +13,11 @@ test-security-cross-tenant:
 		-H "Content-Type: application/json" \
 		-d '{"email":"joao@minha-loja.com","password":"senha12345"}'); \
 	TOKEN=$$(echo "$$LOGIN" | grep -o '"token":"[^"]*' | cut -d'"' -f4); \
-	MY_URL=$$(echo "$$LOGIN" | grep -o '"url_code":"[^"]*' | head -1 | cut -d'"' -f4); \
+	MY_URL=$$(echo "$$LOGIN" | grep -o '"current_tenant_code":"[^"]*' | cut -d'"' -f4); \
 	echo "   Token obtained. My tenant: $$MY_URL"; \
 	echo ""; \
-	echo "2. Access OWN tenant config (should succeed)..."; \
-	RESULT=$$(curl -s -o /dev/null -w '%{http_code}' -X GET http://localhost:8080/api/v1/$$MY_URL/config \
+	echo "2. Access OWN tenant bootstrap (should succeed)..."; \
+	RESULT=$$(curl -s -o /dev/null -w '%{http_code}' -X GET http://localhost:8080/api/v1/$$MY_URL/bootstrap \
 		-H "Authorization: Bearer $$TOKEN"); \
 	if [ "$$RESULT" = "200" ]; then echo "   ✅ OWN tenant: HTTP $$RESULT (OK)"; else echo "   ❌ OWN tenant: HTTP $$RESULT (FAIL)"; fi; \
 	echo ""; \
@@ -29,13 +29,13 @@ test-security-cross-tenant:
 		-H "Authorization: Bearer $$ADMIN_TOKEN" | grep -o '"URLCode":"[^"]*' | cut -d'"' -f4 | grep -v "$$MY_URL" | head -1); \
 	echo "   Other tenant: $$OTHER_URL"; \
 	echo ""; \
-	echo "4. Access OTHER tenant config with Joao's token (should be 403)..."; \
-	RESULT=$$(curl -s -o /dev/null -w '%{http_code}' -X GET http://localhost:8080/api/v1/$$OTHER_URL/config \
+	echo "4. Access OTHER tenant bootstrap with Joao's token (should be 403)..."; \
+	RESULT=$$(curl -s -o /dev/null -w '%{http_code}' -X GET http://localhost:8080/api/v1/$$OTHER_URL/bootstrap \
 		-H "Authorization: Bearer $$TOKEN"); \
 	if [ "$$RESULT" = "403" ]; then echo "   ✅ OTHER tenant: HTTP $$RESULT (BLOCKED)"; else echo "   ❌ OTHER tenant: HTTP $$RESULT (VULNERABILITY!)"; fi; \
 	echo ""; \
 	echo "5. Error body for cross-tenant access:"; \
-	curl -s -X GET http://localhost:8080/api/v1/$$OTHER_URL/config \
+	curl -s -X GET http://localhost:8080/api/v1/$$OTHER_URL/bootstrap \
 		-H "Authorization: Bearer $$TOKEN"
 	@echo ""
 	@echo "========================================="

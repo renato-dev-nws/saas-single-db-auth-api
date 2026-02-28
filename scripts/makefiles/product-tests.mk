@@ -8,7 +8,7 @@ test-product-create:
 		-H "Content-Type: application/json" \
 		-d '{"email":"joao@minha-loja.com","password":"senha12345"}'); \
 	TOKEN=$$(echo "$$LOGIN" | grep -o '"token":"[^"]*' | cut -d'"' -f4); \
-	URL_CODE=$$(echo "$$LOGIN" | grep -o '"url_code":"[^"]*' | head -1 | cut -d'"' -f4); \
+	URL_CODE=$$(echo "$$LOGIN" | grep -o '"current_tenant_code":"[^"]*' | cut -d'"' -f4); \
 	curl -s -X POST http://localhost:8080/api/v1/$$URL_CODE/products \
 		-H "Content-Type: application/json" \
 		-H "Authorization: Bearer $$TOKEN" \
@@ -22,7 +22,7 @@ test-product-list:
 		-H "Content-Type: application/json" \
 		-d '{"email":"joao@minha-loja.com","password":"senha12345"}'); \
 	TOKEN=$$(echo "$$LOGIN" | grep -o '"token":"[^"]*' | cut -d'"' -f4); \
-	URL_CODE=$$(echo "$$LOGIN" | grep -o '"url_code":"[^"]*' | head -1 | cut -d'"' -f4); \
+	URL_CODE=$$(echo "$$LOGIN" | grep -o '"current_tenant_code":"[^"]*' | cut -d'"' -f4); \
 	curl -s -X GET http://localhost:8080/api/v1/$$URL_CODE/products \
 		-H "Authorization: Bearer $$TOKEN"
 	@echo ""
@@ -34,7 +34,7 @@ test-product-update:
 		-H "Content-Type: application/json" \
 		-d '{"email":"joao@minha-loja.com","password":"senha12345"}'); \
 	TOKEN=$$(echo "$$LOGIN" | grep -o '"token":"[^"]*' | cut -d'"' -f4); \
-	URL_CODE=$$(echo "$$LOGIN" | grep -o '"url_code":"[^"]*' | head -1 | cut -d'"' -f4); \
+	URL_CODE=$$(echo "$$LOGIN" | grep -o '"current_tenant_code":"[^"]*' | cut -d'"' -f4); \
 	PRODUCT_ID=$$(curl -s -X GET http://localhost:8080/api/v1/$$URL_CODE/products \
 		-H "Authorization: Bearer $$TOKEN" | grep -o '"id":"[^"]*' | head -1 | cut -d'"' -f4); \
 	curl -s -X PUT http://localhost:8080/api/v1/$$URL_CODE/products/$$PRODUCT_ID \
@@ -50,7 +50,7 @@ test-product-delete:
 		-H "Content-Type: application/json" \
 		-d '{"email":"joao@minha-loja.com","password":"senha12345"}'); \
 	TOKEN=$$(echo "$$LOGIN" | grep -o '"token":"[^"]*' | cut -d'"' -f4); \
-	URL_CODE=$$(echo "$$LOGIN" | grep -o '"url_code":"[^"]*' | head -1 | cut -d'"' -f4); \
+	URL_CODE=$$(echo "$$LOGIN" | grep -o '"current_tenant_code":"[^"]*' | cut -d'"' -f4); \
 	PRODUCT_ID=$$(curl -s -X GET http://localhost:8080/api/v1/$$URL_CODE/products \
 		-H "Authorization: Bearer $$TOKEN" | grep -o '"id":"[^"]*' | head -1 | cut -d'"' -f4); \
 	curl -s -X DELETE http://localhost:8080/api/v1/$$URL_CODE/products/$$PRODUCT_ID \
@@ -66,7 +66,7 @@ test-products-all:
 		-H "Content-Type: application/json" \
 		-d '{"email":"joao@minha-loja.com","password":"senha12345"}'); \
 	TOKEN=$$(echo "$$LOGIN" | grep -o '"token":"[^"]*' | cut -d'"' -f4); \
-	URL_CODE=$$(echo "$$LOGIN" | grep -o '"url_code":"[^"]*' | head -1 | cut -d'"' -f4); \
+	URL_CODE=$$(echo "$$LOGIN" | grep -o '"current_tenant_code":"[^"]*' | cut -d'"' -f4); \
 	echo "1. Create:"; \
 	RESPONSE=$$(curl -s -X POST http://localhost:8080/api/v1/$$URL_CODE/products \
 		-H "Content-Type: application/json" \

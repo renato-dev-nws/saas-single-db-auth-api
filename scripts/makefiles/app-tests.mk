@@ -6,7 +6,7 @@ test-app-register:
 	@LOGIN=$$(curl -s -X POST http://localhost:8080/api/v1/auth/login \
 		-H "Content-Type: application/json" \
 		-d '{"email":"joao@minha-loja.com","password":"senha12345"}'); \
-	URL_CODE=$$(echo "$$LOGIN" | grep -o '"url_code":"[^"]*' | head -1 | cut -d'"' -f4); \
+	URL_CODE=$$(echo "$$LOGIN" | grep -o '"current_tenant_code":"[^"]*' | cut -d'"' -f4); \
 	curl -s -X POST http://localhost:8082/api/v1/$$URL_CODE/auth/register \
 		-H "Content-Type: application/json" \
 		-d '{"name":"Cliente App","email":"cliente@app.com","password":"senha12345"}'
@@ -18,7 +18,7 @@ test-app-login:
 	@LOGIN=$$(curl -s -X POST http://localhost:8080/api/v1/auth/login \
 		-H "Content-Type: application/json" \
 		-d '{"email":"joao@minha-loja.com","password":"senha12345"}'); \
-	URL_CODE=$$(echo "$$LOGIN" | grep -o '"url_code":"[^"]*' | head -1 | cut -d'"' -f4); \
+	URL_CODE=$$(echo "$$LOGIN" | grep -o '"current_tenant_code":"[^"]*' | cut -d'"' -f4); \
 	curl -s -X POST http://localhost:8082/api/v1/$$URL_CODE/auth/login \
 		-H "Content-Type: application/json" \
 		-d '{"email":"cliente@app.com","password":"senha12345"}'
@@ -30,7 +30,7 @@ test-app-catalog:
 	@LOGIN=$$(curl -s -X POST http://localhost:8080/api/v1/auth/login \
 		-H "Content-Type: application/json" \
 		-d '{"email":"joao@minha-loja.com","password":"senha12345"}'); \
-	URL_CODE=$$(echo "$$LOGIN" | grep -o '"url_code":"[^"]*' | head -1 | cut -d'"' -f4); \
+	URL_CODE=$$(echo "$$LOGIN" | grep -o '"current_tenant_code":"[^"]*' | cut -d'"' -f4); \
 	echo "Products:"; \
 	curl -s -X GET http://localhost:8082/api/v1/$$URL_CODE/catalog/products; \
 	echo ""; echo "Services:"; \
@@ -43,7 +43,7 @@ test-app-profile:
 	@LOGIN=$$(curl -s -X POST http://localhost:8080/api/v1/auth/login \
 		-H "Content-Type: application/json" \
 		-d '{"email":"joao@minha-loja.com","password":"senha12345"}'); \
-	URL_CODE=$$(echo "$$LOGIN" | grep -o '"url_code":"[^"]*' | head -1 | cut -d'"' -f4); \
+	URL_CODE=$$(echo "$$LOGIN" | grep -o '"current_tenant_code":"[^"]*' | cut -d'"' -f4); \
 	TOKEN=$$(curl -s -X POST http://localhost:8082/api/v1/$$URL_CODE/auth/login \
 		-H "Content-Type: application/json" \
 		-d '{"email":"cliente@app.com","password":"senha12345"}' | grep -o '"token":"[^"]*' | cut -d'"' -f4); \
@@ -59,7 +59,7 @@ test-app-all:
 	@LOGIN=$$(curl -s -X POST http://localhost:8080/api/v1/auth/login \
 		-H "Content-Type: application/json" \
 		-d '{"email":"joao@minha-loja.com","password":"senha12345"}'); \
-	URL_CODE=$$(echo "$$LOGIN" | grep -o '"url_code":"[^"]*' | head -1 | cut -d'"' -f4); \
+	URL_CODE=$$(echo "$$LOGIN" | grep -o '"current_tenant_code":"[^"]*' | cut -d'"' -f4); \
 	echo "1. Register:"; \
 	RESPONSE=$$(curl -s -X POST http://localhost:8082/api/v1/$$URL_CODE/auth/register \
 		-H "Content-Type: application/json" \

@@ -194,11 +194,11 @@ func (h *Handler) Login(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{
-		"token":   result.Token,
-		"user_id": result.UserID,
-		"name":    result.Name,
-		"email":   result.Email,
-		"tenants": result.Tenants,
+		"token":               result.Token,
+		"name":                result.Name,
+		"email":               result.Email,
+		"current_tenant_code": result.CurrentTenantCode,
+		"tenants":             result.Tenants,
 	})
 }
 
@@ -401,19 +401,19 @@ func (h *Handler) UploadAvatar(c *gin.Context) {
 	})
 }
 
-// ==================== TENANT CONFIG ====================
+// ==================== BOOTSTRAP ====================
 
-// GetConfig godoc
-// @Summary Obter configuração do tenant
-// @Description Retorna configuração completa do tenant: dados, features, permissões, plano e perfil
-// @Tags Tenant Config
+// GetBootstrap godoc
+// @Summary Obter bootstrap do tenant
+// @Description Retorna dados essenciais para inicializar o frontend: tenant, features, permissões, plano e layout
+// @Tags Bootstrap
 // @Produce json
 // @Security BearerAuth
 // @Param url_code path string true "URL code do tenant"
-// @Success 200 {object} swagger.TenantConfigResponse
+// @Success 200 {object} swagger.BootstrapResponse
 // @Failure 404 {object} swagger.ErrorResponse
-// @Router /{url_code}/config [get]
-func (h *Handler) GetConfig(c *gin.Context) {
+// @Router /{url_code}/bootstrap [get]
+func (h *Handler) GetBootstrap(c *gin.Context) {
 	tenantID := c.GetString("tenant_id")
 	userID := c.GetString("user_id")
 
@@ -426,34 +426,35 @@ func (h *Handler) GetConfig(c *gin.Context) {
 	plan, _ := h.repo.GetActiveTenantPlan(c.Request.Context(), tenantID)
 	features, _ := h.repo.GetTenantFeatures(c.Request.Context(), tenantID)
 	perms, _ := h.repo.GetUserPermissions(c.Request.Context(), userID, tenantID)
-	memberCount, _ := h.repo.CountTenantMembers(c.Request.Context(), tenantID)
 	isOwner := h.service.IsOwner(c.Request.Context(), userID, tenantID)
-	profile, _ := h.repo.GetTenantProfile(c.Request.Context(), tenantID)
+
+	// Layout settings — return defaults if none saved yet
+	layoutData := map[string]interface{}{
+		"primary_color":   "#4F46E5",
+		"secondary_color": "#10B981",
+		"logo":            "",
+		"theme":           "Aura",
+	}
+	layoutSetting, err := h.repo.GetSetting(c.Request.Context(), tenantID, "layout")
+	if err == nil && layoutSetting != nil {
+		if m, ok := layoutSetting.Data.(map[string]interface{}); ok {
+			layoutData = m
+		}
+	}
 
 	result := gin.H{
-		"tenant":       tenant,
-		"features":     features,
-		"permissions":  perms,
-		"is_owner":     isOwner,
-		"member_count": memberCount,
+		"tenant":          tenant,
+		"features":        features,
+		"permissions":     perms,
+		"is_owner":        isOwner,
+		"layout_settings": layoutData,
 	}
 
 	if plan != nil {
 		result["plan"] = gin.H{
-			"id":               plan.PlanID,
-			"name":             plan.PlanName,
-			"max_users":        plan.MaxUsers,
-			"is_multilang":     plan.IsMultilang,
-			"billing_cycle":    plan.BillingCycle,
-			"contracted_price": plan.ContractedPrice,
-			"promo_price":      plan.PromoPrice,
-			"promo_expires_at": plan.PromoExpiresAt,
-		}
-	}
-	if profile != nil {
-		result["profile"] = gin.H{
-			"about":    profile.About,
-			"logo_url": profile.LogoURL,
+			"name":         plan.PlanName,
+			"max_users":    plan.MaxUsers,
+			"is_multilang": plan.IsMultilang,
 		}
 	}
 
@@ -1380,6 +1381,85 @@ func (h *Handler) UploadServiceImage(c *gin.Context) {
 }
 
 // ==================== SETTINGS ====================
+
+// GetLayoutSettings godoc
+// @Summary Obter configurações de layout
+// @Description Retorna as configurações de layout do tenant (cores, logo, tema)
+// @Tags Settings
+// @Produce json
+// @Security BearerAuth
+// @Param url_code path string true "URL code do tenant"
+// @Success 200 {object} swagger.LayoutSettingsResponse
+// @Failure 500 {object} swagger.ErrorResponse
+// @Router /{url_code}/settings/layout [get]
+func (h *Handler) GetLayoutSettings(c *gin.Context) {
+	tenantID := c.GetString("tenant_id")
+
+	// Default layout settings
+	layoutData := map[string]interface{}{
+		"primary_color":   "#4F46E5",
+		"secondary_color": "#10B981",
+		"logo":            "",
+		"theme":           "Aura",
+	}
+
+	setting, err := h.repo.GetSetting(c.Request.Context(), tenantID, "layout")
+	if err == nil && setting != nil {
+		if m, ok := setting.Data.(map[string]interface{}); ok {
+			layoutData = m
+		}
+	}
+
+	c.JSON(http.StatusOK, layoutData)
+}
+
+// UpdateLayoutSettings godoc
+// @Summary Atualizar configurações de layout
+// @Description Atualiza cores, logo e tema do tenant. Requer permissão 'setg_m' ou ser owner.
+// @Tags Settings
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param url_code path string true "URL code do tenant"
+// @Param request body swagger.LayoutSettingsRequest true "Configurações de layout"
+// @Success 200 {object} swagger.MessageResponse
+// @Failure 400 {object} swagger.ErrorResponse
+// @Failure 403 {object} swagger.ErrorResponse
+// @Router /{url_code}/settings/layout [put]
+func (h *Handler) UpdateLayoutSettings(c *gin.Context) {
+	tenantID := c.GetString("tenant_id")
+	userID := c.GetString("user_id")
+
+	if !h.service.HasPermission(c.Request.Context(), userID, tenantID, "setg_m") &&
+		!h.service.IsOwner(c.Request.Context(), userID, tenantID) {
+		c.JSON(http.StatusForbidden, gin.H{"error": "insufficient permissions"})
+		return
+	}
+
+	var req struct {
+		PrimaryColor   string `json:"primary_color" binding:"required"`
+		SecondaryColor string `json:"secondary_color" binding:"required"`
+		Logo           string `json:"logo"`
+		Theme          string `json:"theme" binding:"required,oneof=Aura Lara"`
+	}
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": utils.FormatValidationErrors(err)})
+		return
+	}
+
+	data := map[string]interface{}{
+		"primary_color":   req.PrimaryColor,
+		"secondary_color": req.SecondaryColor,
+		"logo":            req.Logo,
+		"theme":           req.Theme,
+	}
+
+	if err := h.repo.UpsertSetting(c.Request.Context(), tenantID, "layout", data); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to save layout settings"})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"message": "layout_settings_saved"})
+}
 
 // ListSettings godoc
 // @Summary Listar configurações

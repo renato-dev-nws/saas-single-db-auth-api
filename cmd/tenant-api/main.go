@@ -112,8 +112,8 @@ func main() {
 			middleware.TenantAccessMiddleware(),
 		)
 		{
-			// Config
-			tenantScoped.GET("/config", handler.GetConfig)
+			// Bootstrap
+			tenantScoped.GET("/bootstrap", handler.GetBootstrap)
 
 			// Tenant profile
 			tenantScoped.GET("/tenant", handler.GetTenantProfile)
@@ -177,6 +177,8 @@ func main() {
 			// Settings
 			settings := tenantScoped.Group("/settings")
 			{
+				settings.GET("/layout", handler.GetLayoutSettings)
+				settings.PUT("/layout", handler.UpdateLayoutSettings)
 				settings.GET("", handler.ListSettings)
 				settings.GET("/:category", handler.GetSetting)
 				settings.PUT("/:category", handler.UpsertSetting)

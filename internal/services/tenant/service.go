@@ -248,11 +248,11 @@ func (s *Service) ResendVerification(ctx context.Context, userID string) error {
 // --- Auth ---
 
 type LoginResult struct {
-	Token   string
-	UserID  string
-	Name    string
-	Email   string
-	Tenants []repo.TenantBriefExported
+	Token             string
+	Name              string
+	Email             string
+	CurrentTenantCode string
+	Tenants           []repo.TenantBriefExported
 }
 
 func (s *Service) Login(ctx context.Context, email, password string) (*LoginResult, error) {
@@ -296,11 +296,11 @@ func (s *Service) Login(ctx context.Context, email, password string) (*LoginResu
 	}
 
 	return &LoginResult{
-		Token:   token,
-		UserID:  user.ID,
-		Name:    user.Name,
-		Email:   user.Email,
-		Tenants: tenantList,
+		Token:             token,
+		Name:              user.Name,
+		Email:             user.Email,
+		CurrentTenantCode: urlCode,
+		Tenants:           tenantList,
 	}, nil
 }
 
