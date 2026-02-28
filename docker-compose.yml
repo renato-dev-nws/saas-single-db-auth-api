@@ -69,5 +69,21 @@ services:
       - postgres
       - redis
 
+  worker-images:
+    build:
+      context: .
+      dockerfile: Dockerfile.worker-images
+    environment:
+      DATABASE_URL: postgres://saasuser:saaspassword@postgres:5432/saasdb?sslmode=disable
+      REDIS_URL: redis://redis:6379
+      STORAGE_PROVIDER: ${STORAGE_PROVIDER:-local}
+      STORAGE_LOCAL_PATH: /app/uploads
+      STORAGE_BASE_URL: http://localhost:8080/uploads
+    volumes:
+      - ./uploads:/app/uploads
+    depends_on:
+      - postgres
+      - redis
+
 volumes:
   pgdata:

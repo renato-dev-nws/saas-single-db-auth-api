@@ -1013,58 +1013,16 @@ func (r *Repository) UpsertSetting(ctx context.Context, tenantID, category strin
 	return err
 }
 
-// --- Images ---
+// --- Images (Polymorphic) ---
 
-func (r *Repository) CreateImage(ctx context.Context, tenantID, originalName, storagePath, publicURL string, fileSize int64, mimeType, provider string, entityType *string, entityID *string, uploadedBy *string) (string, error) {
+func (r *Repository) CreateImageRecord(ctx context.Context, tenantID, imageableType, imageableID, filename, originalFilename, mimeType, extension, storageDriver, storagePath, publicURL string, fileSize int64) (string, error) {
 	var id string
 	err := r.db.QueryRow(ctx,
-		`INSERT INTO images (tenant_id, original_name, storage_path, public_url, file_size, mime_type, provider, entity_type, entity_id, uploaded_by)
-		 VALUES ($1, $2, $3, $4, $5, $6, $7::storage_provider, $8, $9, $10) RETURNING id`,
-		tenantID, originalName, storagePath, publicURL, fileSize, mimeType, provider, entityType, entityID, uploadedBy,
+		`INSERT INTO images (tenant_id, imageable_type, imageable_id, filename, original_filename, mime_type, extension, storage_driver, storage_path, public_url, file_size, variant, processing_status)
+		 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, 'original', 'pending') RETURNING id`,
+		tenantID, imageableType, imageableID, filename, originalFilename, mimeType, extension, storageDriver, storagePath, publicURL, fileSize,
 	).Scan(&id)
 	return id, err
-}
-
-func (r *Repository) ListImages(ctx context.Context, tenantID string, limit, offset int) ([]interface{}, int64, error) {
-	var total int64
-	r.db.QueryRow(ctx, `SELECT COUNT(*) FROM images WHERE tenant_id = $1`, tenantID).Scan(&total)
-
-	rows, err := r.db.Query(ctx,
-		`SELECT id, original_name, storage_path, public_url, file_size, mime_type, entity_type, entity_id, created_at
-		 FROM images WHERE tenant_id = $1 ORDER BY created_at DESC LIMIT $2 OFFSET $3`, tenantID, limit, offset,
-	)
-	if err != nil {
-		return nil, 0, err
-	}
-	defer rows.Close()
-
-	var images []interface{}
-	for rows.Next() {
-		var i struct {
-			ID           string      `json:"id"`
-			OriginalName string      `json:"original_name"`
-			StoragePath  string      `json:"storage_path"`
-			PublicURL    string      `json:"public_url"`
-			FileSize     int64       `json:"file_size"`
-			MimeType     string      `json:"mime_type"`
-			EntityType   *string     `json:"entity_type"`
-			EntityID     *string     `json:"entity_id"`
-			CreatedAt    interface{} `json:"created_at"`
-		}
-		if err := rows.Scan(&i.ID, &i.OriginalName, &i.StoragePath, &i.PublicURL, &i.FileSize, &i.MimeType, &i.EntityType, &i.EntityID, &i.CreatedAt); err != nil {
-			return nil, 0, err
-		}
-		images = append(images, i)
-	}
-	return images, total, nil
-}
-
-func (r *Repository) DeleteImage(ctx context.Context, tenantID, imageID string) (string, error) {
-	var storagePath string
-	err := r.db.QueryRow(ctx,
-		`DELETE FROM images WHERE tenant_id = $1 AND id = $2 RETURNING storage_path`, tenantID, imageID,
-	).Scan(&storagePath)
-	return storagePath, err
 }
 
 // --- App Users (managed by backoffice) ---

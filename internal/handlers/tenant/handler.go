@@ -1,8 +1,10 @@
 package tenant
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/http"
+	"path/filepath"
 	"strings"
 
 	"github.com/gin-gonic/gin"
@@ -1174,14 +1176,33 @@ func (h *Handler) UploadProductImage(c *gin.Context) {
 	}
 	defer file.Close()
 
-	publicURL, storagePath, err := h.storage.Upload(file, header, "products")
+	// Upload original to structured path: tenants/{tenant_id}/images/products/{product_id}/
+	uploadPath := fmt.Sprintf("tenants/%s/images/products/%s", tenantID, productID)
+	publicURL, storagePath, err := h.storage.Upload(file, header, uploadPath)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to upload"})
 		return
 	}
+
+	ext := strings.TrimPrefix(filepath.Ext(header.Filename), ".")
+	filename := filepath.Base(storagePath)
+	mimeType := header.Header.Get("Content-Type")
+	storageDriver := "local"
+
+	imageID, err := h.repo.CreateImageRecord(c.Request.Context(), tenantID, "products", productID, filename, header.Filename, mimeType, ext, storageDriver, storagePath, publicURL, header.Size)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to save image record"})
+		return
+	}
+
+	// Update product image_url with original
 	_ = h.repo.UpdateProductImage(c.Request.Context(), tenantID, productID, publicURL)
 
-	c.JSON(http.StatusOK, gin.H{"path": storagePath, "public_url": publicURL})
+	// Publish to Redis for async processing
+	msg, _ := json.Marshal(map[string]string{"image_id": imageID})
+	h.cache.Publish(c.Request.Context(), "image:process", string(msg))
+
+	c.JSON(http.StatusOK, gin.H{"image_id": imageID, "path": storagePath, "public_url": publicURL})
 }
 
 // ==================== SERVICES ====================
@@ -1371,13 +1392,33 @@ func (h *Handler) UploadServiceImage(c *gin.Context) {
 	}
 	defer file.Close()
 
-	publicURL, storagePath, err := h.storage.Upload(file, header, "services")
+	// Upload original to structured path: tenants/{tenant_id}/images/services/{service_id}/
+	uploadPath := fmt.Sprintf("tenants/%s/images/services/%s", tenantID, serviceID)
+	publicURL, storagePath, err := h.storage.Upload(file, header, uploadPath)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to upload"})
 		return
 	}
+
+	ext := strings.TrimPrefix(filepath.Ext(header.Filename), ".")
+	filename := filepath.Base(storagePath)
+	mimeType := header.Header.Get("Content-Type")
+	storageDriver := "local"
+
+	imageID, err := h.repo.CreateImageRecord(c.Request.Context(), tenantID, "services", serviceID, filename, header.Filename, mimeType, ext, storageDriver, storagePath, publicURL, header.Size)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to save image record"})
+		return
+	}
+
+	// Update service image_url with original
 	_ = h.repo.UpdateServiceImage(c.Request.Context(), tenantID, serviceID, publicURL)
-	c.JSON(http.StatusOK, gin.H{"path": storagePath, "public_url": publicURL})
+
+	// Publish to Redis for async processing
+	msg, _ := json.Marshal(map[string]string{"image_id": imageID})
+	h.cache.Publish(c.Request.Context(), "image:process", string(msg))
+
+	c.JSON(http.StatusOK, gin.H{"image_id": imageID, "path": storagePath, "public_url": publicURL})
 }
 
 // ==================== SETTINGS ====================
@@ -1541,123 +1582,6 @@ func (h *Handler) UpsertSetting(c *gin.Context) {
 		return
 	}
 	c.JSON(http.StatusOK, gin.H{"message": "setting saved"})
-}
-
-// ==================== IMAGES ====================
-
-// ListImages godoc
-// @Summary Listar imagens
-// @Description Retorna imagens do tenant paginadas
-// @Tags Images
-// @Produce json
-// @Security BearerAuth
-// @Param url_code path string true "URL code do tenant"
-// @Param page query int false "Página" default(1)
-// @Param page_size query int false "Itens por página" default(20)
-// @Success 200 {object} swagger.PaginatedResponse
-// @Failure 500 {object} swagger.ErrorResponse
-// @Router /{url_code}/images [get]
-func (h *Handler) ListImages(c *gin.Context) {
-	tenantID := c.GetString("tenant_id")
-	pag := utils.GetPagination(c)
-
-	images, total, err := h.repo.ListImages(c.Request.Context(), tenantID, pag.PageSize, pag.Offset)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to list images"})
-		return
-	}
-	c.JSON(http.StatusOK, gin.H{
-		"data":      images,
-		"total":     total,
-		"page":      pag.Page,
-		"page_size": pag.PageSize,
-	})
-}
-
-// UploadImage godoc
-// @Summary Upload de imagem genérica
-// @Description Faz upload de uma imagem com entity_type e entity_id opcionais
-// @Tags Images
-// @Accept multipart/form-data
-// @Produce json
-// @Security BearerAuth
-// @Param url_code path string true "URL code do tenant"
-// @Param image formData file true "Imagem"
-// @Param entity_type formData string false "Tipo da entidade"
-// @Param entity_id formData string false "ID da entidade"
-// @Success 201 {object} swagger.ImageResponse
-// @Failure 400 {object} swagger.ErrorResponse
-// @Router /{url_code}/images [post]
-func (h *Handler) UploadImage(c *gin.Context) {
-	tenantID := c.GetString("tenant_id")
-	userID := c.GetString("user_id")
-
-	file, header, err := c.Request.FormFile("image")
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "no file provided"})
-		return
-	}
-	defer file.Close()
-
-	entityType := c.PostForm("entity_type")
-	entityID := c.PostForm("entity_id")
-
-	publicURL, storagePath, err := h.storage.Upload(file, header, "images")
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to upload"})
-		return
-	}
-
-	var eType, eID, uBy *string
-	if entityType != "" {
-		eType = &entityType
-	}
-	if entityID != "" {
-		eID = &entityID
-	}
-	uBy = &userID
-
-	providerName := "local"
-	if h.storage != nil {
-		providerName = "local" // default
-	}
-
-	id, err := h.repo.CreateImage(c.Request.Context(), tenantID, header.Filename, storagePath, publicURL, header.Size, header.Header.Get("Content-Type"), providerName, eType, eID, uBy)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to save image record"})
-		return
-	}
-
-	c.JSON(http.StatusCreated, gin.H{
-		"id":         id,
-		"path":       storagePath,
-		"public_url": publicURL,
-	})
-}
-
-// DeleteImage godoc
-// @Summary Remover imagem
-// @Description Remove uma imagem do tenant
-// @Tags Images
-// @Produce json
-// @Security BearerAuth
-// @Param url_code path string true "URL code do tenant"
-// @Param id path string true "ID da imagem"
-// @Success 200 {object} swagger.MessageResponse
-// @Failure 404 {object} swagger.ErrorResponse
-// @Router /{url_code}/images/{id} [delete]
-func (h *Handler) DeleteImage(c *gin.Context) {
-	tenantID := c.GetString("tenant_id")
-	imageID := c.Param("id")
-
-	storagePath, err := h.repo.DeleteImage(c.Request.Context(), tenantID, imageID)
-	if err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "image not found"})
-		return
-	}
-
-	_ = h.storage.Delete(storagePath)
-	c.JSON(http.StatusOK, gin.H{"message": "image deleted"})
 }
 
 // ==================== APP USERS (managed from backoffice) ====================

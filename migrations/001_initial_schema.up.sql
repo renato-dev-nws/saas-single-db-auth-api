@@ -333,24 +333,37 @@ CREATE TABLE email_templates (
 );
 
 -- ============================================================
--- Images Table
+-- Images Table (Polymorphic)
 -- ============================================================
 
+CREATE TYPE media_type     AS ENUM ('image');
+CREATE TYPE image_variant  AS ENUM ('original', 'medium', 'small', 'thumb');
+
 CREATE TABLE images (
-    id             UUID             PRIMARY KEY DEFAULT uuid_generate_v4(),
-    tenant_id      UUID             NOT NULL REFERENCES tenants(id) ON DELETE CASCADE,
-    original_name  VARCHAR(500)     NOT NULL,
-    storage_path   TEXT             NOT NULL,
-    public_url     TEXT             NOT NULL,
-    file_size      BIGINT           NOT NULL DEFAULT 0,
-    mime_type      VARCHAR(100)     NOT NULL,
-    width          INTEGER,
-    height         INTEGER,
-    provider       storage_provider NOT NULL DEFAULT 'local',
-    entity_type    VARCHAR(50),
-    entity_id      UUID,
-    uploaded_by    UUID             REFERENCES users(id) ON DELETE SET NULL,
-    created_at     TIMESTAMP        NOT NULL DEFAULT NOW()
+    id                 UUID           PRIMARY KEY DEFAULT uuid_generate_v4(),
+    tenant_id          UUID           NOT NULL REFERENCES tenants(id) ON DELETE CASCADE,
+    imageable_type     VARCHAR(50)    NOT NULL,
+    imageable_id       UUID           NOT NULL,
+    filename           VARCHAR(255)   NOT NULL,
+    original_filename  VARCHAR(255),
+    title              VARCHAR(255),
+    alt_text           VARCHAR(255),
+    media_type         media_type     NOT NULL DEFAULT 'image',
+    mime_type          VARCHAR(100)   NOT NULL,
+    extension          VARCHAR(10)    NOT NULL,
+    variant            image_variant  NOT NULL DEFAULT 'original',
+    parent_id          UUID           REFERENCES images(id) ON DELETE CASCADE,
+    width              INTEGER,
+    height             INTEGER,
+    file_size          BIGINT,
+    storage_driver     VARCHAR(20)    NOT NULL DEFAULT 'local',
+    storage_path       TEXT           NOT NULL,
+    public_url         TEXT,
+    processing_status  VARCHAR(20)    DEFAULT 'pending',
+    processed_at       TIMESTAMP,
+    display_order      INTEGER        DEFAULT 0,
+    created_at         TIMESTAMP      NOT NULL DEFAULT NOW(),
+    updated_at         TIMESTAMP      NOT NULL DEFAULT NOW()
 );
 
 -- ============================================================
@@ -378,7 +391,10 @@ CREATE INDEX idx_tenant_members_tenant_id  ON tenant_members(tenant_id) WHERE de
 CREATE INDEX idx_products_tenant_id  ON products(tenant_id);
 CREATE INDEX idx_services_tenant_id  ON services(tenant_id);
 CREATE INDEX idx_settings_tenant_id  ON settings(tenant_id);
-CREATE INDEX idx_images_tenant_id    ON images(tenant_id);
+CREATE INDEX idx_images_tenant_id         ON images(tenant_id);
+CREATE INDEX idx_images_imageable         ON images(imageable_type, imageable_id);
+CREATE INDEX idx_images_parent_id         ON images(parent_id);
+CREATE INDEX idx_images_processing_status ON images(processing_status) WHERE processing_status IN ('pending', 'processing');
 
 CREATE INDEX idx_tenant_app_users_tenant_id ON tenant_app_users(tenant_id);
 CREATE INDEX idx_tenant_app_users_email     ON tenant_app_users(tenant_id, email) WHERE deleted_at IS NULL;

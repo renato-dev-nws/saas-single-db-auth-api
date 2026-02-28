@@ -7,6 +7,7 @@ include scripts/makefiles/product-tests.mk
 include scripts/makefiles/service-tests.mk
 include scripts/makefiles/setting-tests.mk
 include scripts/makefiles/security-tests.mk
+include scripts/makefiles/image-tests.mk
 
 .PHONY: up down build logs logs-admin logs-tenant logs-app dev-admin dev-tenant dev-app
 
@@ -32,6 +33,9 @@ logs-tenant:
 logs-app:
 	docker compose logs -f app-api
 
+logs-worker:
+	docker compose logs -f worker-images
+
 # Local dev (run outside Docker)
 dev-admin:
 	go run ./cmd/admin-api
@@ -41,6 +45,9 @@ dev-tenant:
 
 dev-app:
 	go run ./cmd/app-api
+
+dev-worker:
+	go run ./cmd/worker-images
 
 # Build binaries
 build-admin:
@@ -52,10 +59,14 @@ build-tenant:
 build-app:
 	go build -buildvcs=false -o bin/app-api ./cmd/app-api
 
+build-worker:
+	go build -buildvcs=false -o bin/worker-images ./cmd/worker-images
+
 build-all:
 	@$(MAKE) build-admin
 	@$(MAKE) build-tenant
 	@$(MAKE) build-app
+	@$(MAKE) build-worker
 
 # Clean
 clean:

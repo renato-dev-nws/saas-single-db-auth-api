@@ -185,14 +185,6 @@ func main() {
 				settings.PUT("/:category", handler.UpsertSetting)
 			}
 
-			// Images
-			images := tenantScoped.Group("/images")
-			{
-				images.POST("", handler.UploadImage)
-				images.GET("", handler.ListImages)
-				images.DELETE("/:id", handler.DeleteImage)
-			}
-
 			// App Users (managed from backoffice)
 			appUsers := tenantScoped.Group("/app-users")
 			{
