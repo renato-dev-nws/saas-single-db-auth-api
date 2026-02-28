@@ -23,7 +23,7 @@ func (r *Repository) GetAdminByEmail(ctx context.Context, email string) (*models
 	var u models.SystemAdminUser
 	err := r.db.QueryRow(ctx,
 		`SELECT id, name, email, hash_pass, status, created_at, updated_at
-		 FROM system_admin_users WHERE email = $1 AND deleted_at IS NULL`, email,
+		 FROM saas_admin_users WHERE email = $1 AND deleted_at IS NULL`, email,
 	).Scan(&u.ID, &u.Name, &u.Email, &u.HashPass, &u.Status, &u.CreatedAt, &u.UpdatedAt)
 	if err != nil {
 		return nil, err
@@ -35,7 +35,7 @@ func (r *Repository) GetAdminByID(ctx context.Context, id string) (*models.Syste
 	var u models.SystemAdminUser
 	err := r.db.QueryRow(ctx,
 		`SELECT id, name, email, hash_pass, status, created_at, updated_at
-		 FROM system_admin_users WHERE id = $1 AND deleted_at IS NULL`, id,
+		 FROM saas_admin_users WHERE id = $1 AND deleted_at IS NULL`, id,
 	).Scan(&u.ID, &u.Name, &u.Email, &u.HashPass, &u.Status, &u.CreatedAt, &u.UpdatedAt)
 	if err != nil {
 		return nil, err
@@ -46,7 +46,7 @@ func (r *Repository) GetAdminByID(ctx context.Context, id string) (*models.Syste
 func (r *Repository) ListAdmins(ctx context.Context, limit, offset int) ([]models.SystemAdminUser, int64, error) {
 	var total int64
 	err := r.db.QueryRow(ctx,
-		`SELECT COUNT(*) FROM system_admin_users WHERE deleted_at IS NULL`,
+		`SELECT COUNT(*) FROM saas_admin_users WHERE deleted_at IS NULL`,
 	).Scan(&total)
 	if err != nil {
 		return nil, 0, err
@@ -54,7 +54,7 @@ func (r *Repository) ListAdmins(ctx context.Context, limit, offset int) ([]model
 
 	rows, err := r.db.Query(ctx,
 		`SELECT id, name, email, status, created_at, updated_at
-		 FROM system_admin_users WHERE deleted_at IS NULL
+		 FROM saas_admin_users WHERE deleted_at IS NULL
 		 ORDER BY created_at DESC LIMIT $1 OFFSET $2`, limit, offset,
 	)
 	if err != nil {
@@ -76,7 +76,7 @@ func (r *Repository) ListAdmins(ctx context.Context, limit, offset int) ([]model
 func (r *Repository) CreateAdmin(ctx context.Context, name, email, hashPass string) (*models.SystemAdminUser, error) {
 	var u models.SystemAdminUser
 	err := r.db.QueryRow(ctx,
-		`INSERT INTO system_admin_users (name, email, hash_pass) VALUES ($1, $2, $3)
+		`INSERT INTO saas_admin_users (name, email, hash_pass) VALUES ($1, $2, $3)
 		 RETURNING id, name, email, status, created_at, updated_at`,
 		name, email, hashPass,
 	).Scan(&u.ID, &u.Name, &u.Email, &u.Status, &u.CreatedAt, &u.UpdatedAt)
@@ -87,7 +87,7 @@ func (r *Repository) CreateAdmin(ctx context.Context, name, email, hashPass stri
 }
 
 func (r *Repository) UpdateAdmin(ctx context.Context, id string, req *models.UpdateAdminRequest) error {
-	query := `UPDATE system_admin_users SET updated_at = NOW()`
+	query := `UPDATE saas_admin_users SET updated_at = NOW()`
 	args := []interface{}{}
 	argIdx := 1
 
@@ -116,14 +116,14 @@ func (r *Repository) UpdateAdmin(ctx context.Context, id string, req *models.Upd
 
 func (r *Repository) SoftDeleteAdmin(ctx context.Context, id string) error {
 	_, err := r.db.Exec(ctx,
-		`UPDATE system_admin_users SET deleted_at = NOW(), updated_at = NOW() WHERE id = $1 AND deleted_at IS NULL`, id,
+		`UPDATE saas_admin_users SET deleted_at = NOW(), updated_at = NOW() WHERE id = $1 AND deleted_at IS NULL`, id,
 	)
 	return err
 }
 
 func (r *Repository) UpdateAdminPassword(ctx context.Context, id, hashPass string) error {
 	_, err := r.db.Exec(ctx,
-		`UPDATE system_admin_users SET hash_pass = $1, updated_at = NOW() WHERE id = $2`, hashPass, id,
+		`UPDATE saas_admin_users SET hash_pass = $1, updated_at = NOW() WHERE id = $2`, hashPass, id,
 	)
 	return err
 }
@@ -134,7 +134,7 @@ func (r *Repository) GetProfile(ctx context.Context, adminID string) (*models.Sy
 	var p models.SystemAdminProfile
 	err := r.db.QueryRow(ctx,
 		`SELECT admin_user_id, full_name, title, bio, avatar_url, social_links, created_at, updated_at
-		 FROM system_admin_profiles WHERE admin_user_id = $1`, adminID,
+		 FROM saas_admin_profiles WHERE admin_user_id = $1`, adminID,
 	).Scan(&p.AdminUserID, &p.FullName, &p.Title, &p.Bio, &p.AvatarURL, &p.SocialLinks, &p.CreatedAt, &p.UpdatedAt)
 	if err != nil {
 		return nil, err
@@ -144,13 +144,13 @@ func (r *Repository) GetProfile(ctx context.Context, adminID string) (*models.Sy
 
 func (r *Repository) UpsertProfile(ctx context.Context, adminID string, req *models.UpdateProfileRequest) error {
 	_, err := r.db.Exec(ctx,
-		`INSERT INTO system_admin_profiles (admin_user_id, full_name, title, bio, social_links)
+		`INSERT INTO saas_admin_profiles (admin_user_id, full_name, title, bio, social_links)
 		 VALUES ($1, $2, $3, $4, COALESCE($5::jsonb, '{}'))
 		 ON CONFLICT (admin_user_id) DO UPDATE SET
-		   full_name = COALESCE($2, system_admin_profiles.full_name),
-		   title = COALESCE($3, system_admin_profiles.title),
-		   bio = COALESCE($4, system_admin_profiles.bio),
-		   social_links = COALESCE($5::jsonb, system_admin_profiles.social_links),
+		   full_name = COALESCE($2, saas_admin_profiles.full_name),
+		   title = COALESCE($3, saas_admin_profiles.title),
+		   bio = COALESCE($4, saas_admin_profiles.bio),
+		   social_links = COALESCE($5::jsonb, saas_admin_profiles.social_links),
 		   updated_at = NOW()`,
 		adminID, req.FullName, req.Title, req.Bio, req.SocialLinks,
 	)
@@ -159,7 +159,7 @@ func (r *Repository) UpsertProfile(ctx context.Context, adminID string, req *mod
 
 func (r *Repository) CreateProfile(ctx context.Context, adminID, fullName string) error {
 	_, err := r.db.Exec(ctx,
-		`INSERT INTO system_admin_profiles (admin_user_id, full_name) VALUES ($1, $2)
+		`INSERT INTO saas_admin_profiles (admin_user_id, full_name) VALUES ($1, $2)
 		 ON CONFLICT (admin_user_id) DO NOTHING`,
 		adminID, fullName,
 	)
@@ -170,7 +170,7 @@ func (r *Repository) CreateProfile(ctx context.Context, adminID, fullName string
 
 func (r *Repository) ListRoles(ctx context.Context) ([]models.SystemAdminRole, error) {
 	rows, err := r.db.Query(ctx,
-		`SELECT id, title, slug, description, created_at, updated_at FROM system_admin_roles ORDER BY id`,
+		`SELECT id, title, slug, description, created_at, updated_at FROM saas_admin_roles ORDER BY id`,
 	)
 	if err != nil {
 		return nil, err
@@ -191,7 +191,7 @@ func (r *Repository) ListRoles(ctx context.Context) ([]models.SystemAdminRole, e
 func (r *Repository) GetRoleByID(ctx context.Context, id int) (*models.SystemAdminRole, error) {
 	var role models.SystemAdminRole
 	err := r.db.QueryRow(ctx,
-		`SELECT id, title, slug, description, created_at, updated_at FROM system_admin_roles WHERE id = $1`, id,
+		`SELECT id, title, slug, description, created_at, updated_at FROM saas_admin_roles WHERE id = $1`, id,
 	).Scan(&role.ID, &role.Title, &role.Slug, &role.Description, &role.CreatedAt, &role.UpdatedAt)
 	if err != nil {
 		return nil, err
@@ -202,7 +202,7 @@ func (r *Repository) GetRoleByID(ctx context.Context, id int) (*models.SystemAdm
 func (r *Repository) CreateRole(ctx context.Context, title, slug string, description *string) (*models.SystemAdminRole, error) {
 	var role models.SystemAdminRole
 	err := r.db.QueryRow(ctx,
-		`INSERT INTO system_admin_roles (title, slug, description) VALUES ($1, $2, $3)
+		`INSERT INTO saas_admin_roles (title, slug, description) VALUES ($1, $2, $3)
 		 RETURNING id, title, slug, description, created_at, updated_at`,
 		title, slug, description,
 	).Scan(&role.ID, &role.Title, &role.Slug, &role.Description, &role.CreatedAt, &role.UpdatedAt)
@@ -213,7 +213,7 @@ func (r *Repository) CreateRole(ctx context.Context, title, slug string, descrip
 }
 
 func (r *Repository) UpdateRole(ctx context.Context, id int, req *models.UpdateRoleRequest) error {
-	query := `UPDATE system_admin_roles SET updated_at = NOW()`
+	query := `UPDATE saas_admin_roles SET updated_at = NOW()`
 	args := []interface{}{}
 	argIdx := 1
 
@@ -236,13 +236,13 @@ func (r *Repository) UpdateRole(ctx context.Context, id int, req *models.UpdateR
 }
 
 func (r *Repository) DeleteRole(ctx context.Context, id int) error {
-	_, err := r.db.Exec(ctx, `DELETE FROM system_admin_roles WHERE id = $1`, id)
+	_, err := r.db.Exec(ctx, `DELETE FROM saas_admin_roles WHERE id = $1`, id)
 	return err
 }
 
 func (r *Repository) AssignRoleToAdmin(ctx context.Context, adminID string, roleID int) error {
 	_, err := r.db.Exec(ctx,
-		`INSERT INTO system_admin_user_roles (admin_user_id, admin_role_id) VALUES ($1, $2)
+		`INSERT INTO saas_admin_user_roles (admin_user_id, admin_role_id) VALUES ($1, $2)
 		 ON CONFLICT DO NOTHING`, adminID, roleID,
 	)
 	return err
@@ -250,7 +250,7 @@ func (r *Repository) AssignRoleToAdmin(ctx context.Context, adminID string, role
 
 func (r *Repository) RemoveRoleFromAdmin(ctx context.Context, adminID string, roleID int) error {
 	_, err := r.db.Exec(ctx,
-		`DELETE FROM system_admin_user_roles WHERE admin_user_id = $1 AND admin_role_id = $2`, adminID, roleID,
+		`DELETE FROM saas_admin_user_roles WHERE admin_user_id = $1 AND admin_role_id = $2`, adminID, roleID,
 	)
 	return err
 }
@@ -258,8 +258,8 @@ func (r *Repository) RemoveRoleFromAdmin(ctx context.Context, adminID string, ro
 func (r *Repository) GetAdminRoles(ctx context.Context, adminID string) ([]models.SystemAdminRole, error) {
 	rows, err := r.db.Query(ctx,
 		`SELECT r.id, r.title, r.slug, r.description, r.created_at, r.updated_at
-		 FROM system_admin_roles r
-		 JOIN system_admin_user_roles ur ON ur.admin_role_id = r.id
+		 FROM saas_admin_roles r
+		 JOIN saas_admin_user_roles ur ON ur.admin_role_id = r.id
 		 WHERE ur.admin_user_id = $1`, adminID,
 	)
 	if err != nil {
@@ -282,7 +282,7 @@ func (r *Repository) GetAdminRoles(ctx context.Context, adminID string) ([]model
 
 func (r *Repository) ListPermissions(ctx context.Context) ([]models.SystemAdminPermission, error) {
 	rows, err := r.db.Query(ctx,
-		`SELECT id, title, slug, description, created_at, updated_at FROM system_admin_permissions ORDER BY id`,
+		`SELECT id, title, slug, description, created_at, updated_at FROM saas_admin_permissions ORDER BY id`,
 	)
 	if err != nil {
 		return nil, err
@@ -303,9 +303,9 @@ func (r *Repository) ListPermissions(ctx context.Context) ([]models.SystemAdminP
 func (r *Repository) GetAdminPermissions(ctx context.Context, adminID string) ([]string, error) {
 	rows, err := r.db.Query(ctx,
 		`SELECT DISTINCT p.slug
-		 FROM system_admin_permissions p
-		 JOIN system_admin_role_permissions rp ON rp.admin_permission_id = p.id
-		 JOIN system_admin_user_roles ur ON ur.admin_role_id = rp.admin_role_id
+		 FROM saas_admin_permissions p
+		 JOIN saas_admin_role_permissions rp ON rp.admin_permission_id = p.id
+		 JOIN saas_admin_user_roles ur ON ur.admin_role_id = rp.admin_role_id
 		 WHERE ur.admin_user_id = $1`, adminID,
 	)
 	if err != nil {
@@ -326,7 +326,7 @@ func (r *Repository) GetAdminPermissions(ctx context.Context, adminID string) ([
 func (r *Repository) GetRoleBySlug(ctx context.Context, slug string) (*models.SystemAdminRole, error) {
 	var role models.SystemAdminRole
 	err := r.db.QueryRow(ctx,
-		`SELECT id, title, slug, description, created_at, updated_at FROM system_admin_roles WHERE slug = $1`, slug,
+		`SELECT id, title, slug, description, created_at, updated_at FROM saas_admin_roles WHERE slug = $1`, slug,
 	).Scan(&role.ID, &role.Title, &role.Slug, &role.Description, &role.CreatedAt, &role.UpdatedAt)
 	if err != nil {
 		return nil, err
@@ -351,7 +351,7 @@ func (r *Repository) ListTenants(ctx context.Context, limit, offset int) ([]tena
 		        p.name as plan_name, tp.billing_cycle, tp.contracted_price
 		 FROM tenants t
 		 LEFT JOIN tenant_plans tp ON tp.tenant_id = t.id AND tp.is_active = true
-		 LEFT JOIN plans p ON p.id = tp.plan_id
+		 LEFT JOIN saas_plans p ON p.id = tp.plan_id
 		 WHERE t.deleted_at IS NULL
 		 ORDER BY t.created_at DESC LIMIT $1 OFFSET $2`, limit, offset,
 	)
@@ -397,7 +397,7 @@ func (r *Repository) GetTenantByID(ctx context.Context, id string) (*tenantRow, 
 		        p.name as plan_name, tp.billing_cycle, tp.contracted_price
 		 FROM tenants t
 		 LEFT JOIN tenant_plans tp ON tp.tenant_id = t.id AND tp.is_active = true
-		 LEFT JOIN plans p ON p.id = tp.plan_id
+		 LEFT JOIN saas_plans p ON p.id = tp.plan_id
 		 WHERE t.id = $1 AND t.deleted_at IS NULL`, id,
 	).Scan(&t.ID, &t.Name, &t.URLCode, &t.Subdomain, &t.IsCompany,
 		&t.CompanyName, &t.CustomDomain, &t.Status, &t.CreatedAt, &t.UpdatedAt,
@@ -504,7 +504,7 @@ func (r *Repository) ListPlans(ctx context.Context) ([]planWithFeatures, error) 
 	rows, err := r.db.Query(ctx,
 		`SELECT p.id, p.name, p.description, p.plan_type, p.price, p.max_users, p.is_multilang, p.is_active,
 		        p.created_at, p.updated_at
-		 FROM plans p ORDER BY p.price`,
+		 FROM saas_plans p ORDER BY p.price`,
 	)
 	if err != nil {
 		return nil, err
@@ -554,7 +554,7 @@ func (r *Repository) GetPlanByID(ctx context.Context, id string) (*planWithFeatu
 	var p planWithFeatures
 	err := r.db.QueryRow(ctx,
 		`SELECT id, name, description, plan_type, price, max_users, is_multilang, is_active, created_at, updated_at
-		 FROM plans WHERE id = $1`, id,
+		 FROM saas_plans WHERE id = $1`, id,
 	).Scan(&p.ID, &p.Name, &p.Description, &p.PlanType, &p.Price, &p.MaxUsers, &p.IsMultilang, &p.IsActive, &p.CreatedAt, &p.UpdatedAt)
 	if err != nil {
 		return nil, err
@@ -566,14 +566,14 @@ func (r *Repository) GetPlanByID(ctx context.Context, id string) (*planWithFeatu
 func (r *Repository) CreatePlan(ctx context.Context, name string, description *string, planType string, price float64, maxUsers int, isMultilang bool) (string, error) {
 	var id string
 	err := r.db.QueryRow(ctx,
-		`INSERT INTO plans (name, description, plan_type, price, max_users, is_multilang) VALUES ($1, $2, $3::plan_type, $4, $5, $6) RETURNING id`,
+		`INSERT INTO saas_plans (name, description, plan_type, price, max_users, is_multilang) VALUES ($1, $2, $3::plan_type, $4, $5, $6) RETURNING id`,
 		name, description, planType, price, maxUsers, isMultilang,
 	).Scan(&id)
 	return id, err
 }
 
 func (r *Repository) UpdatePlan(ctx context.Context, id string, name *string, description *string, price *float64, maxUsers *int, isMultilang *bool, isActive *bool) error {
-	query := `UPDATE plans SET updated_at = NOW()`
+	query := `UPDATE saas_plans SET updated_at = NOW()`
 	args := []interface{}{}
 	argIdx := 1
 
@@ -616,15 +616,15 @@ func (r *Repository) UpdatePlan(ctx context.Context, id string, name *string, de
 }
 
 func (r *Repository) DeletePlan(ctx context.Context, id string) error {
-	_, err := r.db.Exec(ctx, `DELETE FROM plans WHERE id = $1`, id)
+	_, err := r.db.Exec(ctx, `DELETE FROM saas_plans WHERE id = $1`, id)
 	return err
 }
 
 func (r *Repository) GetPlanFeatures(ctx context.Context, planID string) ([]featureRow, error) {
 	rows, err := r.db.Query(ctx,
 		`SELECT f.id, f.title, f.slug, f.code
-		 FROM features f
-		 JOIN plan_features pf ON pf.feature_id = f.id
+		 FROM saas_features f
+		 JOIN saas_features_plans pf ON pf.feature_id = f.id
 		 WHERE pf.plan_id = $1`, planID,
 	)
 	if err != nil {
@@ -645,7 +645,7 @@ func (r *Repository) GetPlanFeatures(ctx context.Context, planID string) ([]feat
 
 func (r *Repository) AddFeatureToPlan(ctx context.Context, planID, featureID string) error {
 	_, err := r.db.Exec(ctx,
-		`INSERT INTO plan_features (plan_id, feature_id) VALUES ($1, $2) ON CONFLICT DO NOTHING`,
+		`INSERT INTO saas_features_plans (plan_id, feature_id) VALUES ($1, $2) ON CONFLICT DO NOTHING`,
 		planID, featureID,
 	)
 	return err
@@ -653,7 +653,7 @@ func (r *Repository) AddFeatureToPlan(ctx context.Context, planID, featureID str
 
 func (r *Repository) RemoveFeatureFromPlan(ctx context.Context, planID, featureID string) error {
 	_, err := r.db.Exec(ctx,
-		`DELETE FROM plan_features WHERE plan_id = $1 AND feature_id = $2`, planID, featureID,
+		`DELETE FROM saas_features_plans WHERE plan_id = $1 AND feature_id = $2`, planID, featureID,
 	)
 	return err
 }
@@ -662,7 +662,7 @@ func (r *Repository) RemoveFeatureFromPlan(ctx context.Context, planID, featureI
 
 func (r *Repository) ListFeatures(ctx context.Context) ([]featureFullRow, error) {
 	rows, err := r.db.Query(ctx,
-		`SELECT id, title, slug, code, description, is_active, created_at, updated_at FROM features ORDER BY title`,
+		`SELECT id, title, slug, code, description, is_active, created_at, updated_at FROM saas_features ORDER BY title`,
 	)
 	if err != nil {
 		return nil, err
@@ -694,7 +694,7 @@ type featureFullRow struct {
 func (r *Repository) GetFeatureByID(ctx context.Context, id string) (*featureFullRow, error) {
 	var f featureFullRow
 	err := r.db.QueryRow(ctx,
-		`SELECT id, title, slug, code, description, is_active, created_at, updated_at FROM features WHERE id = $1`, id,
+		`SELECT id, title, slug, code, description, is_active, created_at, updated_at FROM saas_features WHERE id = $1`, id,
 	).Scan(&f.ID, &f.Title, &f.Slug, &f.Code, &f.Description, &f.IsActive, &f.CreatedAt, &f.UpdatedAt)
 	if err != nil {
 		return nil, err
@@ -705,14 +705,14 @@ func (r *Repository) GetFeatureByID(ctx context.Context, id string) (*featureFul
 func (r *Repository) CreateFeature(ctx context.Context, title, slug, code string, description *string, isActive bool) (string, error) {
 	var id string
 	err := r.db.QueryRow(ctx,
-		`INSERT INTO features (title, slug, code, description, is_active) VALUES ($1, $2, $3, $4, $5) RETURNING id`,
+		`INSERT INTO saas_features (title, slug, code, description, is_active) VALUES ($1, $2, $3, $4, $5) RETURNING id`,
 		title, slug, code, description, isActive,
 	).Scan(&id)
 	return id, err
 }
 
 func (r *Repository) UpdateFeature(ctx context.Context, id string, title *string, description *string, isActive *bool) error {
-	query := `UPDATE features SET updated_at = NOW()`
+	query := `UPDATE saas_features SET updated_at = NOW()`
 	args := []interface{}{}
 	argIdx := 1
 
@@ -740,7 +740,7 @@ func (r *Repository) UpdateFeature(ctx context.Context, id string, title *string
 }
 
 func (r *Repository) DeleteFeature(ctx context.Context, id string) error {
-	_, err := r.db.Exec(ctx, `DELETE FROM features WHERE id = $1`, id)
+	_, err := r.db.Exec(ctx, `DELETE FROM saas_features WHERE id = $1`, id)
 	return err
 }
 
@@ -749,8 +749,8 @@ func (r *Repository) DeleteFeature(ctx context.Context, id string) error {
 func (r *Repository) ListPromotions(ctx context.Context) ([]promotionRow, error) {
 	rows, err := r.db.Query(ctx,
 		`SELECT id, name, description, discount_type, discount_value, duration_months,
-		        valid_from, valid_until, is_active, created_at, updated_at
-		 FROM promotions ORDER BY created_at DESC`,
+		        valid_from, valid_until, is_active, plan_id, created_at, updated_at
+		 FROM saas_plans_promotions ORDER BY created_at DESC`,
 	)
 	if err != nil {
 		return nil, err
@@ -761,7 +761,7 @@ func (r *Repository) ListPromotions(ctx context.Context) ([]promotionRow, error)
 	for rows.Next() {
 		var p promotionRow
 		if err := rows.Scan(&p.ID, &p.Name, &p.Description, &p.DiscountType, &p.DiscountValue,
-			&p.DurationMonths, &p.ValidFrom, &p.ValidUntil, &p.IsActive, &p.CreatedAt, &p.UpdatedAt); err != nil {
+			&p.DurationMonths, &p.ValidFrom, &p.ValidUntil, &p.IsActive, &p.PlanID, &p.CreatedAt, &p.UpdatedAt); err != nil {
 			return nil, err
 		}
 		promos = append(promos, p)
@@ -779,6 +779,7 @@ type promotionRow struct {
 	ValidFrom      interface{}
 	ValidUntil     interface{}
 	IsActive       bool
+	PlanID         *string
 	CreatedAt      interface{}
 	UpdatedAt      interface{}
 }
@@ -787,33 +788,33 @@ func (r *Repository) GetPromotionByID(ctx context.Context, id string) (*promotio
 	var p promotionRow
 	err := r.db.QueryRow(ctx,
 		`SELECT id, name, description, discount_type, discount_value, duration_months,
-		        valid_from, valid_until, is_active, created_at, updated_at
-		 FROM promotions WHERE id = $1`, id,
+		        valid_from, valid_until, is_active, plan_id, created_at, updated_at
+		 FROM saas_plans_promotions WHERE id = $1`, id,
 	).Scan(&p.ID, &p.Name, &p.Description, &p.DiscountType, &p.DiscountValue,
-		&p.DurationMonths, &p.ValidFrom, &p.ValidUntil, &p.IsActive, &p.CreatedAt, &p.UpdatedAt)
+		&p.DurationMonths, &p.ValidFrom, &p.ValidUntil, &p.IsActive, &p.PlanID, &p.CreatedAt, &p.UpdatedAt)
 	if err != nil {
 		return nil, err
 	}
 	return &p, nil
 }
 
-func (r *Repository) CreatePromotion(ctx context.Context, name string, description *string, discountType string, discountValue float64, durationMonths int, validFrom, validUntil interface{}) (string, error) {
+func (r *Repository) CreatePromotion(ctx context.Context, name string, description *string, discountType string, discountValue float64, durationMonths int, validFrom, validUntil interface{}, planID *string) (string, error) {
 	var id string
 	err := r.db.QueryRow(ctx,
-		`INSERT INTO promotions (name, description, discount_type, discount_value, duration_months, valid_from, valid_until)
-		 VALUES ($1, $2, $3::discount_type, $4, $5, COALESCE($6::timestamp, NOW()), $7::timestamp) RETURNING id`,
-		name, description, discountType, discountValue, durationMonths, validFrom, validUntil,
+		`INSERT INTO saas_plans_promotions (name, description, discount_type, discount_value, duration_months, valid_from, valid_until, plan_id)
+		 VALUES ($1, $2, $3::discount_type, $4, $5, COALESCE($6::timestamp, NOW()), $7::timestamp, $8) RETURNING id`,
+		name, description, discountType, discountValue, durationMonths, validFrom, validUntil, planID,
 	).Scan(&id)
 	return id, err
 }
 
 func (r *Repository) UpdatePromotion(ctx context.Context, id string, req interface{}) error {
-	_, err := r.db.Exec(ctx, `UPDATE promotions SET updated_at = NOW() WHERE id = $1`, id)
+	_, err := r.db.Exec(ctx, `UPDATE saas_plans_promotions SET updated_at = NOW() WHERE id = $1`, id)
 	return err
 }
 
 func (r *Repository) DeactivatePromotion(ctx context.Context, id string) error {
-	_, err := r.db.Exec(ctx, `UPDATE promotions SET is_active = false, updated_at = NOW() WHERE id = $1`, id)
+	_, err := r.db.Exec(ctx, `UPDATE saas_plans_promotions SET is_active = false, updated_at = NOW() WHERE id = $1`, id)
 	return err
 }
 
@@ -841,7 +842,7 @@ func (r *Repository) GetTenantPlanHistory(ctx context.Context, tenantID string) 
 		`SELECT tp.id, tp.plan_id, p.name, tp.billing_cycle, tp.base_price, tp.contracted_price,
 		        tp.promo_price, tp.promo_expires_at, tp.is_active, tp.started_at, tp.ended_at
 		 FROM tenant_plans tp
-		 JOIN plans p ON p.id = tp.plan_id
+		 JOIN saas_plans p ON p.id = tp.plan_id
 		 WHERE tp.tenant_id = $1
 		 ORDER BY tp.created_at DESC`, tenantID,
 	)

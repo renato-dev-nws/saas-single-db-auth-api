@@ -15,10 +15,10 @@ CREATE TYPE discount_type    AS ENUM ('percent', 'fixed');
 CREATE TYPE plan_type        AS ENUM ('individual', 'business');
 
 -- ============================================================
--- System Admin Tables
+-- SaaS Admin Tables
 -- ============================================================
 
-CREATE TABLE system_admin_users (
+CREATE TABLE saas_admin_users (
     id            UUID         PRIMARY KEY DEFAULT uuid_generate_v4(),
     name          VARCHAR(255),
     email         VARCHAR(255) UNIQUE NOT NULL,
@@ -29,8 +29,8 @@ CREATE TABLE system_admin_users (
     deleted_at    TIMESTAMP
 );
 
-CREATE TABLE system_admin_profiles (
-    admin_user_id UUID         PRIMARY KEY REFERENCES system_admin_users(id) ON DELETE CASCADE,
+CREATE TABLE saas_admin_profiles (
+    admin_user_id UUID         PRIMARY KEY REFERENCES saas_admin_users(id) ON DELETE CASCADE,
     full_name     VARCHAR(255),
     title         VARCHAR(255),
     bio           TEXT,
@@ -40,7 +40,7 @@ CREATE TABLE system_admin_profiles (
     updated_at    TIMESTAMP    NOT NULL DEFAULT NOW()
 );
 
-CREATE TABLE system_admin_roles (
+CREATE TABLE saas_admin_roles (
     id          SERIAL       PRIMARY KEY,
     title       VARCHAR(100) NOT NULL,
     slug        VARCHAR(50)  UNIQUE NOT NULL,
@@ -49,7 +49,7 @@ CREATE TABLE system_admin_roles (
     updated_at  TIMESTAMP    NOT NULL DEFAULT NOW()
 );
 
-CREATE TABLE system_admin_permissions (
+CREATE TABLE saas_admin_permissions (
     id          SERIAL       PRIMARY KEY,
     title       VARCHAR(100) NOT NULL,
     slug        VARCHAR(50)  UNIQUE NOT NULL,
@@ -58,16 +58,16 @@ CREATE TABLE system_admin_permissions (
     updated_at  TIMESTAMP    NOT NULL DEFAULT NOW()
 );
 
-CREATE TABLE system_admin_user_roles (
-    admin_user_id UUID    REFERENCES system_admin_users(id) ON DELETE CASCADE,
-    admin_role_id INTEGER REFERENCES system_admin_roles(id) ON DELETE CASCADE,
+CREATE TABLE saas_admin_user_roles (
+    admin_user_id UUID    REFERENCES saas_admin_users(id) ON DELETE CASCADE,
+    admin_role_id INTEGER REFERENCES saas_admin_roles(id) ON DELETE CASCADE,
     created_at    TIMESTAMP NOT NULL DEFAULT NOW(),
     PRIMARY KEY (admin_user_id, admin_role_id)
 );
 
-CREATE TABLE system_admin_role_permissions (
-    admin_role_id       INTEGER REFERENCES system_admin_roles(id) ON DELETE CASCADE,
-    admin_permission_id INTEGER REFERENCES system_admin_permissions(id) ON DELETE CASCADE,
+CREATE TABLE saas_admin_role_permissions (
+    admin_role_id       INTEGER REFERENCES saas_admin_roles(id) ON DELETE CASCADE,
+    admin_permission_id INTEGER REFERENCES saas_admin_permissions(id) ON DELETE CASCADE,
     created_at          TIMESTAMP NOT NULL DEFAULT NOW(),
     PRIMARY KEY (admin_role_id, admin_permission_id)
 );
@@ -76,7 +76,7 @@ CREATE TABLE system_admin_role_permissions (
 -- Plans & Features Tables
 -- ============================================================
 
-CREATE TABLE features (
+CREATE TABLE saas_features (
     id          UUID         PRIMARY KEY DEFAULT uuid_generate_v4(),
     title       VARCHAR(255) NOT NULL,
     slug        VARCHAR(100) UNIQUE NOT NULL,
@@ -87,7 +87,7 @@ CREATE TABLE features (
     updated_at  TIMESTAMP    NOT NULL DEFAULT NOW()
 );
 
-CREATE TABLE plans (
+CREATE TABLE saas_plans (
     id            UUID           PRIMARY KEY DEFAULT uuid_generate_v4(),
     name          VARCHAR(255)   NOT NULL,
     description   TEXT,
@@ -100,9 +100,9 @@ CREATE TABLE plans (
     updated_at    TIMESTAMP      NOT NULL DEFAULT NOW()
 );
 
-CREATE TABLE plan_features (
-    plan_id    UUID REFERENCES plans(id)    ON DELETE CASCADE,
-    feature_id UUID REFERENCES features(id) ON DELETE CASCADE,
+CREATE TABLE saas_features_plans (
+    plan_id    UUID REFERENCES saas_plans(id)    ON DELETE CASCADE,
+    feature_id UUID REFERENCES saas_features(id) ON DELETE CASCADE,
     created_at TIMESTAMP NOT NULL DEFAULT NOW(),
     PRIMARY KEY (plan_id, feature_id)
 );
@@ -111,8 +111,9 @@ CREATE TABLE plan_features (
 -- Tenant Tables
 -- ============================================================
 
-CREATE TABLE promotions (
+CREATE TABLE saas_plans_promotions (
     id              UUID           PRIMARY KEY DEFAULT uuid_generate_v4(),
+    plan_id         UUID           REFERENCES saas_plans(id) ON DELETE SET NULL,
     name            VARCHAR(255)   NOT NULL,
     description     TEXT,
     discount_type   discount_type  NOT NULL,
@@ -142,12 +143,12 @@ CREATE TABLE tenants (
 CREATE TABLE tenant_plans (
     id                UUID           PRIMARY KEY DEFAULT uuid_generate_v4(),
     tenant_id         UUID           NOT NULL REFERENCES tenants(id) ON DELETE CASCADE,
-    plan_id           UUID           NOT NULL REFERENCES plans(id),
+    plan_id           UUID           NOT NULL REFERENCES saas_plans(id),
     billing_cycle     billing_cycle  NOT NULL DEFAULT 'monthly',
     base_price        DECIMAL(10,2)  NOT NULL,
     contracted_price  DECIMAL(10,2)  NOT NULL,
     price_updated_at  TIMESTAMP      NOT NULL DEFAULT NOW(),
-    promotion_id      UUID           REFERENCES promotions(id) ON DELETE SET NULL,
+    promotion_id      UUID           REFERENCES saas_plans_promotions(id) ON DELETE SET NULL,
     promo_price       DECIMAL(10,2),
     promo_expires_at  TIMESTAMP,
     is_active         BOOLEAN        NOT NULL DEFAULT true,
@@ -206,7 +207,7 @@ CREATE TABLE user_roles (
 
 CREATE TABLE user_permissions (
     id          UUID         PRIMARY KEY DEFAULT uuid_generate_v4(),
-    feature_id  UUID         REFERENCES features(id) ON DELETE CASCADE,
+    feature_id  UUID         REFERENCES saas_features(id) ON DELETE CASCADE,
     title       VARCHAR(255) NOT NULL,
     slug        VARCHAR(100) UNIQUE NOT NULL,
     description TEXT,
@@ -264,14 +265,13 @@ CREATE TABLE services (
     updated_at  TIMESTAMP      NOT NULL DEFAULT NOW()
 );
 
-CREATE TABLE settings (
-    id         UUID         PRIMARY KEY DEFAULT uuid_generate_v4(),
-    tenant_id  UUID         NOT NULL REFERENCES tenants(id) ON DELETE CASCADE,
-    category   VARCHAR(100) NOT NULL,
-    data       JSONB        NOT NULL DEFAULT '{}',
-    created_at TIMESTAMP    NOT NULL DEFAULT NOW(),
-    updated_at TIMESTAMP    NOT NULL DEFAULT NOW(),
-    UNIQUE (tenant_id, category)
+CREATE TABLE tenant_settings (
+    id            UUID         PRIMARY KEY DEFAULT uuid_generate_v4(),
+    tenant_id     UUID         NOT NULL UNIQUE REFERENCES tenants(id) ON DELETE CASCADE,
+    layout        JSONB        NOT NULL DEFAULT '{"primary_color":"#4F46E5","secondary_color":"#10B981","logo":"","theme":"Aura"}',
+    convert_webp  BOOLEAN      NOT NULL DEFAULT true,
+    created_at    TIMESTAMP    NOT NULL DEFAULT NOW(),
+    updated_at    TIMESTAMP    NOT NULL DEFAULT NOW()
 );
 
 -- ============================================================
@@ -378,7 +378,8 @@ CREATE INDEX idx_tenants_deleted_at  ON tenants(deleted_at) WHERE deleted_at IS 
 CREATE INDEX idx_tenant_plans_tenant_id ON tenant_plans(tenant_id);
 CREATE INDEX idx_tenant_plans_plan_id   ON tenant_plans(plan_id);
 
-CREATE INDEX idx_promotions_is_active ON promotions(is_active);
+CREATE INDEX idx_saas_plans_promotions_is_active ON saas_plans_promotions(is_active);
+CREATE INDEX idx_saas_plans_promotions_plan_id ON saas_plans_promotions(plan_id);
 
 CREATE INDEX idx_users_email              ON users(email);
 CREATE INDEX idx_users_status             ON users(status);
@@ -390,7 +391,7 @@ CREATE INDEX idx_tenant_members_tenant_id  ON tenant_members(tenant_id) WHERE de
 
 CREATE INDEX idx_products_tenant_id  ON products(tenant_id);
 CREATE INDEX idx_services_tenant_id  ON services(tenant_id);
-CREATE INDEX idx_settings_tenant_id  ON settings(tenant_id);
+CREATE INDEX idx_tenant_settings_tenant_id  ON tenant_settings(tenant_id);
 CREATE INDEX idx_images_tenant_id         ON images(tenant_id);
 CREATE INDEX idx_images_imageable         ON images(imageable_type, imageable_id);
 CREATE INDEX idx_images_parent_id         ON images(parent_id);
@@ -399,9 +400,9 @@ CREATE INDEX idx_images_processing_status ON images(processing_status) WHERE pro
 CREATE INDEX idx_tenant_app_users_tenant_id ON tenant_app_users(tenant_id);
 CREATE INDEX idx_tenant_app_users_email     ON tenant_app_users(tenant_id, email) WHERE deleted_at IS NULL;
 
-CREATE INDEX idx_system_admin_users_email      ON system_admin_users(email);
-CREATE INDEX idx_system_admin_users_status     ON system_admin_users(status);
-CREATE INDEX idx_system_admin_users_deleted_at ON system_admin_users(deleted_at) WHERE deleted_at IS NOT NULL;
+CREATE INDEX idx_saas_admin_users_email      ON saas_admin_users(email);
+CREATE INDEX idx_saas_admin_users_status     ON saas_admin_users(status);
+CREATE INDEX idx_saas_admin_users_deleted_at ON saas_admin_users(deleted_at) WHERE deleted_at IS NOT NULL;
 
 CREATE INDEX idx_email_verification_tokens_user_id ON email_verification_tokens(user_id);
 CREATE INDEX idx_email_verification_tokens_token   ON email_verification_tokens(token);
@@ -410,15 +411,15 @@ CREATE INDEX idx_email_verification_tokens_token   ON email_verification_tokens(
 -- Seed Data
 -- ============================================================
 
--- System admin roles
-INSERT INTO system_admin_roles (title, slug) VALUES
+-- SaaS admin roles
+INSERT INTO saas_admin_roles (title, slug) VALUES
     ('Super Admin', 'super_admin'),
     ('Admin',       'admin'),
     ('Support',     'support'),
     ('Viewer',      'viewer');
 
--- System admin permissions
-INSERT INTO system_admin_permissions (title, slug) VALUES
+-- SaaS admin permissions
+INSERT INTO saas_admin_permissions (title, slug) VALUES
     ('Manage Tenants',      'manage_tenants'),
     ('View Tenants',        'view_tenants'),
     ('Manage Plans',        'manage_plans'),
@@ -428,45 +429,46 @@ INSERT INTO system_admin_permissions (title, slug) VALUES
     ('Manage Billing',      'manage_billing');
 
 -- Assign all permissions to super_admin role
-INSERT INTO system_admin_role_permissions (admin_role_id, admin_permission_id)
-SELECT r.id, p.id FROM system_admin_roles r, system_admin_permissions p WHERE r.slug = 'super_admin';
+INSERT INTO saas_admin_role_permissions (admin_role_id, admin_permission_id)
+SELECT r.id, p.id FROM saas_admin_roles r, saas_admin_permissions p WHERE r.slug = 'super_admin';
 
 -- Assign view + manage tenants to admin role
-INSERT INTO system_admin_role_permissions (admin_role_id, admin_permission_id)
-SELECT r.id, p.id FROM system_admin_roles r, system_admin_permissions p
+INSERT INTO saas_admin_role_permissions (admin_role_id, admin_permission_id)
+SELECT r.id, p.id FROM saas_admin_roles r, saas_admin_permissions p
 WHERE r.slug = 'admin' AND p.slug IN ('manage_tenants', 'view_tenants', 'manage_plans', 'manage_features');
 
 -- Assign view permissions to support role
-INSERT INTO system_admin_role_permissions (admin_role_id, admin_permission_id)
-SELECT r.id, p.id FROM system_admin_roles r, system_admin_permissions p
+INSERT INTO saas_admin_role_permissions (admin_role_id, admin_permission_id)
+SELECT r.id, p.id FROM saas_admin_roles r, saas_admin_permissions p
 WHERE r.slug = 'support' AND p.slug IN ('view_tenants');
 
 -- Assign view to viewer role
-INSERT INTO system_admin_role_permissions (admin_role_id, admin_permission_id)
-SELECT r.id, p.id FROM system_admin_roles r, system_admin_permissions p
+INSERT INTO saas_admin_role_permissions (admin_role_id, admin_permission_id)
+SELECT r.id, p.id FROM saas_admin_roles r, saas_admin_permissions p
 WHERE r.slug = 'viewer' AND p.slug IN ('view_tenants', 'view_analytics');
 
 -- Default admin user (admin@saas.com / admin123)
 -- bcrypt hash of 'admin123' with cost 12
-INSERT INTO system_admin_users (name, email, hash_pass) VALUES
+INSERT INTO saas_admin_users (name, email, hash_pass) VALUES
     ('System Administrator', 'admin@saas.com', '$2a$12$ns1YP4G3P8iRUKwREqMK8eGgIcxvPyAzXxmNibXydt5GRD6LslLG.');
 
-INSERT INTO system_admin_profiles (admin_user_id, full_name, title)
-    SELECT id, 'System Administrator', 'Platform Admin' FROM system_admin_users WHERE email = 'admin@saas.com';
+INSERT INTO saas_admin_profiles (admin_user_id, full_name, title)
+    SELECT id, 'System Administrator', 'Platform Admin' FROM saas_admin_users WHERE email = 'admin@saas.com';
 
 -- Assign super_admin role to default admin
-INSERT INTO system_admin_user_roles (admin_user_id, admin_role_id)
-    SELECT u.id, r.id FROM system_admin_users u, system_admin_roles r
+INSERT INTO saas_admin_user_roles (admin_user_id, admin_role_id)
+    SELECT u.id, r.id FROM saas_admin_users u, saas_admin_roles r
     WHERE u.email = 'admin@saas.com' AND r.slug = 'super_admin';
 
 -- Default features
-INSERT INTO features (id, title, slug, code) VALUES
+INSERT INTO saas_features (id, title, slug, code) VALUES
     ('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', 'Products', 'products', 'prod'),
     ('bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb', 'Services', 'services', 'serv');
 
 -- Default promotion
-INSERT INTO promotions (id, name, description, discount_type, discount_value, duration_months, valid_from, is_active) VALUES
+INSERT INTO saas_plans_promotions (id, plan_id, name, description, discount_type, discount_value, duration_months, valid_from, is_active) VALUES
     ('cc000000-0000-0000-0000-000000000001',
+     NULL,
      'Lançamento 50% off',
      '50% de desconto nos primeiros 3 meses',
      'percent', 50.00, 3,
@@ -477,7 +479,7 @@ INSERT INTO promotions (id, name, description, discount_type, discount_value, du
 -- Individual: always 1 user (with and without multilang)
 -- Business: 1, 5 and 10 users (with and without multilang)
 -- ============================================================
-INSERT INTO plans (id, name, description, plan_type, price, max_users, is_multilang) VALUES
+INSERT INTO saas_plans (id, name, description, plan_type, price, max_users, is_multilang) VALUES
     -- Individual plans (1 user always)
     ('10000000-0000-0000-0000-000000000001', 'Individual',           'Plano individual sem multilang',            'individual',  29.90,  1, false),
     ('10000000-0000-0000-0000-000000000002', 'Individual Multi',     'Plano individual com multilang',            'individual',  49.90,  1, true),
@@ -490,8 +492,8 @@ INSERT INTO plans (id, name, description, plan_type, price, max_users, is_multil
     ('20000000-0000-0000-0000-000000000006', 'Business 10 Multi',    'Plano empresarial 10 usuários com multilang','business',  249.90, 10, true);
 
 -- Assign all features to all plans
-INSERT INTO plan_features (plan_id, feature_id)
-SELECT p.id, f.id FROM plans p, features f;
+INSERT INTO saas_features_plans (plan_id, feature_id)
+SELECT p.id, f.id FROM saas_plans p, saas_features f;
 
 -- User permissions (backoffice)
 INSERT INTO user_permissions (id, title, slug, feature_id) VALUES

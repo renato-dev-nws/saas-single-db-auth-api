@@ -11,7 +11,7 @@ import (
 	"github.com/saas-single-db-api/internal/utils"
 )
 
-// AdminAuthMiddleware validates JWT for system_admin_users
+// AdminAuthMiddleware validates JWT for saas_admin_users
 func AdminAuthMiddleware(jwtSecret string, redisClient *redis.Client) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		token := extractToken(c)

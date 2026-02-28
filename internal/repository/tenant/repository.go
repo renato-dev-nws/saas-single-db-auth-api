@@ -51,7 +51,7 @@ func (r *Repository) CreateTenantPlan(ctx context.Context, tx pgx.Tx, tenantID, 
 func (r *Repository) GetPlanByID(ctx context.Context, id string) (*planRow, error) {
 	var p planRow
 	err := r.db.QueryRow(ctx,
-		`SELECT id, name, description, plan_type, price, max_users, is_multilang, is_active FROM plans WHERE id = $1`, id,
+		`SELECT id, name, description, plan_type, price, max_users, is_multilang, is_active FROM saas_plans WHERE id = $1`, id,
 	).Scan(&p.ID, &p.Name, &p.Description, &p.PlanType, &p.Price, &p.MaxUsers, &p.IsMultilang, &p.IsActive)
 	if err != nil {
 		return nil, err
@@ -74,7 +74,7 @@ func (r *Repository) GetPromotionByID(ctx context.Context, id string) (*promoRow
 	var p promoRow
 	err := r.db.QueryRow(ctx,
 		`SELECT id, name, description, discount_type, discount_value, duration_months, valid_from, valid_until, is_active
-		 FROM promotions WHERE id = $1 AND is_active = true`, id,
+		 FROM saas_plans_promotions WHERE id = $1 AND is_active = true`, id,
 	).Scan(&p.ID, &p.Name, &p.Description, &p.DiscountType, &p.DiscountValue, &p.DurationMonths, &p.ValidFrom, &p.ValidUntil, &p.IsActive)
 	if err != nil {
 		return nil, err
@@ -86,7 +86,7 @@ func (r *Repository) GetPromotionByName(ctx context.Context, name string) (*prom
 	var p promoRow
 	err := r.db.QueryRow(ctx,
 		`SELECT id, name, description, discount_type, discount_value, duration_months, valid_from, valid_until, is_active
-		 FROM promotions WHERE name = $1 AND is_active = true`, name,
+		 FROM saas_plans_promotions WHERE name = $1 AND is_active = true`, name,
 	).Scan(&p.ID, &p.Name, &p.Description, &p.DiscountType, &p.DiscountValue, &p.DurationMonths, &p.ValidFrom, &p.ValidUntil, &p.IsActive)
 	if err != nil {
 		return nil, err
@@ -109,7 +109,7 @@ type promoRow struct {
 func (r *Repository) ListActivePlans(ctx context.Context) ([]interface{}, error) {
 	rows, err := r.db.Query(ctx,
 		`SELECT p.id, p.name, p.description, p.plan_type, p.price, p.max_users, p.is_multilang
-		 FROM plans p WHERE p.is_active = true ORDER BY p.price`,
+		 FROM saas_plans p WHERE p.is_active = true ORDER BY p.price`,
 	)
 	if err != nil {
 		return nil, err
@@ -133,7 +133,7 @@ func (r *Repository) ListActivePlans(ctx context.Context) ([]interface{}, error)
 		}
 		// Get features
 		frows, _ := r.db.Query(ctx,
-			`SELECT f.slug FROM features f JOIN plan_features pf ON pf.feature_id = f.id WHERE pf.plan_id = $1 AND f.is_active = true`, p.ID)
+			`SELECT f.slug FROM saas_features f JOIN saas_features_plans pf ON pf.feature_id = f.id WHERE pf.plan_id = $1 AND f.is_active = true`, p.ID)
 		if frows != nil {
 			for frows.Next() {
 				var slug string
@@ -377,8 +377,8 @@ func (r *Repository) GetTenantFeatures(ctx context.Context, tenantID string) ([]
 	rows, err := r.db.Query(ctx,
 		`SELECT f.slug
 		 FROM tenant_plans tp
-		 JOIN plan_features pf ON pf.plan_id = tp.plan_id
-		 JOIN features f ON f.id = pf.feature_id
+		 JOIN saas_features_plans pf ON pf.plan_id = tp.plan_id
+		 JOIN saas_features f ON f.id = pf.feature_id
 		 WHERE tp.tenant_id = $1 AND tp.is_active = true AND f.is_active = true`, tenantID,
 	)
 	if err != nil {
@@ -437,7 +437,7 @@ func (r *Repository) GetActiveTenantPlan(ctx context.Context, tenantID string) (
 		        tp.billing_cycle, tp.contracted_price, tp.promo_price, tp.promo_expires_at,
 		        tp.price_updated_at
 		 FROM tenant_plans tp
-		 JOIN plans pl ON pl.id = tp.plan_id
+		 JOIN saas_plans pl ON pl.id = tp.plan_id
 		 WHERE tp.tenant_id = $1 AND tp.is_active = true
 		 LIMIT 1`, tenantID,
 	).Scan(&p.ID, &p.PlanID, &p.PlanName, &p.MaxUsers, &p.IsMultilang,
@@ -961,56 +961,52 @@ func (r *Repository) UpdateServiceImage(ctx context.Context, tenantID, serviceID
 	return err
 }
 
-// --- Settings ---
+// --- Tenant Settings ---
 
-func (r *Repository) ListSettings(ctx context.Context, tenantID string) ([]settingRow, error) {
-	rows, err := r.db.Query(ctx,
-		`SELECT id, category, data, created_at, updated_at
-		 FROM settings WHERE tenant_id = $1 ORDER BY category`, tenantID,
-	)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-
-	var settings []settingRow
-	for rows.Next() {
-		var s settingRow
-		if err := rows.Scan(&s.ID, &s.Category, &s.Data, &s.CreatedAt, &s.UpdatedAt); err != nil {
-			return nil, err
-		}
-		settings = append(settings, s)
-	}
-	return settings, nil
+type tenantSettingsRow struct {
+	ID          string      `json:"id"`
+	TenantID    string      `json:"tenant_id"`
+	Layout      interface{} `json:"layout"`
+	ConvertWebp bool        `json:"convert_webp"`
+	CreatedAt   interface{} `json:"created_at"`
+	UpdatedAt   interface{} `json:"updated_at"`
 }
 
-type settingRow struct {
-	ID        string      `json:"id"`
-	Category  string      `json:"category"`
-	Data      interface{} `json:"data"`
-	CreatedAt interface{} `json:"created_at"`
-	UpdatedAt interface{} `json:"updated_at"`
-}
-
-func (r *Repository) GetSetting(ctx context.Context, tenantID, category string) (*settingRow, error) {
-	var s settingRow
+func (r *Repository) GetTenantSettings(ctx context.Context, tenantID string) (*tenantSettingsRow, error) {
+	var s tenantSettingsRow
 	err := r.db.QueryRow(ctx,
-		`SELECT id, category, data, created_at, updated_at
-		 FROM settings WHERE tenant_id = $1 AND category = $2`, tenantID, category,
-	).Scan(&s.ID, &s.Category, &s.Data, &s.CreatedAt, &s.UpdatedAt)
+		`SELECT id, tenant_id, layout, convert_webp, created_at, updated_at
+		 FROM tenant_settings WHERE tenant_id = $1`, tenantID,
+	).Scan(&s.ID, &s.TenantID, &s.Layout, &s.ConvertWebp, &s.CreatedAt, &s.UpdatedAt)
 	if err != nil {
 		return nil, err
 	}
 	return &s, nil
 }
 
-func (r *Repository) UpsertSetting(ctx context.Context, tenantID, category string, data interface{}) error {
+func (r *Repository) UpsertTenantSettings(ctx context.Context, tenantID string, layout interface{}, convertWebp *bool) error {
 	_, err := r.db.Exec(ctx,
-		`INSERT INTO settings (tenant_id, category, data) VALUES ($1, $2, $3::jsonb)
-		 ON CONFLICT (tenant_id, category) DO UPDATE SET data = $3::jsonb, updated_at = NOW()`,
-		tenantID, category, data,
+		`INSERT INTO tenant_settings (tenant_id, layout, convert_webp)
+		 VALUES ($1, COALESCE($2::jsonb, '{}'), COALESCE($3, true))
+		 ON CONFLICT (tenant_id) DO UPDATE SET
+		   layout = COALESCE($2::jsonb, tenant_settings.layout),
+		   convert_webp = COALESCE($3, tenant_settings.convert_webp),
+		   updated_at = NOW()`,
+		tenantID, layout, convertWebp,
 	)
 	return err
+}
+
+func (r *Repository) GetConvertWebp(ctx context.Context, tenantID string) (bool, error) {
+	var convertWebp bool
+	err := r.db.QueryRow(ctx,
+		`SELECT convert_webp FROM tenant_settings WHERE tenant_id = $1`, tenantID,
+	).Scan(&convertWebp)
+	if err != nil {
+		// Default to true if no settings row exists
+		return true, nil
+	}
+	return convertWebp, nil
 }
 
 // --- Images (Polymorphic) ---

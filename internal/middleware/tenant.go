@@ -122,8 +122,8 @@ func getActiveTenantFeatures(ctx context.Context, db *pgxpool.Pool, tenantID str
 	rows, err := db.Query(ctx,
 		`SELECT f.slug
 		 FROM tenant_plans tp
-		 JOIN plan_features pf ON pf.plan_id = tp.plan_id
-		 JOIN features f ON f.id = pf.feature_id
+		 JOIN saas_features_plans pf ON pf.plan_id = tp.plan_id
+		 JOIN saas_features f ON f.id = pf.feature_id
 		 WHERE tp.tenant_id = $1 AND tp.is_active = true AND f.is_active = true`,
 		tenantID,
 	)

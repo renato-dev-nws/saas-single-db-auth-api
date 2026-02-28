@@ -180,9 +180,8 @@ func main() {
 			{
 				settings.GET("/layout", handler.GetLayoutSettings)
 				settings.PUT("/layout", handler.UpdateLayoutSettings)
-				settings.GET("", handler.ListSettings)
-				settings.GET("/:category", handler.GetSetting)
-				settings.PUT("/:category", handler.UpsertSetting)
+				settings.GET("", handler.GetSettings)
+				settings.PUT("", handler.UpdateSettings)
 			}
 
 			// App Users (managed from backoffice)

@@ -1,7 +1,7 @@
 # Build stage
 FROM golang:1.25-alpine AS builder
 
-RUN apk add --no-cache git
+RUN apk add --no-cache git gcc musl-dev libwebp-dev
 
 WORKDIR /app
 
@@ -9,12 +9,12 @@ COPY go.mod go.sum ./
 RUN go mod download
 
 COPY . .
-RUN CGO_ENABLED=0 GOOS=linux go build -buildvcs=false -o /worker-images ./cmd/worker-images
+RUN CGO_ENABLED=1 GOOS=linux go build -buildvcs=false -o /worker-images ./cmd/worker-images
 
 # Run stage
 FROM alpine:3.21
 
-RUN apk add --no-cache ca-certificates tzdata
+RUN apk add --no-cache ca-certificates tzdata libwebp
 
 WORKDIR /app
 

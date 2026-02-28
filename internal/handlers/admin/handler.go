@@ -1308,7 +1308,7 @@ func (h *Handler) CreatePromotion(c *gin.Context) {
 		return
 	}
 
-	id, err := h.service.Repo().CreatePromotion(c.Request.Context(), req.Name, req.Description, req.DiscountType, req.DiscountValue, req.DurationMonths, req.ValidFrom, req.ValidUntil)
+	id, err := h.service.Repo().CreatePromotion(c.Request.Context(), req.Name, req.Description, req.DiscountType, req.DiscountValue, req.DurationMonths, req.ValidFrom, req.ValidUntil, req.PlanID)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed_to_create_promotion"})
 		return

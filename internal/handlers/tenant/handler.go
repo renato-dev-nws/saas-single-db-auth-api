@@ -437,9 +437,9 @@ func (h *Handler) GetBootstrap(c *gin.Context) {
 		"logo":            "",
 		"theme":           "Aura",
 	}
-	layoutSetting, err := h.repo.GetSetting(c.Request.Context(), tenantID, "layout")
-	if err == nil && layoutSetting != nil {
-		if m, ok := layoutSetting.Data.(map[string]interface{}); ok {
+	tenantSettings, err := h.repo.GetTenantSettings(c.Request.Context(), tenantID)
+	if err == nil && tenantSettings != nil {
+		if m, ok := tenantSettings.Layout.(map[string]interface{}); ok {
 			layoutData = m
 		}
 	}
@@ -1444,9 +1444,9 @@ func (h *Handler) GetLayoutSettings(c *gin.Context) {
 		"theme":           "Aura",
 	}
 
-	setting, err := h.repo.GetSetting(c.Request.Context(), tenantID, "layout")
-	if err == nil && setting != nil {
-		if m, ok := setting.Data.(map[string]interface{}); ok {
+	settings, err := h.repo.GetTenantSettings(c.Request.Context(), tenantID)
+	if err == nil && settings != nil {
+		if m, ok := settings.Layout.(map[string]interface{}); ok {
 			layoutData = m
 		}
 	}
@@ -1495,70 +1495,59 @@ func (h *Handler) UpdateLayoutSettings(c *gin.Context) {
 		"theme":           req.Theme,
 	}
 
-	if err := h.repo.UpsertSetting(c.Request.Context(), tenantID, "layout", data); err != nil {
+	if err := h.repo.UpsertTenantSettings(c.Request.Context(), tenantID, data, nil); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to save layout settings"})
 		return
 	}
 	c.JSON(http.StatusOK, gin.H{"message": "layout_settings_saved"})
 }
 
-// ListSettings godoc
-// @Summary Listar configurações
-// @Description Retorna todas as configurações do tenant
+// GetSettings godoc
+// @Summary Obter configurações do tenant
+// @Description Retorna todas as configurações do tenant (layout + convert_webp)
 // @Tags Settings
 // @Produce json
 // @Security BearerAuth
 // @Param url_code path string true "URL code do tenant"
-// @Success 200 {array} swagger.SettingResponse
+// @Success 200 {object} swagger.TenantSettingsResponse
 // @Failure 500 {object} swagger.ErrorResponse
 // @Router /{url_code}/settings [get]
-func (h *Handler) ListSettings(c *gin.Context) {
+func (h *Handler) GetSettings(c *gin.Context) {
 	tenantID := c.GetString("tenant_id")
-	settings, err := h.repo.ListSettings(c.Request.Context(), tenantID)
+	settings, err := h.repo.GetTenantSettings(c.Request.Context(), tenantID)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to list settings"})
+		// Return defaults if no settings row exists
+		c.JSON(http.StatusOK, gin.H{
+			"layout": map[string]interface{}{
+				"primary_color":   "#4F46E5",
+				"secondary_color": "#10B981",
+				"logo":            "",
+				"theme":           "Aura",
+			},
+			"convert_webp": true,
+		})
 		return
 	}
-	c.JSON(http.StatusOK, settings)
+	c.JSON(http.StatusOK, gin.H{
+		"layout":       settings.Layout,
+		"convert_webp": settings.ConvertWebp,
+	})
 }
 
-// GetSetting godoc
-// @Summary Obter configuração por categoria
-// @Description Retorna uma configuração específica do tenant por categoria
-// @Tags Settings
-// @Produce json
-// @Security BearerAuth
-// @Param url_code path string true "URL code do tenant"
-// @Param category path string true "Categoria da configuração"
-// @Success 200 {object} swagger.SettingResponse
-// @Failure 404 {object} swagger.ErrorResponse
-// @Router /{url_code}/settings/{category} [get]
-func (h *Handler) GetSetting(c *gin.Context) {
-	tenantID := c.GetString("tenant_id")
-	category := c.Param("category")
-	setting, err := h.repo.GetSetting(c.Request.Context(), tenantID, category)
-	if err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "setting not found"})
-		return
-	}
-	c.JSON(http.StatusOK, setting)
-}
-
-// UpsertSetting godoc
-// @Summary Salvar configuração
-// @Description Cria ou atualiza uma configuração. Requer permissão 'setg_m' ou ser owner.
+// UpdateSettings godoc
+// @Summary Atualizar configurações do tenant
+// @Description Atualiza as configurações do tenant (layout e/ou convert_webp). Requer permissão 'setg_m' ou ser owner.
 // @Tags Settings
 // @Accept json
 // @Produce json
 // @Security BearerAuth
 // @Param url_code path string true "URL code do tenant"
-// @Param category path string true "Categoria da configuração"
-// @Param request body swagger.UpsertSettingRequest true "Dados da configuração"
+// @Param request body swagger.UpdateTenantSettingsRequest true "Configurações do tenant"
 // @Success 200 {object} swagger.MessageResponse
 // @Failure 400 {object} swagger.ErrorResponse
 // @Failure 403 {object} swagger.ErrorResponse
-// @Router /{url_code}/settings/{category} [put]
-func (h *Handler) UpsertSetting(c *gin.Context) {
+// @Router /{url_code}/settings [put]
+func (h *Handler) UpdateSettings(c *gin.Context) {
 	tenantID := c.GetString("tenant_id")
 	userID := c.GetString("user_id")
 
@@ -1569,19 +1558,19 @@ func (h *Handler) UpsertSetting(c *gin.Context) {
 	}
 
 	var req struct {
-		Category string      `json:"category" binding:"required"`
-		Data     interface{} `json:"data" binding:"required"`
+		Layout      interface{} `json:"layout"`
+		ConvertWebp *bool       `json:"convert_webp"`
 	}
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": utils.FormatValidationErrors(err)})
 		return
 	}
 
-	if err := h.repo.UpsertSetting(c.Request.Context(), tenantID, req.Category, req.Data); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to save setting"})
+	if err := h.repo.UpsertTenantSettings(c.Request.Context(), tenantID, req.Layout, req.ConvertWebp); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to save settings"})
 		return
 	}
-	c.JSON(http.StatusOK, gin.H{"message": "setting saved"})
+	c.JSON(http.StatusOK, gin.H{"message": "settings_saved"})
 }
 
 // ==================== APP USERS (managed from backoffice) ====================

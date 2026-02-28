@@ -227,6 +227,7 @@ type CreatePromotionRequest struct {
 	DurationMonths int        `json:"duration_months" binding:"required"`
 	ValidFrom      *time.Time `json:"valid_from"`
 	ValidUntil     *time.Time `json:"valid_until"`
+	PlanID         *string    `json:"plan_id"`
 }
 
 // UpdatePromotionRequest is the request to update a promotion

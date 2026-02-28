@@ -34,7 +34,7 @@ db-status:
 		SELECT 'Tables: ' || COUNT(*) FROM information_schema.tables WHERE table_schema = 'public'; \
 		SELECT 'Tenants: ' || COUNT(*) FROM tenants; \
 		SELECT 'Users: ' || COUNT(*) FROM users; \
-		SELECT 'Admin Users: ' || COUNT(*) FROM system_admin_users;"
+		SELECT 'Admin Users: ' || COUNT(*) FROM saas_admin_users;"
 
 # Backup database
 db-backup:
@@ -75,8 +75,8 @@ db-tenants:
 
 # Show all plans
 db-plans:
-	@docker compose exec postgres psql -U saasuser -d saasdb -c "SELECT id, name, price, max_users, is_active FROM plans;"
+	@docker compose exec postgres psql -U saasuser -d saasdb -c "SELECT id, name, price, max_users, is_active FROM saas_plans;"
 
 # Show all admin users
 db-admins:
-	@docker compose exec postgres psql -U saasuser -d saasdb -c "SELECT id, name, email, status FROM system_admin_users;"
+	@docker compose exec postgres psql -U saasuser -d saasdb -c "SELECT id, name, email, status FROM saas_admin_users;"

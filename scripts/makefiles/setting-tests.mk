@@ -1,9 +1,9 @@
-.PHONY: test-settings-list test-settings-get test-settings-update \
+.PHONY: test-settings-get test-settings-update \
         test-layout-get test-layout-update
 
-# Test settings list
-test-settings-list:
-	@echo "Testing settings list..."
+# Test settings GET (returns layout + convert_webp)
+test-settings-get:
+	@echo "Testing settings GET..."
 	@LOGIN=$$(curl -s -X POST http://localhost:8080/api/v1/auth/login \
 		-H "Content-Type: application/json" \
 		-d '{"email":"joao@minha-loja.com","password":"senha12345"}'); \
@@ -13,30 +13,22 @@ test-settings-list:
 		-H "Authorization: Bearer $$TOKEN"
 	@echo ""
 
-# Test setting get
-test-settings-get:
-	@echo "Testing setting get..."
-	@LOGIN=$$(curl -s -X POST http://localhost:8080/api/v1/auth/login \
-		-H "Content-Type: application/json" \
-		-d '{"email":"joao@minha-loja.com","password":"senha12345"}'); \
-	TOKEN=$$(echo "$$LOGIN" | grep -o '"token":"[^"]*' | cut -d'"' -f4); \
-	URL_CODE=$$(echo "$$LOGIN" | grep -o '"current_tenant_code":"[^"]*' | cut -d'"' -f4); \
-	curl -s -X GET http://localhost:8080/api/v1/$$URL_CODE/settings/theme_color \
-		-H "Authorization: Bearer $$TOKEN"
-	@echo ""
-
-# Test setting update
+# Test settings UPDATE (layout + convert_webp)
 test-settings-update:
-	@echo "Testing setting update..."
+	@echo "Testing settings UPDATE..."
 	@LOGIN=$$(curl -s -X POST http://localhost:8080/api/v1/auth/login \
 		-H "Content-Type: application/json" \
 		-d '{"email":"joao@minha-loja.com","password":"senha12345"}'); \
 	TOKEN=$$(echo "$$LOGIN" | grep -o '"token":"[^"]*' | cut -d'"' -f4); \
 	URL_CODE=$$(echo "$$LOGIN" | grep -o '"current_tenant_code":"[^"]*' | cut -d'"' -f4); \
-	curl -s -X PUT http://localhost:8080/api/v1/$$URL_CODE/settings/theme_color \
+	echo "1. Update settings (layout + convert_webp=false)..."; \
+	curl -s -X PUT http://localhost:8080/api/v1/$$URL_CODE/settings \
 		-H "Content-Type: application/json" \
 		-H "Authorization: Bearer $$TOKEN" \
-		-d '{"value":"#FF5733"}'
+		-d '{"layout":{"primary_color":"#FF5733","secondary_color":"#33FF57","logo":"https://example.com/logo.png","theme":"Lara"},"convert_webp":false}'; \
+	echo ""; echo "2. Read back settings..."; \
+	curl -s -X GET http://localhost:8080/api/v1/$$URL_CODE/settings \
+		-H "Authorization: Bearer $$TOKEN"
 	@echo ""
 
 # Test layout settings GET (returns defaults if none saved)

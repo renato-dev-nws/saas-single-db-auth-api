@@ -12,7 +12,7 @@ test-subscription:
 	@echo "Testing subscription endpoint..."
 	@curl -s -X POST http://localhost:8080/api/v1/subscription \
 		-H "Content-Type: application/json" \
-		-d '{"plan_id":"10000000-0000-0000-0000-000000000001","billing_cycle":"monthly","subdomain":"minhaloja2","is_company":false,"name":"Joao Silva 2","email":"joao2@minha-loja.com","password":"senha12345"}'
+		-d '{"plan_id":"10000000-0000-0000-0000-000000000001","billing_cycle":"monthly","subdomain":"minhaloja","is_company":false,"name":"Joao Silva","email":"joao@minha-loja.com","password":"senha12345"}'
 	@echo ""
 
 test-subscription-with-promo:

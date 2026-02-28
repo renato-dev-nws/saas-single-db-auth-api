@@ -16,6 +16,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/chai2010/webp"
 	"github.com/disintegration/imaging"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/redis/go-redis/v9"
@@ -164,7 +165,10 @@ func (w *worker) processImage(ctx context.Context, imageID string) error {
 		return fmt.Errorf("failed to update status: %w", err)
 	}
 
-	// 4. Download original from storage
+	// 4. Check tenant convert_webp setting (default true)
+	convertWebp := w.getConvertWebp(ctx, img.TenantID)
+
+	// 5. Download original from storage
 	reader, err := w.storage.GetReader(img.StoragePath)
 	if err != nil {
 		w.updateStatus(ctx, imageID, "failed")
@@ -172,23 +176,23 @@ func (w *worker) processImage(ctx context.Context, imageID string) error {
 	}
 	defer reader.Close()
 
-	// 5. Decode image
+	// 6. Decode image
 	srcImage, format, err := image.Decode(reader)
 	if err != nil {
 		w.updateStatus(ctx, imageID, "failed")
 		return fmt.Errorf("failed to decode image: %w", err)
 	}
 
-	// 6. Update original dimensions
+	// 7. Update original dimensions
 	bounds := srcImage.Bounds()
 	origWidth := bounds.Dx()
 	origHeight := bounds.Dy()
 	w.updateDimensions(ctx, imageID, origWidth, origHeight)
 
-	// 7. Generate variants
+	// 8. Generate variants
 	var createdPaths []string
 	for _, v := range variants {
-		variantPath, err := w.generateVariant(ctx, img, srcImage, format, v)
+		variantPath, err := w.generateVariant(ctx, img, srcImage, format, v, convertWebp)
 		if err != nil {
 			log.Printf("Error generating %s variant for image %s: %v", v.Name, imageID, err)
 			// Cleanup already-created variant files
@@ -201,7 +205,7 @@ func (w *worker) processImage(ctx context.Context, imageID string) error {
 		createdPaths = append(createdPaths, variantPath)
 	}
 
-	// 8. Mark as completed
+	// 9. Mark as completed
 	if err := w.updateStatusCompleted(ctx, imageID); err != nil {
 		return fmt.Errorf("failed to mark completed: %w", err)
 	}
@@ -209,14 +213,21 @@ func (w *worker) processImage(ctx context.Context, imageID string) error {
 	return nil
 }
 
-func (w *worker) generateVariant(ctx context.Context, img *imageRow, srcImage image.Image, format string, vc variantConfig) (string, error) {
+func (w *worker) generateVariant(ctx context.Context, img *imageRow, srcImage image.Image, format string, vc variantConfig, convertWebp bool) (string, error) {
 	// Resize using Lanczos
 	resized := imaging.Fit(srcImage, vc.MaxWidth, vc.MaxHeight, imaging.Lanczos)
 
+	// Determine output format and extension
+	outExt := img.Extension
+	outMimeType := img.MimeType
+	if convertWebp {
+		outExt = "webp"
+		outMimeType = "image/webp"
+	}
+
 	// Build variant filename: {original_name_without_ext}_{variant}.{ext}
-	ext := img.Extension
-	nameWithoutExt := strings.TrimSuffix(img.Filename, "."+ext)
-	variantFilename := fmt.Sprintf("%s_%s.%s", nameWithoutExt, vc.Name, ext)
+	nameWithoutExt := strings.TrimSuffix(img.Filename, "."+img.Extension)
+	variantFilename := fmt.Sprintf("%s_%s.%s", nameWithoutExt, vc.Name, outExt)
 
 	// Build storage path from original path
 	dir := filepath.Dir(img.StoragePath)
@@ -238,14 +249,18 @@ func (w *worker) generateVariant(ctx context.Context, img *imageRow, srcImage im
 	}
 	defer outFile.Close()
 
-	// Encode based on format
-	switch format {
-	case "jpeg", "jpg":
-		err = jpeg.Encode(outFile, resized, &jpeg.Options{Quality: 90})
-	case "png":
-		err = png.Encode(outFile, resized)
-	default:
-		err = jpeg.Encode(outFile, resized, &jpeg.Options{Quality: 90})
+	// Encode based on output format
+	if convertWebp {
+		err = webp.Encode(outFile, resized, &webp.Options{Lossless: false, Quality: 85})
+	} else {
+		switch format {
+		case "jpeg", "jpg":
+			err = jpeg.Encode(outFile, resized, &jpeg.Options{Quality: 90})
+		case "png":
+			err = png.Encode(outFile, resized)
+		default:
+			err = jpeg.Encode(outFile, resized, &jpeg.Options{Quality: 90})
+		}
 	}
 	if err != nil {
 		os.Remove(fullPath)
@@ -268,12 +283,11 @@ func (w *worker) generateVariant(ctx context.Context, img *imageRow, srcImage im
 	publicURL := fmt.Sprintf("%s/%s", baseURL, variantStoragePath)
 
 	// Insert variant record in DB
-	mimeType := img.MimeType
 	_, err = w.db.Exec(ctx,
 		`INSERT INTO images (tenant_id, imageable_type, imageable_id, filename, original_filename, mime_type, extension, variant, parent_id, width, height, file_size, storage_driver, storage_path, public_url, processing_status, processed_at)
 		 VALUES ($1, $2, $3, $4, $5, $6, $7, $8::image_variant, $9, $10, $11, $12, $13, $14, $15, 'completed', NOW())`,
 		img.TenantID, img.ImageableType, img.ImageableID, variantFilename, img.OriginalFilename,
-		mimeType, img.Extension, vc.Name, img.ID, vWidth, vHeight, fi.Size(),
+		outMimeType, outExt, vc.Name, img.ID, vWidth, vHeight, fi.Size(),
 		img.StorageDriver, variantStoragePath, publicURL,
 	)
 	if err != nil {
@@ -314,6 +328,18 @@ func (w *worker) updateDimensions(ctx context.Context, imageID string, width, he
 	w.db.Exec(ctx,
 		`UPDATE images SET width = $1, height = $2, updated_at = NOW() WHERE id = $3`, width, height, imageID,
 	)
+}
+
+func (w *worker) getConvertWebp(ctx context.Context, tenantID string) bool {
+	var convertWebp bool
+	err := w.db.QueryRow(ctx,
+		`SELECT convert_webp FROM tenant_settings WHERE tenant_id = $1`, tenantID,
+	).Scan(&convertWebp)
+	if err != nil {
+		// Default to true if no settings row exists
+		return true
+	}
+	return convertWebp
 }
 
 // Config helpers — read from environment with defaults
