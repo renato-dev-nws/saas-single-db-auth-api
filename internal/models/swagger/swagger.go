@@ -227,10 +227,11 @@ type TenantMemberDTO struct {
 
 // SubscriptionResponse is the response for public subscription
 type SubscriptionResponse struct {
-	Tenant       TenantBriefDTO      `json:"tenant"`
-	Subscription SubscriptionInfoDTO `json:"subscription"`
-	Token        string              `json:"token" example:"eyJhbGciOiJIUzI1NiIs..."`
-	User         UserBriefDTO        `json:"user"`
+	TenantID string `json:"tenant_id" example:"uuid"`
+	UserID   string `json:"user_id" example:"uuid"`
+	URLCode  string `json:"url_code" example:"HRP1ZYERFVA"`
+	Token    string `json:"token" example:"eyJhbGciOiJIUzI1NiIs..."`
+	Language string `json:"language" example:"pt-BR"`
 }
 
 // TenantBriefDTO is a brief tenant representation
@@ -265,6 +266,7 @@ type UserLoginResponse struct {
 	Email             string        `json:"email" example:"user@example.com"`
 	CurrentTenantCode string        `json:"current_tenant_code" example:"HRP1ZYERFVA"`
 	Tenants           []TenantBrief `json:"tenants"`
+	Language          string        `json:"language" example:"pt-BR"`
 }
 
 // BackofficeUserDTO is a safe representation of a backoffice user
@@ -316,6 +318,7 @@ type BootstrapResponse struct {
 	IsOwner        bool              `json:"is_owner" example:"true"`
 	Plan           BootstrapPlanDTO  `json:"plan"`
 	LayoutSettings LayoutSettingsDTO `json:"layout_settings"`
+	Language       string            `json:"language" example:"pt-BR"`
 }
 
 // BootstrapPlanDTO is the simplified plan info returned in bootstrap
@@ -504,6 +507,7 @@ type SubscribeRequest struct {
 	IsCompany    bool    `json:"is_company" example:"true"`
 	CompanyName  *string `json:"company_name" example:"My Company"`
 	Subdomain    string  `json:"subdomain" binding:"required" example:"mycompany"`
+	Language     string  `json:"language" example:"pt-BR"`
 }
 
 // UserLoginRequest is the request for backoffice login
@@ -614,6 +618,19 @@ type UpdateAppUserStatusRequest struct {
 // UpdateLanguageRequest is the request for changing tenant language
 type UpdateLanguageRequest struct {
 	Language string `json:"language" binding:"required" example:"en"`
+}
+
+// TenantSettingsResponse is the response for getting tenant settings
+type TenantSettingsResponse struct {
+	Layout      interface{} `json:"layout"`
+	ConvertWebp bool        `json:"convert_webp" example:"true"`
+	Language    string      `json:"language" example:"pt-BR"`
+}
+
+// UpdateTenantSettingsRequest is the request for updating tenant settings
+type UpdateTenantSettingsRequest struct {
+	Layout      interface{} `json:"layout"`
+	ConvertWebp *bool       `json:"convert_webp" example:"true"`
 }
 
 // ResendVerificationRequest is the request for resending verification email

@@ -2922,6 +2922,9 @@ const docTemplate = `{
                 "name": {
                     "type": "string"
                 },
+                "plan_id": {
+                    "type": "string"
+                },
                 "valid_from": {
                     "type": "string"
                 },

@@ -63,6 +63,9 @@ definitions:
       is_owner:
         example: true
         type: boolean
+      language:
+        example: pt-BR
+        type: string
       layout_settings:
         $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.LayoutSettingsDTO'
       permissions:
@@ -198,18 +201,6 @@ definitions:
         example: Products
         type: string
       updated_at:
-        type: string
-    type: object
-  github_com_saas-single-db-api_internal_models_swagger.ImageResponse:
-    properties:
-      id:
-        example: uuid
-        type: string
-      path:
-        example: /uploads/tenant/image.jpg
-        type: string
-      public_url:
-        example: http://localhost:8080/uploads/tenant/image.jpg
         type: string
     type: object
   github_com_saas-single-db-api_internal_models_swagger.InviteMemberRequest:
@@ -447,23 +438,6 @@ definitions:
       updated_at:
         type: string
     type: object
-  github_com_saas-single-db-api_internal_models_swagger.SettingResponse:
-    properties:
-      category:
-        example: appearance
-        type: string
-      created_at:
-        type: string
-      data: {}
-      id:
-        example: uuid
-        type: string
-      tenant_id:
-        example: uuid
-        type: string
-      updated_at:
-        type: string
-    type: object
   github_com_saas-single-db-api_internal_models_swagger.SubscribeRequest:
     properties:
       billing_cycle:
@@ -478,6 +452,9 @@ definitions:
       is_company:
         example: true
         type: boolean
+      language:
+        example: pt-BR
+        type: string
       name:
         example: John Doe
         type: string
@@ -502,35 +479,23 @@ definitions:
     - plan_id
     - subdomain
     type: object
-  github_com_saas-single-db-api_internal_models_swagger.SubscriptionInfoDTO:
-    properties:
-      billing_cycle:
-        example: monthly
-        type: string
-      contracted_price:
-        example: 99.9
-        type: number
-      plan:
-        example: Business Pro
-        type: string
-      promo_expires_at:
-        type: string
-      promo_price:
-        type: number
-      promotion:
-        type: string
-    type: object
   github_com_saas-single-db-api_internal_models_swagger.SubscriptionResponse:
     properties:
-      subscription:
-        $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.SubscriptionInfoDTO'
-      tenant:
-        $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.TenantBriefDTO'
+      language:
+        example: pt-BR
+        type: string
+      tenant_id:
+        example: uuid
+        type: string
       token:
         example: eyJhbGciOiJIUzI1NiIs...
         type: string
-      user:
-        $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.UserBriefDTO'
+      url_code:
+        example: HRP1ZYERFVA
+        type: string
+      user_id:
+        example: uuid
+        type: string
     type: object
   github_com_saas-single-db-api_internal_models_swagger.SwitchTenantResponse:
     properties:
@@ -554,24 +519,6 @@ definitions:
         type: boolean
       name:
         example: My Company
-        type: string
-      url_code:
-        example: HRP1ZYERFVA
-        type: string
-    type: object
-  github_com_saas-single-db-api_internal_models_swagger.TenantBriefDTO:
-    properties:
-      id:
-        example: uuid
-        type: string
-      name:
-        example: My Company
-        type: string
-      status:
-        example: active
-        type: string
-      subdomain:
-        example: mycompany
         type: string
       url_code:
         example: HRP1ZYERFVA
@@ -604,6 +551,16 @@ definitions:
         example: uuid
         type: string
     type: object
+  github_com_saas-single-db-api_internal_models_swagger.TenantSettingsResponse:
+    properties:
+      convert_webp:
+        example: true
+        type: boolean
+      language:
+        example: pt-BR
+        type: string
+      layout: {}
+    type: object
   github_com_saas-single-db-api_internal_models_swagger.UpdateAppUserStatusRequest:
     properties:
       status:
@@ -611,6 +568,14 @@ definitions:
         type: string
     required:
     - status
+    type: object
+  github_com_saas-single-db-api_internal_models_swagger.UpdateLanguageRequest:
+    properties:
+      language:
+        example: en
+        type: string
+    required:
+    - language
     type: object
   github_com_saas-single-db-api_internal_models_swagger.UpdateMemberRoleRequest:
     properties:
@@ -674,6 +639,13 @@ definitions:
         type: string
       custom_settings: {}
     type: object
+  github_com_saas-single-db-api_internal_models_swagger.UpdateTenantSettingsRequest:
+    properties:
+      convert_webp:
+        example: true
+        type: boolean
+      layout: {}
+    type: object
   github_com_saas-single-db-api_internal_models_swagger.UpdateUserProfileRequest:
     properties:
       about:
@@ -690,21 +662,6 @@ definitions:
         type: string
       public_url:
         example: http://localhost:8080/uploads/tenant/file.jpg
-        type: string
-    type: object
-  github_com_saas-single-db-api_internal_models_swagger.UpsertSettingRequest:
-    properties:
-      data: {}
-    required:
-    - data
-    type: object
-  github_com_saas-single-db-api_internal_models_swagger.UserBriefDTO:
-    properties:
-      email:
-        example: user@example.com
-        type: string
-      id:
-        example: uuid
         type: string
     type: object
   github_com_saas-single-db-api_internal_models_swagger.UserLoginRequest:
@@ -726,6 +683,9 @@ definitions:
         type: string
       email:
         example: user@example.com
+        type: string
+      language:
+        example: pt-BR
         type: string
       name:
         example: John
@@ -950,110 +910,6 @@ paths:
       summary: Obter bootstrap do tenant
       tags:
       - Bootstrap
-  /{url_code}/images:
-    get:
-      description: Retorna imagens do tenant paginadas
-      parameters:
-      - description: URL code do tenant
-        in: path
-        name: url_code
-        required: true
-        type: string
-      - default: 1
-        description: Página
-        in: query
-        name: page
-        type: integer
-      - default: 20
-        description: Itens por página
-        in: query
-        name: page_size
-        type: integer
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.PaginatedResponse'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.ErrorResponse'
-      security:
-      - BearerAuth: []
-      summary: Listar imagens
-      tags:
-      - Images
-    post:
-      consumes:
-      - multipart/form-data
-      description: Faz upload de uma imagem com entity_type e entity_id opcionais
-      parameters:
-      - description: URL code do tenant
-        in: path
-        name: url_code
-        required: true
-        type: string
-      - description: Imagem
-        in: formData
-        name: image
-        required: true
-        type: file
-      - description: Tipo da entidade
-        in: formData
-        name: entity_type
-        type: string
-      - description: ID da entidade
-        in: formData
-        name: entity_id
-        type: string
-      produces:
-      - application/json
-      responses:
-        "201":
-          description: Created
-          schema:
-            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.ImageResponse'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.ErrorResponse'
-      security:
-      - BearerAuth: []
-      summary: Upload de imagem genérica
-      tags:
-      - Images
-  /{url_code}/images/{id}:
-    delete:
-      description: Remove uma imagem do tenant
-      parameters:
-      - description: URL code do tenant
-        in: path
-        name: url_code
-        required: true
-        type: string
-      - description: ID da imagem
-        in: path
-        name: id
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.MessageResponse'
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.ErrorResponse'
-      security:
-      - BearerAuth: []
-      summary: Remover imagem
-      tags:
-      - Images
   /{url_code}/members:
     get:
       description: Retorna todos os membros do tenant
@@ -1908,7 +1764,7 @@ paths:
       - Services
   /{url_code}/settings:
     get:
-      description: Retorna todas as configurações do tenant
+      description: Retorna todas as configurações do tenant (layout + convert_webp)
       parameters:
       - description: URL code do tenant
         in: path
@@ -1921,70 +1777,33 @@ paths:
         "200":
           description: OK
           schema:
-            items:
-              $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.SettingResponse'
-            type: array
+            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.TenantSettingsResponse'
         "500":
           description: Internal Server Error
           schema:
             $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.ErrorResponse'
       security:
       - BearerAuth: []
-      summary: Listar configurações
-      tags:
-      - Settings
-  /{url_code}/settings/{category}:
-    get:
-      description: Retorna uma configuração específica do tenant por categoria
-      parameters:
-      - description: URL code do tenant
-        in: path
-        name: url_code
-        required: true
-        type: string
-      - description: Categoria da configuração
-        in: path
-        name: category
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.SettingResponse'
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.ErrorResponse'
-      security:
-      - BearerAuth: []
-      summary: Obter configuração por categoria
+      summary: Obter configurações do tenant
       tags:
       - Settings
     put:
       consumes:
       - application/json
-      description: Cria ou atualiza uma configuração. Requer permissão 'setg_m' ou
-        ser owner.
+      description: Atualiza as configurações do tenant (layout e/ou convert_webp).
+        Requer permissão 'setg_m' ou ser owner.
       parameters:
       - description: URL code do tenant
         in: path
         name: url_code
         required: true
         type: string
-      - description: Categoria da configuração
-        in: path
-        name: category
-        required: true
-        type: string
-      - description: Dados da configuração
+      - description: Configurações do tenant
         in: body
         name: request
         required: true
         schema:
-          $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.UpsertSettingRequest'
+          $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.UpdateTenantSettingsRequest'
       produces:
       - application/json
       responses:
@@ -2002,7 +1821,44 @@ paths:
             $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.ErrorResponse'
       security:
       - BearerAuth: []
-      summary: Salvar configuração
+      summary: Atualizar configurações do tenant
+      tags:
+      - Settings
+  /{url_code}/settings/language:
+    put:
+      consumes:
+      - application/json
+      description: 'Atualiza o idioma do tenant. Aceita: pt-BR, pt, en, es'
+      parameters:
+      - description: URL code do tenant
+        in: path
+        name: url_code
+        required: true
+        type: string
+      - description: Novo idioma
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.UpdateLanguageRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.MessageResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Atualizar idioma do tenant
       tags:
       - Settings
   /{url_code}/settings/layout:

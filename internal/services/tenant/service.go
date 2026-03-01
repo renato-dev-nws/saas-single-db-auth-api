@@ -39,6 +39,7 @@ type SubscribeInput struct {
 	OwnerName    string
 	OwnerEmail   string
 	OwnerPass    string
+	Language     string
 }
 
 type SubscribeResult struct {
@@ -158,6 +159,11 @@ func (s *Service) Subscribe(ctx context.Context, input SubscribeInput) (*Subscri
 		return nil, err
 	}
 
+	// 9a. Save tenant language setting
+	if input.Language != "" {
+		_ = s.repo.UpdateLanguage(ctx, tenantID, input.Language)
+	}
+
 	// 9. Send welcome + verification email (async, don't block on failure)
 	if s.emailService != nil {
 		go func() {
@@ -253,6 +259,7 @@ type LoginResult struct {
 	Email             string
 	CurrentTenantCode string
 	Tenants           []repo.TenantBriefExported
+	Language          string
 }
 
 func (s *Service) Login(ctx context.Context, email, password string) (*LoginResult, error) {
@@ -295,12 +302,16 @@ func (s *Service) Login(ctx context.Context, email, password string) (*LoginResu
 		return nil, err
 	}
 
+	// Fetch language for the current tenant
+	language := s.repo.GetLanguage(ctx, tenantID)
+
 	return &LoginResult{
 		Token:             token,
 		Name:              user.Name,
 		Email:             user.Email,
 		CurrentTenantCode: urlCode,
 		Tenants:           tenantList,
+		Language:          language,
 	}, nil
 }
 

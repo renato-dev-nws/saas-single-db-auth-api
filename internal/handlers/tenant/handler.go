@@ -71,11 +71,22 @@ func (h *Handler) Subscribe(c *gin.Context) {
 		BillingCycle string  `json:"billing_cycle" binding:"required"`
 		PromoCode    *string `json:"promo_code"`
 		Subdomain    string  `json:"subdomain" binding:"required"`
+		Language     string  `json:"language"`
 	}
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": utils.FormatValidationErrors(err, c)})
 		return
 	}
+
+	// Detect language: request > Accept-Language header > default
+	lang := req.Language
+	if lang == "" {
+		lang = i18n.DetectLanguage(c.GetHeader("Accept-Language"))
+	}
+	if !i18n.IsValidLanguage(lang) {
+		lang = i18n.DefaultLang
+	}
+	c.Set("language", lang)
 
 	// company_name is required when is_company is true
 	if req.IsCompany && strings.TrimSpace(req.CompanyName) == "" {
@@ -102,6 +113,7 @@ func (h *Handler) Subscribe(c *gin.Context) {
 		OwnerName:    req.Name,
 		OwnerEmail:   req.Email,
 		OwnerPass:    req.Password,
+		Language:     lang,
 	})
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": i18n.T(c, err.Error())})
@@ -113,6 +125,7 @@ func (h *Handler) Subscribe(c *gin.Context) {
 		"user_id":   result.UserID,
 		"url_code":  result.URLCode,
 		"token":     result.Token,
+		"language":  lang,
 	})
 }
 
@@ -188,6 +201,10 @@ func (h *Handler) Login(c *gin.Context) {
 		return
 	}
 
+	// Detect language from Accept-Language for error messages (no tenant context yet)
+	lang := i18n.DetectLanguage(c.GetHeader("Accept-Language"))
+	c.Set("language", lang)
+
 	result, err := h.service.Login(c.Request.Context(), req.Email, req.Password)
 	if err != nil {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": i18n.T(c, err.Error())})
@@ -200,6 +217,7 @@ func (h *Handler) Login(c *gin.Context) {
 		"email":               result.Email,
 		"current_tenant_code": result.CurrentTenantCode,
 		"tenants":             result.Tenants,
+		"language":            result.Language,
 	})
 }
 
@@ -443,12 +461,19 @@ func (h *Handler) GetBootstrap(c *gin.Context) {
 		}
 	}
 
+	// Language from settings
+	language := i18n.DefaultLang
+	if tenantSettings != nil && tenantSettings.Language != "" {
+		language = tenantSettings.Language
+	}
+
 	result := gin.H{
 		"tenant":          tenant,
 		"features":        features,
 		"permissions":     perms,
 		"is_owner":        isOwner,
 		"layout_settings": layoutData,
+		"language":        language,
 	}
 
 	if plan != nil {

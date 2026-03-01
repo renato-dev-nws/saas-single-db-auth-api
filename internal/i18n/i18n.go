@@ -31,6 +31,35 @@ func IsValidLanguage(lang string) bool {
 	return false
 }
 
+// DetectLanguage parses the Accept-Language header and returns the best matching
+// supported language. Returns DefaultLang if no match is found.
+func DetectLanguage(acceptLang string) string {
+	if acceptLang == "" {
+		return DefaultLang
+	}
+	// Parse entries like "pt-BR,pt;q=0.9,en-US;q=0.8,en;q=0.7,es;q=0.6"
+	for _, part := range strings.Split(acceptLang, ",") {
+		tag := strings.TrimSpace(strings.SplitN(part, ";", 2)[0])
+		if tag == "" {
+			continue
+		}
+		// Exact match
+		if IsValidLanguage(tag) {
+			return tag
+		}
+		// Try prefix match: "en-US" → "en", "pt-PT" → "pt"
+		prefix := strings.SplitN(tag, "-", 2)[0]
+		// Special case: "pt-BR" is valid
+		if prefix == "pt" && strings.HasPrefix(tag, "pt-BR") {
+			return LangPtBR
+		}
+		if IsValidLanguage(prefix) {
+			return prefix
+		}
+	}
+	return DefaultLang
+}
+
 // T returns the translated message for the given key using the language from Gin context.
 // Falls back to DefaultLang if language not set or key not found.
 func T(c *gin.Context, key string) string {

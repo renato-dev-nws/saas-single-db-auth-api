@@ -711,167 +711,6 @@ const docTemplate = `{
                 }
             }
         },
-        "/{url_code}/images": {
-            "get": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "Retorna imagens do tenant paginadas",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Images"
-                ],
-                "summary": "Listar imagens",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "URL code do tenant",
-                        "name": "url_code",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "integer",
-                        "default": 1,
-                        "description": "Página",
-                        "name": "page",
-                        "in": "query"
-                    },
-                    {
-                        "type": "integer",
-                        "default": 20,
-                        "description": "Itens por página",
-                        "name": "page_size",
-                        "in": "query"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/github_com_saas-single-db-api_internal_models_swagger.PaginatedResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/github_com_saas-single-db-api_internal_models_swagger.ErrorResponse"
-                        }
-                    }
-                }
-            },
-            "post": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "Faz upload de uma imagem com entity_type e entity_id opcionais",
-                "consumes": [
-                    "multipart/form-data"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Images"
-                ],
-                "summary": "Upload de imagem genérica",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "URL code do tenant",
-                        "name": "url_code",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "file",
-                        "description": "Imagem",
-                        "name": "image",
-                        "in": "formData",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "Tipo da entidade",
-                        "name": "entity_type",
-                        "in": "formData"
-                    },
-                    {
-                        "type": "string",
-                        "description": "ID da entidade",
-                        "name": "entity_id",
-                        "in": "formData"
-                    }
-                ],
-                "responses": {
-                    "201": {
-                        "description": "Created",
-                        "schema": {
-                            "$ref": "#/definitions/github_com_saas-single-db-api_internal_models_swagger.ImageResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/github_com_saas-single-db-api_internal_models_swagger.ErrorResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/{url_code}/images/{id}": {
-            "delete": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "Remove uma imagem do tenant",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Images"
-                ],
-                "summary": "Remover imagem",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "URL code do tenant",
-                        "name": "url_code",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "ID da imagem",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/github_com_saas-single-db-api_internal_models_swagger.MessageResponse"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/github_com_saas-single-db-api_internal_models_swagger.ErrorResponse"
-                        }
-                    }
-                }
-            }
-        },
         "/{url_code}/members": {
             "get": {
                 "security": [
@@ -2198,14 +2037,14 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "Retorna todas as configurações do tenant",
+                "description": "Retorna todas as configurações do tenant (layout + convert_webp)",
                 "produces": [
                     "application/json"
                 ],
                 "tags": [
                     "Settings"
                 ],
-                "summary": "Listar configurações",
+                "summary": "Obter configurações do tenant",
                 "parameters": [
                     {
                         "type": "string",
@@ -2219,14 +2058,125 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "type": "array",
-                            "items": {
-                                "$ref": "#/definitions/github_com_saas-single-db-api_internal_models_swagger.SettingResponse"
-                            }
+                            "$ref": "#/definitions/github_com_saas-single-db-api_internal_models_swagger.TenantSettingsResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_saas-single-db-api_internal_models_swagger.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Atualiza as configurações do tenant (layout e/ou convert_webp). Requer permissão 'setg_m' ou ser owner.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Settings"
+                ],
+                "summary": "Atualizar configurações do tenant",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "URL code do tenant",
+                        "name": "url_code",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Configurações do tenant",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/github_com_saas-single-db-api_internal_models_swagger.UpdateTenantSettingsRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_saas-single-db-api_internal_models_swagger.MessageResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_saas-single-db-api_internal_models_swagger.ErrorResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_saas-single-db-api_internal_models_swagger.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/{url_code}/settings/language": {
+            "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Atualiza o idioma do tenant. Aceita: pt-BR, pt, en, es",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Settings"
+                ],
+                "summary": "Atualizar idioma do tenant",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "URL code do tenant",
+                        "name": "url_code",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Novo idioma",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/github_com_saas-single-db-api_internal_models_swagger.UpdateLanguageRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_saas-single-db-api_internal_models_swagger.MessageResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_saas-single-db-api_internal_models_swagger.ErrorResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
                         "schema": {
                             "$ref": "#/definitions/github_com_saas-single-db-api_internal_models_swagger.ErrorResponse"
                         }
@@ -2305,116 +2255,6 @@ const docTemplate = `{
                         "required": true,
                         "schema": {
                             "$ref": "#/definitions/github_com_saas-single-db-api_internal_models_swagger.LayoutSettingsRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/github_com_saas-single-db-api_internal_models_swagger.MessageResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/github_com_saas-single-db-api_internal_models_swagger.ErrorResponse"
-                        }
-                    },
-                    "403": {
-                        "description": "Forbidden",
-                        "schema": {
-                            "$ref": "#/definitions/github_com_saas-single-db-api_internal_models_swagger.ErrorResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/{url_code}/settings/{category}": {
-            "get": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "Retorna uma configuração específica do tenant por categoria",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Settings"
-                ],
-                "summary": "Obter configuração por categoria",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "URL code do tenant",
-                        "name": "url_code",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "Categoria da configuração",
-                        "name": "category",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/github_com_saas-single-db-api_internal_models_swagger.SettingResponse"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/github_com_saas-single-db-api_internal_models_swagger.ErrorResponse"
-                        }
-                    }
-                }
-            },
-            "put": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "Cria ou atualiza uma configuração. Requer permissão 'setg_m' ou ser owner.",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Settings"
-                ],
-                "summary": "Salvar configuração",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "URL code do tenant",
-                        "name": "url_code",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "Categoria da configuração",
-                        "name": "category",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "description": "Dados da configuração",
-                        "name": "request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/github_com_saas-single-db-api_internal_models_swagger.UpsertSettingRequest"
                         }
                     }
                 ],
@@ -2674,6 +2514,10 @@ const docTemplate = `{
                     "type": "boolean",
                     "example": true
                 },
+                "language": {
+                    "type": "string",
+                    "example": "pt-BR"
+                },
                 "layout_settings": {
                     "$ref": "#/definitions/github_com_saas-single-db-api_internal_models_swagger.LayoutSettingsDTO"
                 },
@@ -2865,23 +2709,6 @@ const docTemplate = `{
                 },
                 "updated_at": {
                     "type": "string"
-                }
-            }
-        },
-        "github_com_saas-single-db-api_internal_models_swagger.ImageResponse": {
-            "type": "object",
-            "properties": {
-                "id": {
-                    "type": "string",
-                    "example": "uuid"
-                },
-                "path": {
-                    "type": "string",
-                    "example": "/uploads/tenant/image.jpg"
-                },
-                "public_url": {
-                    "type": "string",
-                    "example": "http://localhost:8080/uploads/tenant/image.jpg"
                 }
             }
         },
@@ -3216,30 +3043,6 @@ const docTemplate = `{
                 }
             }
         },
-        "github_com_saas-single-db-api_internal_models_swagger.SettingResponse": {
-            "type": "object",
-            "properties": {
-                "category": {
-                    "type": "string",
-                    "example": "appearance"
-                },
-                "created_at": {
-                    "type": "string"
-                },
-                "data": {},
-                "id": {
-                    "type": "string",
-                    "example": "uuid"
-                },
-                "tenant_id": {
-                    "type": "string",
-                    "example": "uuid"
-                },
-                "updated_at": {
-                    "type": "string"
-                }
-            }
-        },
         "github_com_saas-single-db-api_internal_models_swagger.SubscribeRequest": {
             "type": "object",
             "required": [
@@ -3267,6 +3070,10 @@ const docTemplate = `{
                     "type": "boolean",
                     "example": true
                 },
+                "language": {
+                    "type": "string",
+                    "example": "pt-BR"
+                },
                 "name": {
                     "type": "string",
                     "example": "John Doe"
@@ -3290,47 +3097,28 @@ const docTemplate = `{
                 }
             }
         },
-        "github_com_saas-single-db-api_internal_models_swagger.SubscriptionInfoDTO": {
-            "type": "object",
-            "properties": {
-                "billing_cycle": {
-                    "type": "string",
-                    "example": "monthly"
-                },
-                "contracted_price": {
-                    "type": "number",
-                    "example": 99.9
-                },
-                "plan": {
-                    "type": "string",
-                    "example": "Business Pro"
-                },
-                "promo_expires_at": {
-                    "type": "string"
-                },
-                "promo_price": {
-                    "type": "number"
-                },
-                "promotion": {
-                    "type": "string"
-                }
-            }
-        },
         "github_com_saas-single-db-api_internal_models_swagger.SubscriptionResponse": {
             "type": "object",
             "properties": {
-                "subscription": {
-                    "$ref": "#/definitions/github_com_saas-single-db-api_internal_models_swagger.SubscriptionInfoDTO"
+                "language": {
+                    "type": "string",
+                    "example": "pt-BR"
                 },
-                "tenant": {
-                    "$ref": "#/definitions/github_com_saas-single-db-api_internal_models_swagger.TenantBriefDTO"
+                "tenant_id": {
+                    "type": "string",
+                    "example": "uuid"
                 },
                 "token": {
                     "type": "string",
                     "example": "eyJhbGciOiJIUzI1NiIs..."
                 },
-                "user": {
-                    "$ref": "#/definitions/github_com_saas-single-db-api_internal_models_swagger.UserBriefDTO"
+                "url_code": {
+                    "type": "string",
+                    "example": "HRP1ZYERFVA"
+                },
+                "user_id": {
+                    "type": "string",
+                    "example": "uuid"
                 }
             }
         },
@@ -3365,31 +3153,6 @@ const docTemplate = `{
                 "name": {
                     "type": "string",
                     "example": "My Company"
-                },
-                "url_code": {
-                    "type": "string",
-                    "example": "HRP1ZYERFVA"
-                }
-            }
-        },
-        "github_com_saas-single-db-api_internal_models_swagger.TenantBriefDTO": {
-            "type": "object",
-            "properties": {
-                "id": {
-                    "type": "string",
-                    "example": "uuid"
-                },
-                "name": {
-                    "type": "string",
-                    "example": "My Company"
-                },
-                "status": {
-                    "type": "string",
-                    "example": "active"
-                },
-                "subdomain": {
-                    "type": "string",
-                    "example": "mycompany"
                 },
                 "url_code": {
                     "type": "string",
@@ -3435,6 +3198,20 @@ const docTemplate = `{
                 }
             }
         },
+        "github_com_saas-single-db-api_internal_models_swagger.TenantSettingsResponse": {
+            "type": "object",
+            "properties": {
+                "convert_webp": {
+                    "type": "boolean",
+                    "example": true
+                },
+                "language": {
+                    "type": "string",
+                    "example": "pt-BR"
+                },
+                "layout": {}
+            }
+        },
         "github_com_saas-single-db-api_internal_models_swagger.UpdateAppUserStatusRequest": {
             "type": "object",
             "required": [
@@ -3444,6 +3221,18 @@ const docTemplate = `{
                 "status": {
                     "type": "string",
                     "example": "blocked"
+                }
+            }
+        },
+        "github_com_saas-single-db-api_internal_models_swagger.UpdateLanguageRequest": {
+            "type": "object",
+            "required": [
+                "language"
+            ],
+            "properties": {
+                "language": {
+                    "type": "string",
+                    "example": "en"
                 }
             }
         },
@@ -3535,6 +3324,16 @@ const docTemplate = `{
                 "custom_settings": {}
             }
         },
+        "github_com_saas-single-db-api_internal_models_swagger.UpdateTenantSettingsRequest": {
+            "type": "object",
+            "properties": {
+                "convert_webp": {
+                    "type": "boolean",
+                    "example": true
+                },
+                "layout": {}
+            }
+        },
         "github_com_saas-single-db-api_internal_models_swagger.UpdateUserProfileRequest": {
             "type": "object",
             "properties": {
@@ -3558,28 +3357,6 @@ const docTemplate = `{
                 "public_url": {
                     "type": "string",
                     "example": "http://localhost:8080/uploads/tenant/file.jpg"
-                }
-            }
-        },
-        "github_com_saas-single-db-api_internal_models_swagger.UpsertSettingRequest": {
-            "type": "object",
-            "required": [
-                "data"
-            ],
-            "properties": {
-                "data": {}
-            }
-        },
-        "github_com_saas-single-db-api_internal_models_swagger.UserBriefDTO": {
-            "type": "object",
-            "properties": {
-                "email": {
-                    "type": "string",
-                    "example": "user@example.com"
-                },
-                "id": {
-                    "type": "string",
-                    "example": "uuid"
                 }
             }
         },
@@ -3610,6 +3387,10 @@ const docTemplate = `{
                 "email": {
                     "type": "string",
                     "example": "user@example.com"
+                },
+                "language": {
+                    "type": "string",
+                    "example": "pt-BR"
                 },
                 "name": {
                     "type": "string",
