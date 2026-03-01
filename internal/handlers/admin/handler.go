@@ -10,6 +10,7 @@ import (
 	"github.com/jackc/pgx/v5"
 	"github.com/redis/go-redis/v9"
 	"github.com/saas-single-db-api/internal/cache"
+	"github.com/saas-single-db-api/internal/i18n"
 	models "github.com/saas-single-db-api/internal/models/admin"
 	"github.com/saas-single-db-api/internal/models/shared"
 	_ "github.com/saas-single-db-api/internal/models/swagger"
@@ -43,13 +44,13 @@ func NewHandler(service *svc.Service, redisClient *redis.Client) *Handler {
 func (h *Handler) Login(c *gin.Context) {
 	var req models.LoginRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": utils.FormatValidationErrors(err)})
+		c.JSON(http.StatusBadRequest, gin.H{"error": utils.FormatValidationErrors(err, c)})
 		return
 	}
 
 	token, admin, err := h.service.Login(c.Request.Context(), req.Email, req.Password)
 	if err != nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
+		c.JSON(http.StatusUnauthorized, gin.H{"error": i18n.T(c, err.Error())})
 		return
 	}
 
@@ -68,7 +69,7 @@ func (h *Handler) Login(c *gin.Context) {
 func (h *Handler) Logout(c *gin.Context) {
 	token := c.GetString("token")
 	cache.SetBlacklist(h.redisClient, context.Background(), token, 24*time.Hour)
-	c.JSON(http.StatusOK, shared.MessageResponse{Message: "logged_out"})
+	c.JSON(http.StatusOK, shared.MessageResponse{Message: i18n.T(c, "logged_out")})
 }
 
 // Me godoc
@@ -85,7 +86,7 @@ func (h *Handler) Me(c *gin.Context) {
 	adminID := c.GetString("admin_id")
 	result, err := h.service.GetMe(c.Request.Context(), adminID)
 	if err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "admin_not_found"})
+		c.JSON(http.StatusNotFound, gin.H{"error": i18n.T(c, "admin_not_found")})
 		return
 	}
 	c.JSON(http.StatusOK, result)
@@ -107,27 +108,27 @@ func (h *Handler) ChangePassword(c *gin.Context) {
 	adminID := c.GetString("admin_id")
 	var req models.ChangePasswordRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": utils.FormatValidationErrors(err)})
+		c.JSON(http.StatusBadRequest, gin.H{"error": utils.FormatValidationErrors(err, c)})
 		return
 	}
 
 	admin, err := h.service.Repo().GetAdminByID(c.Request.Context(), adminID)
 	if err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "admin_not_found"})
+		c.JSON(http.StatusNotFound, gin.H{"error": i18n.T(c, "admin_not_found")})
 		return
 	}
 	if !utils.CheckPassword(req.CurrentPassword, admin.HashPass) {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid_current_password"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": i18n.T(c, "invalid_current_password")})
 		return
 	}
 
 	hash, _ := utils.HashPassword(req.NewPassword)
 	if err := h.service.Repo().UpdateAdminPassword(c.Request.Context(), adminID, hash); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed_to_update_password"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": i18n.T(c, "failed_update_password")})
 		return
 	}
 
-	c.JSON(http.StatusOK, shared.MessageResponse{Message: "password_updated"})
+	c.JSON(http.StatusOK, shared.MessageResponse{Message: i18n.T(c, "password_changed")})
 }
 
 // --- Sys Users ---
@@ -147,14 +148,14 @@ func (h *Handler) ChangePassword(c *gin.Context) {
 func (h *Handler) ListSysUsers(c *gin.Context) {
 	adminID := c.GetString("admin_id")
 	if !h.service.HasPermission(c.Request.Context(), adminID, "manage_sys_users") {
-		c.JSON(http.StatusForbidden, gin.H{"error": "permission_denied"})
+		c.JSON(http.StatusForbidden, gin.H{"error": i18n.T(c, "permission_denied")})
 		return
 	}
 
 	p := utils.GetPagination(c)
 	admins, total, err := h.service.Repo().ListAdmins(c.Request.Context(), p.PageSize, p.Offset)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed_to_list_admins"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": i18n.T(c, "failed_list_admins")})
 		return
 	}
 
@@ -179,20 +180,20 @@ func (h *Handler) ListSysUsers(c *gin.Context) {
 func (h *Handler) CreateSysUser(c *gin.Context) {
 	adminID := c.GetString("admin_id")
 	if !h.service.HasPermission(c.Request.Context(), adminID, "manage_sys_users") {
-		c.JSON(http.StatusForbidden, gin.H{"error": "permission_denied"})
+		c.JSON(http.StatusForbidden, gin.H{"error": i18n.T(c, "permission_denied")})
 		return
 	}
 
 	var req models.CreateAdminRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": utils.FormatValidationErrors(err)})
+		c.JSON(http.StatusBadRequest, gin.H{"error": utils.FormatValidationErrors(err, c)})
 		return
 	}
 
 	hash, _ := utils.HashPassword(req.Password)
 	admin, err := h.service.Repo().CreateAdmin(c.Request.Context(), req.FullName, req.Email, hash)
 	if err != nil {
-		c.JSON(http.StatusConflict, gin.H{"error": "email_already_exists"})
+		c.JSON(http.StatusConflict, gin.H{"error": i18n.T(c, "email_already_exists")})
 		return
 	}
 
@@ -224,14 +225,14 @@ func (h *Handler) CreateSysUser(c *gin.Context) {
 func (h *Handler) GetSysUser(c *gin.Context) {
 	adminID := c.GetString("admin_id")
 	if !h.service.HasPermission(c.Request.Context(), adminID, "manage_sys_users") {
-		c.JSON(http.StatusForbidden, gin.H{"error": "permission_denied"})
+		c.JSON(http.StatusForbidden, gin.H{"error": i18n.T(c, "permission_denied")})
 		return
 	}
 
 	id := c.Param("id")
 	admin, err := h.service.Repo().GetAdminByID(c.Request.Context(), id)
 	if err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "admin_not_found"})
+		c.JSON(http.StatusNotFound, gin.H{"error": i18n.T(c, "admin_not_found")})
 		return
 	}
 
@@ -260,23 +261,23 @@ func (h *Handler) GetSysUser(c *gin.Context) {
 func (h *Handler) UpdateSysUser(c *gin.Context) {
 	adminID := c.GetString("admin_id")
 	if !h.service.HasPermission(c.Request.Context(), adminID, "manage_sys_users") {
-		c.JSON(http.StatusForbidden, gin.H{"error": "permission_denied"})
+		c.JSON(http.StatusForbidden, gin.H{"error": i18n.T(c, "permission_denied")})
 		return
 	}
 
 	id := c.Param("id")
 	var req models.UpdateAdminRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": utils.FormatValidationErrors(err)})
+		c.JSON(http.StatusBadRequest, gin.H{"error": utils.FormatValidationErrors(err, c)})
 		return
 	}
 
 	if err := h.service.Repo().UpdateAdmin(c.Request.Context(), id, &req); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed_to_update"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": i18n.T(c, "failed_update")})
 		return
 	}
 
-	c.JSON(http.StatusOK, shared.MessageResponse{Message: "updated"})
+	c.JSON(http.StatusOK, shared.MessageResponse{Message: i18n.T(c, "updated")})
 }
 
 // DeleteSysUser godoc
@@ -293,17 +294,17 @@ func (h *Handler) UpdateSysUser(c *gin.Context) {
 func (h *Handler) DeleteSysUser(c *gin.Context) {
 	adminID := c.GetString("admin_id")
 	if !h.service.HasPermission(c.Request.Context(), adminID, "manage_sys_users") {
-		c.JSON(http.StatusForbidden, gin.H{"error": "permission_denied"})
+		c.JSON(http.StatusForbidden, gin.H{"error": i18n.T(c, "permission_denied")})
 		return
 	}
 
 	id := c.Param("id")
 	if err := h.service.Repo().SoftDeleteAdmin(c.Request.Context(), id); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed_to_delete"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": i18n.T(c, "failed_delete")})
 		return
 	}
 
-	c.JSON(http.StatusOK, shared.MessageResponse{Message: "deleted"})
+	c.JSON(http.StatusOK, shared.MessageResponse{Message: i18n.T(c, "deleted")})
 }
 
 // GetSysUserProfile godoc
@@ -320,14 +321,14 @@ func (h *Handler) DeleteSysUser(c *gin.Context) {
 func (h *Handler) GetSysUserProfile(c *gin.Context) {
 	adminID := c.GetString("admin_id")
 	if !h.service.HasPermission(c.Request.Context(), adminID, "manage_sys_users") {
-		c.JSON(http.StatusForbidden, gin.H{"error": "permission_denied"})
+		c.JSON(http.StatusForbidden, gin.H{"error": i18n.T(c, "permission_denied")})
 		return
 	}
 
 	id := c.Param("id")
 	profile, err := h.service.Repo().GetProfile(c.Request.Context(), id)
 	if err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "profile_not_found"})
+		c.JSON(http.StatusNotFound, gin.H{"error": i18n.T(c, "profile_not_found")})
 		return
 	}
 	c.JSON(http.StatusOK, profile)
@@ -349,23 +350,23 @@ func (h *Handler) GetSysUserProfile(c *gin.Context) {
 func (h *Handler) UpdateSysUserProfile(c *gin.Context) {
 	adminID := c.GetString("admin_id")
 	if !h.service.HasPermission(c.Request.Context(), adminID, "manage_sys_users") {
-		c.JSON(http.StatusForbidden, gin.H{"error": "permission_denied"})
+		c.JSON(http.StatusForbidden, gin.H{"error": i18n.T(c, "permission_denied")})
 		return
 	}
 
 	id := c.Param("id")
 	var req models.UpdateProfileRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": utils.FormatValidationErrors(err)})
+		c.JSON(http.StatusBadRequest, gin.H{"error": utils.FormatValidationErrors(err, c)})
 		return
 	}
 
 	if err := h.service.Repo().UpsertProfile(c.Request.Context(), id, &req); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed_to_update_profile"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": i18n.T(c, "failed_update_profile")})
 		return
 	}
 
-	c.JSON(http.StatusOK, shared.MessageResponse{Message: "profile_updated"})
+	c.JSON(http.StatusOK, shared.MessageResponse{Message: i18n.T(c, "profile_updated")})
 }
 
 // GetMyProfile godoc
@@ -382,7 +383,7 @@ func (h *Handler) GetMyProfile(c *gin.Context) {
 	adminID := c.GetString("admin_id")
 	profile, err := h.service.Repo().GetProfile(c.Request.Context(), adminID)
 	if err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "profile_not_found"})
+		c.JSON(http.StatusNotFound, gin.H{"error": i18n.T(c, "profile_not_found")})
 		return
 	}
 	c.JSON(http.StatusOK, profile)
@@ -404,15 +405,15 @@ func (h *Handler) UpdateMyProfile(c *gin.Context) {
 	adminID := c.GetString("admin_id")
 	var req models.UpdateProfileRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": utils.FormatValidationErrors(err)})
+		c.JSON(http.StatusBadRequest, gin.H{"error": utils.FormatValidationErrors(err, c)})
 		return
 	}
 
 	if err := h.service.Repo().UpsertProfile(c.Request.Context(), adminID, &req); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed_to_update_profile"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": i18n.T(c, "failed_update_profile")})
 		return
 	}
-	c.JSON(http.StatusOK, shared.MessageResponse{Message: "profile_updated"})
+	c.JSON(http.StatusOK, shared.MessageResponse{Message: i18n.T(c, "profile_updated")})
 }
 
 // --- Roles ---
@@ -429,7 +430,7 @@ func (h *Handler) UpdateMyProfile(c *gin.Context) {
 func (h *Handler) ListRoles(c *gin.Context) {
 	roles, err := h.service.Repo().ListRoles(c.Request.Context())
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed_to_list_roles"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": i18n.T(c, "failed_list_roles")})
 		return
 	}
 	c.JSON(http.StatusOK, gin.H{"data": roles})
@@ -450,13 +451,13 @@ func (h *Handler) ListRoles(c *gin.Context) {
 func (h *Handler) CreateRole(c *gin.Context) {
 	var req models.CreateRoleRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": utils.FormatValidationErrors(err)})
+		c.JSON(http.StatusBadRequest, gin.H{"error": utils.FormatValidationErrors(err, c)})
 		return
 	}
 
 	role, err := h.service.Repo().CreateRole(c.Request.Context(), req.Title, req.Slug, req.Description)
 	if err != nil {
-		c.JSON(http.StatusConflict, gin.H{"error": "role_already_exists"})
+		c.JSON(http.StatusConflict, gin.H{"error": i18n.T(c, "role_already_exists")})
 		return
 	}
 	c.JSON(http.StatusCreated, role)
@@ -476,7 +477,7 @@ func (h *Handler) GetRole(c *gin.Context) {
 	id, _ := strconv.Atoi(c.Param("id"))
 	role, err := h.service.Repo().GetRoleByID(c.Request.Context(), id)
 	if err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "role_not_found"})
+		c.JSON(http.StatusNotFound, gin.H{"error": i18n.T(c, "role_not_found")})
 		return
 	}
 	c.JSON(http.StatusOK, role)
@@ -499,15 +500,15 @@ func (h *Handler) UpdateRole(c *gin.Context) {
 	id, _ := strconv.Atoi(c.Param("id"))
 	var req models.UpdateRoleRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": utils.FormatValidationErrors(err)})
+		c.JSON(http.StatusBadRequest, gin.H{"error": utils.FormatValidationErrors(err, c)})
 		return
 	}
 
 	if err := h.service.Repo().UpdateRole(c.Request.Context(), id, &req); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed_to_update_role"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": i18n.T(c, "failed_update_role")})
 		return
 	}
-	c.JSON(http.StatusOK, shared.MessageResponse{Message: "role_updated"})
+	c.JSON(http.StatusOK, shared.MessageResponse{Message: i18n.T(c, "role_updated")})
 }
 
 // DeleteRole godoc
@@ -523,10 +524,10 @@ func (h *Handler) UpdateRole(c *gin.Context) {
 func (h *Handler) DeleteRole(c *gin.Context) {
 	id, _ := strconv.Atoi(c.Param("id"))
 	if err := h.service.Repo().DeleteRole(c.Request.Context(), id); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed_to_delete_role"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": i18n.T(c, "failed_delete_role")})
 		return
 	}
-	c.JSON(http.StatusOK, shared.MessageResponse{Message: "role_deleted"})
+	c.JSON(http.StatusOK, shared.MessageResponse{Message: i18n.T(c, "role_deleted")})
 }
 
 // AssignRole godoc
@@ -546,15 +547,15 @@ func (h *Handler) AssignRole(c *gin.Context) {
 	id := c.Param("id")
 	var req models.AssignRoleRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": utils.FormatValidationErrors(err)})
+		c.JSON(http.StatusBadRequest, gin.H{"error": utils.FormatValidationErrors(err, c)})
 		return
 	}
 
 	if err := h.service.Repo().AssignRoleToAdmin(c.Request.Context(), id, req.RoleID); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed_to_assign_role"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": i18n.T(c, "failed_assign_role")})
 		return
 	}
-	c.JSON(http.StatusOK, shared.MessageResponse{Message: "role_assigned"})
+	c.JSON(http.StatusOK, shared.MessageResponse{Message: i18n.T(c, "role_assigned")})
 }
 
 // RemoveRole godoc
@@ -572,10 +573,10 @@ func (h *Handler) RemoveRole(c *gin.Context) {
 	id := c.Param("id")
 	roleID, _ := strconv.Atoi(c.Param("role_id"))
 	if err := h.service.Repo().RemoveRoleFromAdmin(c.Request.Context(), id, roleID); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed_to_remove_role"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": i18n.T(c, "failed_remove_role")})
 		return
 	}
-	c.JSON(http.StatusOK, shared.MessageResponse{Message: "role_removed"})
+	c.JSON(http.StatusOK, shared.MessageResponse{Message: i18n.T(c, "role_removed")})
 }
 
 // ListPermissions godoc
@@ -590,7 +591,7 @@ func (h *Handler) RemoveRole(c *gin.Context) {
 func (h *Handler) ListPermissions(c *gin.Context) {
 	perms, err := h.service.Repo().ListPermissions(c.Request.Context())
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed_to_list_permissions"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": i18n.T(c, "failed_list_permissions")})
 		return
 	}
 	c.JSON(http.StatusOK, gin.H{"data": perms})
@@ -613,14 +614,14 @@ func (h *Handler) ListPermissions(c *gin.Context) {
 func (h *Handler) ListTenants(c *gin.Context) {
 	adminID := c.GetString("admin_id")
 	if !h.service.HasPermission(c.Request.Context(), adminID, "view_tenants") {
-		c.JSON(http.StatusForbidden, gin.H{"error": "permission_denied"})
+		c.JSON(http.StatusForbidden, gin.H{"error": i18n.T(c, "permission_denied")})
 		return
 	}
 
 	p := utils.GetPagination(c)
 	tenants, total, err := h.service.Repo().ListTenants(c.Request.Context(), p.PageSize, p.Offset)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed_to_list_tenants"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": i18n.T(c, "failed_list_tenants")})
 		return
 	}
 
@@ -645,20 +646,20 @@ func (h *Handler) ListTenants(c *gin.Context) {
 func (h *Handler) CreateTenant(c *gin.Context) {
 	adminID := c.GetString("admin_id")
 	if !h.service.HasPermission(c.Request.Context(), adminID, "manage_tenants") {
-		c.JSON(http.StatusForbidden, gin.H{"error": "permission_denied"})
+		c.JSON(http.StatusForbidden, gin.H{"error": i18n.T(c, "permission_denied")})
 		return
 	}
 
 	var req tenantModels.CreateTenantRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": utils.FormatValidationErrors(err)})
+		c.JSON(http.StatusBadRequest, gin.H{"error": utils.FormatValidationErrors(err, c)})
 		return
 	}
 
 	ctx := c.Request.Context()
 	tx, err := h.service.Repo().BeginTx(ctx)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "transaction_failed"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": i18n.T(c, "transaction_failed")})
 		return
 	}
 	defer tx.Rollback(ctx)
@@ -667,7 +668,7 @@ func (h *Handler) CreateTenant(c *gin.Context) {
 	urlCode := utils.GenerateURLCode()
 	tenantID, err := h.service.Repo().CreateTenant(ctx, tx, req.Name, urlCode, req.Subdomain, req.IsCompany, req.CompanyName)
 	if err != nil {
-		c.JSON(http.StatusConflict, gin.H{"error": "tenant_already_exists"})
+		c.JSON(http.StatusConflict, gin.H{"error": i18n.T(c, "tenant_already_exists")})
 		return
 	}
 
@@ -677,7 +678,7 @@ func (h *Handler) CreateTenant(c *gin.Context) {
 	// Get plan price
 	plan, err := h.service.Repo().GetPlanByID(ctx, req.PlanID)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "plan_not_found"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": i18n.T(c, "plan_not_found")})
 		return
 	}
 
@@ -704,7 +705,7 @@ func (h *Handler) CreateTenant(c *gin.Context) {
 
 	// Create tenant plan
 	if err := h.service.Repo().CreateTenantPlan(ctx, tx, tenantID, req.PlanID, billingCycle, basePrice, contractedPrice, req.PromotionID, promoPrice, promoExpiresAt); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed_to_create_plan"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": i18n.T(c, "failed_create_plan")})
 		return
 	}
 
@@ -716,13 +717,13 @@ func (h *Handler) CreateTenant(c *gin.Context) {
 	if req.OwnerEmail != "" {
 		ownerInfo, err = createOwnerForTenant(ctx, tx, tenantID, req.OwnerEmail, req.OwnerFullName, req.OwnerPassword, urlCode)
 		if err != nil {
-			c.JSON(http.StatusConflict, gin.H{"error": "owner_creation_failed: " + err.Error()})
+			c.JSON(http.StatusConflict, gin.H{"error": i18n.Tf(c, "owner_creation_failed", err.Error())})
 			return
 		}
 	}
 
 	if err := tx.Commit(ctx); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "commit_failed"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": i18n.T(c, "commit_failed")})
 		return
 	}
 
@@ -746,14 +747,14 @@ func (h *Handler) CreateTenant(c *gin.Context) {
 func (h *Handler) GetTenant(c *gin.Context) {
 	adminID := c.GetString("admin_id")
 	if !h.service.HasPermission(c.Request.Context(), adminID, "view_tenants") {
-		c.JSON(http.StatusForbidden, gin.H{"error": "permission_denied"})
+		c.JSON(http.StatusForbidden, gin.H{"error": i18n.T(c, "permission_denied")})
 		return
 	}
 
 	id := c.Param("id")
 	tenant, err := h.service.Repo().GetTenantByID(c.Request.Context(), id)
 	if err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "tenant_not_found"})
+		c.JSON(http.StatusNotFound, gin.H{"error": i18n.T(c, "tenant_not_found")})
 		return
 	}
 	c.JSON(http.StatusOK, tenant)
@@ -775,22 +776,22 @@ func (h *Handler) GetTenant(c *gin.Context) {
 func (h *Handler) UpdateTenant(c *gin.Context) {
 	adminID := c.GetString("admin_id")
 	if !h.service.HasPermission(c.Request.Context(), adminID, "manage_tenants") {
-		c.JSON(http.StatusForbidden, gin.H{"error": "permission_denied"})
+		c.JSON(http.StatusForbidden, gin.H{"error": i18n.T(c, "permission_denied")})
 		return
 	}
 
 	id := c.Param("id")
 	var req tenantModels.UpdateTenantRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": utils.FormatValidationErrors(err)})
+		c.JSON(http.StatusBadRequest, gin.H{"error": utils.FormatValidationErrors(err, c)})
 		return
 	}
 
 	if err := h.service.Repo().UpdateTenant(c.Request.Context(), id, req); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed_to_update"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": i18n.T(c, "failed_update")})
 		return
 	}
-	c.JSON(http.StatusOK, shared.MessageResponse{Message: "tenant_updated"})
+	c.JSON(http.StatusOK, shared.MessageResponse{Message: i18n.T(c, "tenant_updated")})
 }
 
 // DeleteTenant godoc
@@ -807,16 +808,16 @@ func (h *Handler) UpdateTenant(c *gin.Context) {
 func (h *Handler) DeleteTenant(c *gin.Context) {
 	adminID := c.GetString("admin_id")
 	if !h.service.HasPermission(c.Request.Context(), adminID, "manage_tenants") {
-		c.JSON(http.StatusForbidden, gin.H{"error": "permission_denied"})
+		c.JSON(http.StatusForbidden, gin.H{"error": i18n.T(c, "permission_denied")})
 		return
 	}
 
 	id := c.Param("id")
 	if err := h.service.Repo().SoftDeleteTenant(c.Request.Context(), id); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed_to_delete"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": i18n.T(c, "failed_delete")})
 		return
 	}
-	c.JSON(http.StatusOK, shared.MessageResponse{Message: "tenant_deleted"})
+	c.JSON(http.StatusOK, shared.MessageResponse{Message: i18n.T(c, "tenant_deleted")})
 }
 
 // UpdateTenantStatus godoc
@@ -835,22 +836,22 @@ func (h *Handler) DeleteTenant(c *gin.Context) {
 func (h *Handler) UpdateTenantStatus(c *gin.Context) {
 	adminID := c.GetString("admin_id")
 	if !h.service.HasPermission(c.Request.Context(), adminID, "manage_tenants") {
-		c.JSON(http.StatusForbidden, gin.H{"error": "permission_denied"})
+		c.JSON(http.StatusForbidden, gin.H{"error": i18n.T(c, "permission_denied")})
 		return
 	}
 
 	id := c.Param("id")
 	var req tenantModels.UpdateTenantStatusRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": utils.FormatValidationErrors(err)})
+		c.JSON(http.StatusBadRequest, gin.H{"error": utils.FormatValidationErrors(err, c)})
 		return
 	}
 
 	if err := h.service.Repo().UpdateTenantStatus(c.Request.Context(), id, req.Status); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed_to_update_status"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": i18n.T(c, "failed_update_status_admin")})
 		return
 	}
-	c.JSON(http.StatusOK, shared.MessageResponse{Message: "status_updated"})
+	c.JSON(http.StatusOK, shared.MessageResponse{Message: i18n.T(c, "status_updated")})
 }
 
 // ChangeTenantPlan godoc
@@ -869,27 +870,27 @@ func (h *Handler) UpdateTenantStatus(c *gin.Context) {
 func (h *Handler) ChangeTenantPlan(c *gin.Context) {
 	adminID := c.GetString("admin_id")
 	if !h.service.HasPermission(c.Request.Context(), adminID, "manage_plans") {
-		c.JSON(http.StatusForbidden, gin.H{"error": "permission_denied"})
+		c.JSON(http.StatusForbidden, gin.H{"error": i18n.T(c, "permission_denied")})
 		return
 	}
 
 	tenantID := c.Param("id")
 	var req tenantModels.ChangePlanRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": utils.FormatValidationErrors(err)})
+		c.JSON(http.StatusBadRequest, gin.H{"error": utils.FormatValidationErrors(err, c)})
 		return
 	}
 
 	ctx := c.Request.Context()
 	plan, err := h.service.Repo().GetPlanByID(ctx, req.PlanID)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "plan_not_found"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": i18n.T(c, "plan_not_found")})
 		return
 	}
 
 	tx, err := h.service.Repo().BeginTx(ctx)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "transaction_failed"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": i18n.T(c, "transaction_failed")})
 		return
 	}
 	defer tx.Rollback(ctx)
@@ -913,16 +914,16 @@ func (h *Handler) ChangeTenantPlan(c *gin.Context) {
 	}
 
 	if err := h.service.Repo().CreateTenantPlan(ctx, tx, tenantID, req.PlanID, req.BillingCycle, basePrice, contractedPrice, req.PromotionID, promoPrice, promoExpiresAt); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed_to_create_plan"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": i18n.T(c, "failed_create_plan")})
 		return
 	}
 
 	if err := tx.Commit(ctx); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "commit_failed"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": i18n.T(c, "commit_failed")})
 		return
 	}
 
-	c.JSON(http.StatusOK, shared.MessageResponse{Message: "plan_changed"})
+	c.JSON(http.StatusOK, shared.MessageResponse{Message: i18n.T(c, "plan_changed")})
 }
 
 // GetTenantPlanHistory godoc
@@ -939,14 +940,14 @@ func (h *Handler) ChangeTenantPlan(c *gin.Context) {
 func (h *Handler) GetTenantPlanHistory(c *gin.Context) {
 	adminID := c.GetString("admin_id")
 	if !h.service.HasPermission(c.Request.Context(), adminID, "view_tenants") {
-		c.JSON(http.StatusForbidden, gin.H{"error": "permission_denied"})
+		c.JSON(http.StatusForbidden, gin.H{"error": i18n.T(c, "permission_denied")})
 		return
 	}
 
 	tenantID := c.Param("id")
 	history, err := h.service.Repo().GetTenantPlanHistory(c.Request.Context(), tenantID)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed_to_get_history"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": i18n.T(c, "failed_get_history")})
 		return
 	}
 	c.JSON(http.StatusOK, gin.H{"data": history})
@@ -966,14 +967,14 @@ func (h *Handler) GetTenantPlanHistory(c *gin.Context) {
 func (h *Handler) GetTenantMembers(c *gin.Context) {
 	adminID := c.GetString("admin_id")
 	if !h.service.HasPermission(c.Request.Context(), adminID, "view_tenants") {
-		c.JSON(http.StatusForbidden, gin.H{"error": "permission_denied"})
+		c.JSON(http.StatusForbidden, gin.H{"error": i18n.T(c, "permission_denied")})
 		return
 	}
 
 	tenantID := c.Param("id")
 	members, err := h.service.Repo().GetTenantMembers(c.Request.Context(), tenantID)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed_to_list_members"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": i18n.T(c, "failed_list_members_admin")})
 		return
 	}
 	c.JSON(http.StatusOK, gin.H{"data": members})
@@ -993,7 +994,7 @@ func (h *Handler) GetTenantMembers(c *gin.Context) {
 func (h *Handler) ListPlans(c *gin.Context) {
 	plans, err := h.service.Repo().ListPlans(c.Request.Context())
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed_to_list_plans"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": i18n.T(c, "failed_list_plans")})
 		return
 	}
 	c.JSON(http.StatusOK, gin.H{"data": plans})
@@ -1014,7 +1015,7 @@ func (h *Handler) ListPlans(c *gin.Context) {
 func (h *Handler) CreatePlan(c *gin.Context) {
 	var req tenantModels.CreatePlanRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": utils.FormatValidationErrors(err)})
+		c.JSON(http.StatusBadRequest, gin.H{"error": utils.FormatValidationErrors(err, c)})
 		return
 	}
 
@@ -1025,7 +1026,7 @@ func (h *Handler) CreatePlan(c *gin.Context) {
 
 	id, err := h.service.Repo().CreatePlan(c.Request.Context(), req.Name, req.Description, req.PlanType, req.Price, maxUsers, req.IsMultilang)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed_to_create_plan"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": i18n.T(c, "failed_create_plan")})
 		return
 	}
 
@@ -1052,7 +1053,7 @@ func (h *Handler) GetPlan(c *gin.Context) {
 	id := c.Param("id")
 	plan, err := h.service.Repo().GetPlanByID(c.Request.Context(), id)
 	if err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "plan_not_found"})
+		c.JSON(http.StatusNotFound, gin.H{"error": i18n.T(c, "plan_not_found")})
 		return
 	}
 	c.JSON(http.StatusOK, plan)
@@ -1075,15 +1076,15 @@ func (h *Handler) UpdatePlan(c *gin.Context) {
 	id := c.Param("id")
 	var req tenantModels.UpdatePlanRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": utils.FormatValidationErrors(err)})
+		c.JSON(http.StatusBadRequest, gin.H{"error": utils.FormatValidationErrors(err, c)})
 		return
 	}
 
 	if err := h.service.Repo().UpdatePlan(c.Request.Context(), id, req.Name, req.Description, req.Price, req.MaxUsers, req.IsMultilang, req.IsActive); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed_to_update_plan"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": i18n.T(c, "failed_update_plan")})
 		return
 	}
-	c.JSON(http.StatusOK, shared.MessageResponse{Message: "plan_updated"})
+	c.JSON(http.StatusOK, shared.MessageResponse{Message: i18n.T(c, "plan_updated")})
 }
 
 // DeletePlan godoc
@@ -1099,10 +1100,10 @@ func (h *Handler) UpdatePlan(c *gin.Context) {
 func (h *Handler) DeletePlan(c *gin.Context) {
 	id := c.Param("id")
 	if err := h.service.Repo().DeletePlan(c.Request.Context(), id); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed_to_delete_plan"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": i18n.T(c, "failed_delete_plan")})
 		return
 	}
-	c.JSON(http.StatusOK, shared.MessageResponse{Message: "plan_deleted"})
+	c.JSON(http.StatusOK, shared.MessageResponse{Message: i18n.T(c, "plan_deleted")})
 }
 
 // AddFeatureToPlan godoc
@@ -1122,14 +1123,14 @@ func (h *Handler) AddFeatureToPlan(c *gin.Context) {
 	planID := c.Param("id")
 	var req tenantModels.PlanFeatureRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": utils.FormatValidationErrors(err)})
+		c.JSON(http.StatusBadRequest, gin.H{"error": utils.FormatValidationErrors(err, c)})
 		return
 	}
 	if err := h.service.Repo().AddFeatureToPlan(c.Request.Context(), planID, req.FeatureID); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed_to_add_feature"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": i18n.T(c, "failed_add_feature")})
 		return
 	}
-	c.JSON(http.StatusOK, shared.MessageResponse{Message: "feature_added"})
+	c.JSON(http.StatusOK, shared.MessageResponse{Message: i18n.T(c, "feature_added")})
 }
 
 // RemoveFeatureFromPlan godoc
@@ -1147,10 +1148,10 @@ func (h *Handler) RemoveFeatureFromPlan(c *gin.Context) {
 	planID := c.Param("id")
 	featureID := c.Param("feat_id")
 	if err := h.service.Repo().RemoveFeatureFromPlan(c.Request.Context(), planID, featureID); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed_to_remove_feature"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": i18n.T(c, "failed_remove_feature")})
 		return
 	}
-	c.JSON(http.StatusOK, shared.MessageResponse{Message: "feature_removed"})
+	c.JSON(http.StatusOK, shared.MessageResponse{Message: i18n.T(c, "feature_removed")})
 }
 
 // --- Features ---
@@ -1167,7 +1168,7 @@ func (h *Handler) RemoveFeatureFromPlan(c *gin.Context) {
 func (h *Handler) ListFeatures(c *gin.Context) {
 	features, err := h.service.Repo().ListFeatures(c.Request.Context())
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed_to_list_features"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": i18n.T(c, "failed_list_features")})
 		return
 	}
 	c.JSON(http.StatusOK, gin.H{"data": features})
@@ -1188,13 +1189,13 @@ func (h *Handler) ListFeatures(c *gin.Context) {
 func (h *Handler) CreateFeature(c *gin.Context) {
 	var req tenantModels.CreateFeatureRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": utils.FormatValidationErrors(err)})
+		c.JSON(http.StatusBadRequest, gin.H{"error": utils.FormatValidationErrors(err, c)})
 		return
 	}
 
 	id, err := h.service.Repo().CreateFeature(c.Request.Context(), req.Title, req.Slug, req.Code, req.Description, req.IsActive)
 	if err != nil {
-		c.JSON(http.StatusConflict, gin.H{"error": "feature_already_exists"})
+		c.JSON(http.StatusConflict, gin.H{"error": i18n.T(c, "feature_already_exists")})
 		return
 	}
 
@@ -1216,7 +1217,7 @@ func (h *Handler) GetFeature(c *gin.Context) {
 	id := c.Param("id")
 	feature, err := h.service.Repo().GetFeatureByID(c.Request.Context(), id)
 	if err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "feature_not_found"})
+		c.JSON(http.StatusNotFound, gin.H{"error": i18n.T(c, "feature_not_found")})
 		return
 	}
 	c.JSON(http.StatusOK, feature)
@@ -1239,15 +1240,15 @@ func (h *Handler) UpdateFeature(c *gin.Context) {
 	id := c.Param("id")
 	var req tenantModels.UpdateFeatureRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": utils.FormatValidationErrors(err)})
+		c.JSON(http.StatusBadRequest, gin.H{"error": utils.FormatValidationErrors(err, c)})
 		return
 	}
 
 	if err := h.service.Repo().UpdateFeature(c.Request.Context(), id, req.Title, req.Description, req.IsActive); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed_to_update_feature"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": i18n.T(c, "failed_update_feature")})
 		return
 	}
-	c.JSON(http.StatusOK, shared.MessageResponse{Message: "feature_updated"})
+	c.JSON(http.StatusOK, shared.MessageResponse{Message: i18n.T(c, "feature_updated")})
 }
 
 // DeleteFeature godoc
@@ -1263,10 +1264,10 @@ func (h *Handler) UpdateFeature(c *gin.Context) {
 func (h *Handler) DeleteFeature(c *gin.Context) {
 	id := c.Param("id")
 	if err := h.service.Repo().DeleteFeature(c.Request.Context(), id); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed_to_delete_feature"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": i18n.T(c, "failed_delete_feature")})
 		return
 	}
-	c.JSON(http.StatusOK, shared.MessageResponse{Message: "feature_deleted"})
+	c.JSON(http.StatusOK, shared.MessageResponse{Message: i18n.T(c, "feature_deleted")})
 }
 
 // --- Promotions ---
@@ -1283,7 +1284,7 @@ func (h *Handler) DeleteFeature(c *gin.Context) {
 func (h *Handler) ListPromotions(c *gin.Context) {
 	promos, err := h.service.Repo().ListPromotions(c.Request.Context())
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed_to_list_promotions"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": i18n.T(c, "failed_list_promotions")})
 		return
 	}
 	c.JSON(http.StatusOK, gin.H{"data": promos})
@@ -1304,13 +1305,13 @@ func (h *Handler) ListPromotions(c *gin.Context) {
 func (h *Handler) CreatePromotion(c *gin.Context) {
 	var req tenantModels.CreatePromotionRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": utils.FormatValidationErrors(err)})
+		c.JSON(http.StatusBadRequest, gin.H{"error": utils.FormatValidationErrors(err, c)})
 		return
 	}
 
 	id, err := h.service.Repo().CreatePromotion(c.Request.Context(), req.Name, req.Description, req.DiscountType, req.DiscountValue, req.DurationMonths, req.ValidFrom, req.ValidUntil, req.PlanID)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed_to_create_promotion"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": i18n.T(c, "failed_create_promotion")})
 		return
 	}
 
@@ -1332,7 +1333,7 @@ func (h *Handler) GetPromotion(c *gin.Context) {
 	id := c.Param("id")
 	promo, err := h.service.Repo().GetPromotionByID(c.Request.Context(), id)
 	if err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "promotion_not_found"})
+		c.JSON(http.StatusNotFound, gin.H{"error": i18n.T(c, "promotion_not_found")})
 		return
 	}
 	c.JSON(http.StatusOK, promo)
@@ -1355,15 +1356,15 @@ func (h *Handler) UpdatePromotion(c *gin.Context) {
 	id := c.Param("id")
 	var req tenantModels.UpdatePromotionRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": utils.FormatValidationErrors(err)})
+		c.JSON(http.StatusBadRequest, gin.H{"error": utils.FormatValidationErrors(err, c)})
 		return
 	}
 
 	if err := h.service.Repo().UpdatePromotion(c.Request.Context(), id, req); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed_to_update_promotion"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": i18n.T(c, "failed_update_promotion")})
 		return
 	}
-	c.JSON(http.StatusOK, shared.MessageResponse{Message: "promotion_updated"})
+	c.JSON(http.StatusOK, shared.MessageResponse{Message: i18n.T(c, "promotion_updated")})
 }
 
 // DeletePromotion godoc
@@ -1379,10 +1380,10 @@ func (h *Handler) UpdatePromotion(c *gin.Context) {
 func (h *Handler) DeletePromotion(c *gin.Context) {
 	id := c.Param("id")
 	if err := h.service.Repo().DeactivatePromotion(c.Request.Context(), id); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed_to_deactivate_promotion"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": i18n.T(c, "failed_deactivate_promotion")})
 		return
 	}
-	c.JSON(http.StatusOK, shared.MessageResponse{Message: "promotion_deactivated"})
+	c.JSON(http.StatusOK, shared.MessageResponse{Message: i18n.T(c, "promotion_deactivated")})
 }
 
 // --- Helpers ---

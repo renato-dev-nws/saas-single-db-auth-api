@@ -7,6 +7,7 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"github.com/saas-single-db-api/internal/cache"
+	"github.com/saas-single-db-api/internal/i18n"
 	_ "github.com/saas-single-db-api/internal/models/swagger"
 	repo "github.com/saas-single-db-api/internal/repository/app"
 	svc "github.com/saas-single-db-api/internal/services/app"
@@ -48,13 +49,13 @@ func (h *Handler) Register(c *gin.Context) {
 		Password string `json:"password" binding:"required,min=6"`
 	}
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": utils.FormatValidationErrors(err)})
+		c.JSON(http.StatusBadRequest, gin.H{"error": utils.FormatValidationErrors(err, c)})
 		return
 	}
 
 	result, err := h.service.Register(c.Request.Context(), tenantID, urlCode, req.Name, req.Email, req.Password)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		c.JSON(http.StatusBadRequest, gin.H{"error": i18n.T(c, err.Error())})
 		return
 	}
 
@@ -84,13 +85,13 @@ func (h *Handler) Login(c *gin.Context) {
 		Password string `json:"password" binding:"required"`
 	}
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": utils.FormatValidationErrors(err)})
+		c.JSON(http.StatusBadRequest, gin.H{"error": utils.FormatValidationErrors(err, c)})
 		return
 	}
 
 	result, err := h.service.Login(c.Request.Context(), tenantID, urlCode, req.Email, req.Password)
 	if err != nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
+		c.JSON(http.StatusUnauthorized, gin.H{"error": i18n.T(c, err.Error())})
 		return
 	}
 
@@ -116,7 +117,7 @@ func (h *Handler) Logout(c *gin.Context) {
 	if token != "" {
 		h.cache.SetBlacklist(c.Request.Context(), token)
 	}
-	c.JSON(http.StatusOK, gin.H{"message": "logged out"})
+	c.JSON(http.StatusOK, gin.H{"message": i18n.T(c, "logged_out")})
 }
 
 // Me godoc
@@ -135,7 +136,7 @@ func (h *Handler) Me(c *gin.Context) {
 
 	result, err := h.service.GetMe(c.Request.Context(), tenantID, userID)
 	if err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
+		c.JSON(http.StatusNotFound, gin.H{"error": i18n.T(c, err.Error())})
 		return
 	}
 	c.JSON(http.StatusOK, result)
@@ -162,15 +163,15 @@ func (h *Handler) ChangePassword(c *gin.Context) {
 		NewPassword     string `json:"new_password" binding:"required,min=6"`
 	}
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": utils.FormatValidationErrors(err)})
+		c.JSON(http.StatusBadRequest, gin.H{"error": utils.FormatValidationErrors(err, c)})
 		return
 	}
 
 	if err := h.service.ChangePassword(c.Request.Context(), tenantID, userID, req.CurrentPassword, req.NewPassword); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		c.JSON(http.StatusBadRequest, gin.H{"error": i18n.T(c, err.Error())})
 		return
 	}
-	c.JSON(http.StatusOK, gin.H{"message": "password changed"})
+	c.JSON(http.StatusOK, gin.H{"message": i18n.T(c, "password_changed")})
 }
 
 // ForgotPassword godoc
@@ -189,12 +190,12 @@ func (h *Handler) ForgotPassword(c *gin.Context) {
 		Email string `json:"email" binding:"required,email"`
 	}
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": utils.FormatValidationErrors(err)})
+		c.JSON(http.StatusBadRequest, gin.H{"error": utils.FormatValidationErrors(err, c)})
 		return
 	}
 
 	_ = h.service.ForgotPassword(c.Request.Context(), tenantID, req.Email)
-	c.JSON(http.StatusOK, gin.H{"message": "if the email exists, a reset link was sent"})
+	c.JSON(http.StatusOK, gin.H{"message": i18n.T(c, "password_reset_sent")})
 }
 
 // ResetPassword godoc
@@ -215,15 +216,15 @@ func (h *Handler) ResetPassword(c *gin.Context) {
 		NewPassword string `json:"new_password" binding:"required,min=6"`
 	}
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": utils.FormatValidationErrors(err)})
+		c.JSON(http.StatusBadRequest, gin.H{"error": utils.FormatValidationErrors(err, c)})
 		return
 	}
 
 	if err := h.service.ResetPassword(c.Request.Context(), tenantID, req.Token, req.NewPassword); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		c.JSON(http.StatusBadRequest, gin.H{"error": i18n.T(c, err.Error())})
 		return
 	}
-	c.JSON(http.StatusOK, gin.H{"message": "password reset successfully"})
+	c.JSON(http.StatusOK, gin.H{"message": i18n.T(c, "password_reset_success")})
 }
 
 // ==================== PROFILE ====================
@@ -242,7 +243,7 @@ func (h *Handler) GetProfile(c *gin.Context) {
 	userID := c.GetString("app_user_id")
 	profile, err := h.repo.GetAppUserProfile(c.Request.Context(), userID)
 	if err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "profile not found"})
+		c.JSON(http.StatusNotFound, gin.H{"error": i18n.T(c, "profile_not_found")})
 		return
 	}
 	c.JSON(http.StatusOK, gin.H{
@@ -277,15 +278,15 @@ func (h *Handler) UpdateProfile(c *gin.Context) {
 		Notes    *string `json:"notes"`
 	}
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": utils.FormatValidationErrors(err)})
+		c.JSON(http.StatusBadRequest, gin.H{"error": utils.FormatValidationErrors(err, c)})
 		return
 	}
 
 	if err := h.repo.UpdateAppUserProfile(c.Request.Context(), userID, req.FullName, req.Phone, req.Document, req.Address, req.Notes); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to update profile"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": i18n.T(c, "failed_update_profile")})
 		return
 	}
-	c.JSON(http.StatusOK, gin.H{"message": "profile updated"})
+	c.JSON(http.StatusOK, gin.H{"message": i18n.T(c, "profile_updated")})
 }
 
 // UploadAvatar godoc
@@ -304,14 +305,14 @@ func (h *Handler) UploadAvatar(c *gin.Context) {
 	userID := c.GetString("app_user_id")
 	file, header, err := c.Request.FormFile("avatar")
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "no file provided"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": i18n.T(c, "no_file_provided")})
 		return
 	}
 	defer file.Close()
 
 	publicURL, storagePath, err := h.storage.Upload(file, header, "app-avatars")
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to upload"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": i18n.T(c, "failed_upload")})
 		return
 	}
 
@@ -338,7 +339,7 @@ func (h *Handler) ListProducts(c *gin.Context) {
 
 	products, total, err := h.repo.ListActiveProducts(c.Request.Context(), tenantID, pag.PageSize, pag.Offset)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to list products"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": i18n.T(c, "failed_list_products")})
 		return
 	}
 	c.JSON(http.StatusOK, gin.H{
@@ -364,7 +365,7 @@ func (h *Handler) GetProduct(c *gin.Context) {
 	productID := c.Param("id")
 	product, err := h.repo.GetActiveProduct(c.Request.Context(), tenantID, productID)
 	if err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "product not found"})
+		c.JSON(http.StatusNotFound, gin.H{"error": i18n.T(c, "product_not_found")})
 		return
 	}
 	c.JSON(http.StatusOK, product)
@@ -387,7 +388,7 @@ func (h *Handler) ListServices(c *gin.Context) {
 
 	services, total, err := h.repo.ListActiveServices(c.Request.Context(), tenantID, pag.PageSize, pag.Offset)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to list services"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": i18n.T(c, "failed_list_services")})
 		return
 	}
 	c.JSON(http.StatusOK, gin.H{
@@ -413,7 +414,7 @@ func (h *Handler) GetServiceDetail(c *gin.Context) {
 	serviceID := c.Param("id")
 	service, err := h.repo.GetActiveService(c.Request.Context(), tenantID, serviceID)
 	if err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "service not found"})
+		c.JSON(http.StatusNotFound, gin.H{"error": i18n.T(c, "service_not_found")})
 		return
 	}
 	c.JSON(http.StatusOK, service)

@@ -8,6 +8,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/redis/go-redis/v9"
 	"github.com/saas-single-db-api/internal/cache"
+	"github.com/saas-single-db-api/internal/i18n"
 	"github.com/saas-single-db-api/internal/utils"
 )
 
@@ -16,21 +17,21 @@ func AdminAuthMiddleware(jwtSecret string, redisClient *redis.Client) gin.Handle
 	return func(c *gin.Context) {
 		token := extractToken(c)
 		if token == "" {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "authorization_required"})
+			c.JSON(http.StatusUnauthorized, gin.H{"error": i18n.T(c, "authorization_required")})
 			c.Abort()
 			return
 		}
 
 		// Check blacklist
 		if cache.IsBlacklisted(redisClient, context.Background(), token) {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "token_invalidated"})
+			c.JSON(http.StatusUnauthorized, gin.H{"error": i18n.T(c, "token_invalidated")})
 			c.Abort()
 			return
 		}
 
 		claims, err := utils.ValidateAdminToken(token, jwtSecret)
 		if err != nil {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "invalid_token"})
+			c.JSON(http.StatusUnauthorized, gin.H{"error": i18n.T(c, "invalid_token")})
 			c.Abort()
 			return
 		}
@@ -46,21 +47,21 @@ func UserAuthMiddleware(jwtSecret string, redisClient *redis.Client) gin.Handler
 	return func(c *gin.Context) {
 		token := extractToken(c)
 		if token == "" {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "authorization_required"})
+			c.JSON(http.StatusUnauthorized, gin.H{"error": i18n.T(c, "authorization_required")})
 			c.Abort()
 			return
 		}
 
 		// Check blacklist
 		if cache.IsBlacklisted(redisClient, context.Background(), token) {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "token_invalidated"})
+			c.JSON(http.StatusUnauthorized, gin.H{"error": i18n.T(c, "token_invalidated")})
 			c.Abort()
 			return
 		}
 
 		claims, err := utils.ValidateUserToken(token, jwtSecret)
 		if err != nil {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "invalid_token"})
+			c.JSON(http.StatusUnauthorized, gin.H{"error": i18n.T(c, "invalid_token")})
 			c.Abort()
 			return
 		}
@@ -77,21 +78,21 @@ func AppAuthMiddleware(jwtSecret string, redisClient *redis.Client) gin.HandlerF
 	return func(c *gin.Context) {
 		token := extractToken(c)
 		if token == "" {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "authorization_required"})
+			c.JSON(http.StatusUnauthorized, gin.H{"error": i18n.T(c, "authorization_required")})
 			c.Abort()
 			return
 		}
 
 		// Check blacklist
 		if cache.IsBlacklisted(redisClient, context.Background(), token) {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "token_invalidated"})
+			c.JSON(http.StatusUnauthorized, gin.H{"error": i18n.T(c, "token_invalidated")})
 			c.Abort()
 			return
 		}
 
 		claims, err := utils.ValidateAppUserToken(token, jwtSecret)
 		if err != nil {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "invalid_token"})
+			c.JSON(http.StatusUnauthorized, gin.H{"error": i18n.T(c, "invalid_token")})
 			c.Abort()
 			return
 		}

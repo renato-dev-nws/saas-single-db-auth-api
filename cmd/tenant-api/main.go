@@ -13,6 +13,7 @@ import (
 	"github.com/saas-single-db-api/internal/database"
 	"github.com/saas-single-db-api/internal/email"
 	tenantHandler "github.com/saas-single-db-api/internal/handlers/tenant"
+	"github.com/saas-single-db-api/internal/i18n"
 	"github.com/saas-single-db-api/internal/middleware"
 	tenantRepo "github.com/saas-single-db-api/internal/repository/tenant"
 	tenantSvc "github.com/saas-single-db-api/internal/services/tenant"
@@ -144,7 +145,7 @@ func main() {
 					roleID := c.Param("id")
 					perms, err := repo.GetRolePermissions(c.Request.Context(), roleID)
 					if err != nil {
-						c.JSON(500, gin.H{"error": "failed to list permissions"})
+						c.JSON(500, gin.H{"error": i18n.T(c, "failed_list_permissions")})
 						return
 					}
 					c.JSON(200, perms)
@@ -182,6 +183,7 @@ func main() {
 				settings.PUT("/layout", handler.UpdateLayoutSettings)
 				settings.GET("", handler.GetSettings)
 				settings.PUT("", handler.UpdateSettings)
+				settings.PUT("/language", handler.UpdateLanguage)
 			}
 
 			// App Users (managed from backoffice)

@@ -11,12 +11,14 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/redis/go-redis/v9"
+	"github.com/saas-single-db-api/internal/i18n"
 )
 
 type tenantCacheData struct {
 	TenantID string   `json:"tenant_id"`
 	Status   string   `json:"status"`
 	Features []string `json:"features"`
+	Language string   `json:"language"`
 }
 
 // TenantMiddleware resolves tenant_id from :url_code
@@ -30,7 +32,7 @@ func TenantMiddleware(db *pgxpool.Pool, cache *redis.Client) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		urlCode := c.Param("url_code")
 		if urlCode == "" {
-			c.JSON(http.StatusBadRequest, gin.H{"error": "url_code is required"})
+			c.JSON(http.StatusBadRequest, gin.H{"error": i18n.T(c, "url_code_required")})
 			c.Abort()
 			return
 		}
@@ -47,12 +49,17 @@ func TenantMiddleware(db *pgxpool.Pool, cache *redis.Client) gin.HandlerFunc {
 			var data tenantCacheData
 			if json.Unmarshal([]byte(cached), &data) == nil {
 				if data.Status != "active" {
-					c.JSON(http.StatusForbidden, gin.H{"error": "tenant_not_active"})
+					c.JSON(http.StatusForbidden, gin.H{"error": i18n.T(c, "tenant_not_active")})
 					c.Abort()
 					return
 				}
 				c.Set("tenant_id", data.TenantID)
 				c.Set("features", data.Features)
+				if data.Language != "" {
+					c.Set("language", data.Language)
+				} else {
+					c.Set("language", "pt-BR")
+				}
 				c.Next()
 				return
 			}
@@ -65,13 +72,13 @@ func TenantMiddleware(db *pgxpool.Pool, cache *redis.Client) gin.HandlerFunc {
 			urlCode,
 		).Scan(&tenantID, &status)
 		if err != nil {
-			c.JSON(http.StatusNotFound, gin.H{"error": "tenant_not_found"})
+			c.JSON(http.StatusNotFound, gin.H{"error": i18n.T(c, "tenant_not_found")})
 			c.Abort()
 			return
 		}
 
 		if status != "active" {
-			c.JSON(http.StatusForbidden, gin.H{"error": "tenant_not_active"})
+			c.JSON(http.StatusForbidden, gin.H{"error": i18n.T(c, "tenant_not_active")})
 			c.Abort()
 			return
 		}
@@ -79,11 +86,15 @@ func TenantMiddleware(db *pgxpool.Pool, cache *redis.Client) gin.HandlerFunc {
 		// Get active features for this tenant's plan
 		features := getActiveTenantFeatures(ctx, db, tenantID)
 
+		// Get tenant language
+		language := getTenantLanguage(ctx, db, tenantID)
+
 		// Cache it
 		data := tenantCacheData{
 			TenantID: tenantID,
 			Status:   status,
 			Features: features,
+			Language: language,
 		}
 		if bytes, err := json.Marshal(data); err == nil {
 			cache.Set(ctx, cacheKey, string(bytes), 5*time.Minute)
@@ -91,6 +102,7 @@ func TenantMiddleware(db *pgxpool.Pool, cache *redis.Client) gin.HandlerFunc {
 
 		c.Set("tenant_id", tenantID)
 		c.Set("features", features)
+		c.Set("language", language)
 		c.Next()
 	}
 }
@@ -103,13 +115,13 @@ func TenantAccessMiddleware() gin.HandlerFunc {
 		tokenTenantID := c.GetString("token_tenant_id") // from UserAuthMiddleware or AppAuthMiddleware (JWT)
 
 		if tenantID == "" || tokenTenantID == "" {
-			c.JSON(http.StatusForbidden, gin.H{"error": "access_denied"})
+			c.JSON(http.StatusForbidden, gin.H{"error": i18n.T(c, "access_denied")})
 			c.Abort()
 			return
 		}
 
 		if tenantID != tokenTenantID {
-			c.JSON(http.StatusForbidden, gin.H{"error": "access_denied"})
+			c.JSON(http.StatusForbidden, gin.H{"error": i18n.T(c, "access_denied")})
 			c.Abort()
 			return
 		}
@@ -140,4 +152,15 @@ func getActiveTenantFeatures(ctx context.Context, db *pgxpool.Pool, tenantID str
 		}
 	}
 	return features
+}
+
+func getTenantLanguage(ctx context.Context, db *pgxpool.Pool, tenantID string) string {
+	var lang string
+	err := db.QueryRow(ctx,
+		`SELECT language FROM tenant_settings WHERE tenant_id = $1`, tenantID,
+	).Scan(&lang)
+	if err != nil || lang == "" {
+		return "pt-BR"
+	}
+	return lang
 }

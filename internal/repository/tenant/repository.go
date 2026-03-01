@@ -968,6 +968,7 @@ type tenantSettingsRow struct {
 	TenantID    string      `json:"tenant_id"`
 	Layout      interface{} `json:"layout"`
 	ConvertWebp bool        `json:"convert_webp"`
+	Language    string      `json:"language"`
 	CreatedAt   interface{} `json:"created_at"`
 	UpdatedAt   interface{} `json:"updated_at"`
 }
@@ -975,24 +976,48 @@ type tenantSettingsRow struct {
 func (r *Repository) GetTenantSettings(ctx context.Context, tenantID string) (*tenantSettingsRow, error) {
 	var s tenantSettingsRow
 	err := r.db.QueryRow(ctx,
-		`SELECT id, tenant_id, layout, convert_webp, created_at, updated_at
+		`SELECT id, tenant_id, layout, convert_webp, language, created_at, updated_at
 		 FROM tenant_settings WHERE tenant_id = $1`, tenantID,
-	).Scan(&s.ID, &s.TenantID, &s.Layout, &s.ConvertWebp, &s.CreatedAt, &s.UpdatedAt)
+	).Scan(&s.ID, &s.TenantID, &s.Layout, &s.ConvertWebp, &s.Language, &s.CreatedAt, &s.UpdatedAt)
 	if err != nil {
 		return nil, err
 	}
 	return &s, nil
 }
 
-func (r *Repository) UpsertTenantSettings(ctx context.Context, tenantID string, layout interface{}, convertWebp *bool) error {
+func (r *Repository) UpsertTenantSettings(ctx context.Context, tenantID string, layout interface{}, convertWebp *bool, language *string) error {
 	_, err := r.db.Exec(ctx,
-		`INSERT INTO tenant_settings (tenant_id, layout, convert_webp)
-		 VALUES ($1, COALESCE($2::jsonb, '{}'), COALESCE($3, true))
+		`INSERT INTO tenant_settings (tenant_id, layout, convert_webp, language)
+		 VALUES ($1, COALESCE($2::jsonb, '{}'), COALESCE($3, true), COALESCE($4, 'pt-BR'))
 		 ON CONFLICT (tenant_id) DO UPDATE SET
 		   layout = COALESCE($2::jsonb, tenant_settings.layout),
 		   convert_webp = COALESCE($3, tenant_settings.convert_webp),
+		   language = COALESCE($4, tenant_settings.language),
 		   updated_at = NOW()`,
-		tenantID, layout, convertWebp,
+		tenantID, layout, convertWebp, language,
+	)
+	return err
+}
+
+func (r *Repository) GetLanguage(ctx context.Context, tenantID string) string {
+	var lang string
+	err := r.db.QueryRow(ctx,
+		`SELECT language FROM tenant_settings WHERE tenant_id = $1`, tenantID,
+	).Scan(&lang)
+	if err != nil || lang == "" {
+		return "pt-BR"
+	}
+	return lang
+}
+
+func (r *Repository) UpdateLanguage(ctx context.Context, tenantID, language string) error {
+	_, err := r.db.Exec(ctx,
+		`INSERT INTO tenant_settings (tenant_id, language)
+		 VALUES ($1, $2)
+		 ON CONFLICT (tenant_id) DO UPDATE SET
+		   language = $2,
+		   updated_at = NOW()`,
+		tenantID, language,
 	)
 	return err
 }

@@ -26,7 +26,7 @@ type RegisterResult struct {
 func (s *Service) Register(ctx context.Context, tenantID, urlCode, name, email, password string) (*RegisterResult, error) {
 	existing, _ := s.repo.GetAppUserByEmail(ctx, tenantID, email)
 	if existing != nil {
-		return nil, errors.New("email already registered")
+		return nil, errors.New("email_already_registered")
 	}
 
 	hashPass, err := utils.HashPassword(password)
@@ -59,13 +59,13 @@ type LoginResult struct {
 func (s *Service) Login(ctx context.Context, tenantID, urlCode, email, password string) (*LoginResult, error) {
 	user, err := s.repo.GetAppUserByEmail(ctx, tenantID, email)
 	if err != nil {
-		return nil, errors.New("invalid credentials")
+		return nil, errors.New("invalid_credentials")
 	}
 	if user.Status != "active" {
-		return nil, errors.New("account is not active")
+		return nil, errors.New("account_not_active")
 	}
 	if !utils.CheckPassword(password, user.HashPass) {
-		return nil, errors.New("invalid credentials")
+		return nil, errors.New("invalid_credentials")
 	}
 
 	token, err := utils.GenerateAppUserToken(user.ID, tenantID, s.jwtSecret, s.jwtExpiry)
@@ -84,7 +84,7 @@ func (s *Service) Login(ctx context.Context, tenantID, urlCode, email, password 
 func (s *Service) GetMe(ctx context.Context, tenantID, userID string) (map[string]interface{}, error) {
 	user, err := s.repo.GetAppUserByID(ctx, tenantID, userID)
 	if err != nil {
-		return nil, errors.New("user not found")
+		return nil, errors.New("user_not_found")
 	}
 
 	profile, _ := s.repo.GetAppUserProfile(ctx, userID)
@@ -111,10 +111,10 @@ func (s *Service) GetMe(ctx context.Context, tenantID, userID string) (map[strin
 func (s *Service) ChangePassword(ctx context.Context, tenantID, userID, currentPass, newPass string) error {
 	user, err := s.repo.GetAppUserByID(ctx, tenantID, userID)
 	if err != nil {
-		return errors.New("user not found")
+		return errors.New("user_not_found")
 	}
 	if !utils.CheckPassword(currentPass, user.HashPass) {
-		return errors.New("current password is incorrect")
+		return errors.New("current_password_incorrect")
 	}
 	hashPass, err := utils.HashPassword(newPass)
 	if err != nil {
@@ -137,5 +137,5 @@ func (s *Service) ForgotPassword(ctx context.Context, tenantID, email string) er
 func (s *Service) ResetPassword(ctx context.Context, tenantID, token, newPass string) error {
 	// TODO: Validate token and get user ID
 	// For now, return not implemented
-	return errors.New("password reset via token not yet implemented")
+	return errors.New("password_reset_not_implemented")
 }

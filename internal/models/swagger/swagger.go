@@ -611,6 +611,11 @@ type UpdateAppUserStatusRequest struct {
 	Status string `json:"status" binding:"required" example:"blocked"`
 }
 
+// UpdateLanguageRequest is the request for changing tenant language
+type UpdateLanguageRequest struct {
+	Language string `json:"language" binding:"required" example:"en"`
+}
+
 // ResendVerificationRequest is the request for resending verification email
 type ResendVerificationRequest struct {
 	Email string `json:"email" binding:"required,email" example:"user@example.com"`

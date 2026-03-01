@@ -52,13 +52,13 @@ func (s *Service) Subscribe(ctx context.Context, input SubscribeInput) (*Subscri
 	// Check for existing user with same email
 	existing, _ := s.repo.GetUserByEmail(ctx, input.OwnerEmail)
 	if existing != nil {
-		return nil, errors.New("email already in use")
+		return nil, errors.New("email_already_in_use")
 	}
 
 	// Validate plan
 	plan, err := s.repo.GetPlanByID(ctx, input.PlanID)
 	if err != nil || !plan.IsActive {
-		return nil, errors.New("invalid or inactive plan")
+		return nil, errors.New("invalid_or_inactive_plan")
 	}
 
 	// Auto-generate URL code
@@ -74,7 +74,7 @@ func (s *Service) Subscribe(ctx context.Context, input SubscribeInput) (*Subscri
 	if input.PromoCode != nil && *input.PromoCode != "" {
 		promo, err := s.repo.GetPromotionByName(ctx, *input.PromoCode)
 		if err != nil {
-			return nil, errors.New("invalid promotion code")
+			return nil, errors.New("invalid_promo_code")
 		}
 		promoID := promo.ID
 		promotionID = &promoID
@@ -190,7 +190,7 @@ func (s *Service) Subscribe(ctx context.Context, input SubscribeInput) (*Subscri
 func (s *Service) VerifyEmail(ctx context.Context, token string) error {
 	vt, err := s.repo.GetVerificationToken(ctx, token)
 	if err != nil {
-		return errors.New("invalid or expired verification token")
+		return errors.New("invalid_verification_token")
 	}
 
 	if err := s.repo.SetEmailVerified(ctx, vt.UserID); err != nil {
@@ -221,11 +221,11 @@ func (s *Service) VerifyEmail(ctx context.Context, token string) error {
 func (s *Service) ResendVerification(ctx context.Context, userID string) error {
 	user, err := s.repo.GetUserByID(ctx, userID)
 	if err != nil {
-		return errors.New("user not found")
+		return errors.New("user_not_found")
 	}
 
 	if user.EmailVerifiedAt != nil {
-		return errors.New("email already verified")
+		return errors.New("email_already_verified")
 	}
 
 	verifyToken := utils.GenerateVerificationToken()
@@ -258,13 +258,13 @@ type LoginResult struct {
 func (s *Service) Login(ctx context.Context, email, password string) (*LoginResult, error) {
 	user, err := s.repo.GetUserByEmail(ctx, email)
 	if err != nil {
-		return nil, errors.New("invalid credentials")
+		return nil, errors.New("invalid_credentials")
 	}
 	if user.Status != "active" {
-		return nil, errors.New("account is not active")
+		return nil, errors.New("account_not_active")
 	}
 	if !utils.CheckPassword(password, user.HashPass) {
-		return nil, errors.New("invalid credentials")
+		return nil, errors.New("invalid_credentials")
 	}
 
 	tenants, _ := s.repo.GetUserTenants(ctx, user.ID)
@@ -307,7 +307,7 @@ func (s *Service) Login(ctx context.Context, email, password string) (*LoginResu
 func (s *Service) GetMe(ctx context.Context, userID string) (map[string]interface{}, error) {
 	user, err := s.repo.GetUserByID(ctx, userID)
 	if err != nil {
-		return nil, errors.New("user not found")
+		return nil, errors.New("user_not_found")
 	}
 	profile, _ := s.repo.GetUserProfile(ctx, userID)
 	tenants, _ := s.repo.GetUserTenants(ctx, userID)
@@ -356,7 +356,7 @@ func (s *Service) CanAddMember(ctx context.Context, tenantID string) (bool, int,
 	plan, err := s.repo.GetActiveTenantPlan(ctx, tenantID)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
-			return false, 0, 0, errors.New("no active plan")
+			return false, 0, 0, errors.New("no_active_plan")
 		}
 		return false, 0, 0, err
 	}
@@ -371,12 +371,12 @@ func (s *Service) CanAddMember(ctx context.Context, tenantID string) (bool, int,
 }
 
 func (s *Service) InviteMember(ctx context.Context, tenantID, email, name, password, roleSlug string) (string, error) {
-	canAdd, maxUsers, current, err := s.CanAddMember(ctx, tenantID)
+	canAdd, _, _, err := s.CanAddMember(ctx, tenantID)
 	if err != nil {
 		return "", err
 	}
 	if !canAdd {
-		return "", fmt.Errorf("tenant has reached max users (%d/%d)", current, maxUsers)
+		return "", fmt.Errorf("max_users_reached")
 	}
 
 	// Check if user exists
@@ -393,7 +393,7 @@ func (s *Service) InviteMember(ctx context.Context, tenantID, email, name, passw
 		userID = user.ID
 		// Check if already a member
 		if s.repo.IsMember(ctx, userID, tenantID) {
-			return "", errors.New("user is already a member of this tenant")
+			return "", errors.New("user_already_member")
 		}
 	} else {
 		hashPass, err := utils.HashPassword(password)
@@ -415,7 +415,7 @@ func (s *Service) InviteMember(ctx context.Context, tenantID, email, name, passw
 
 	roleID, err := s.repo.GetTenantRoleBySlugTx(ctx, tx, tenantID, roleSlug)
 	if err != nil {
-		return "", fmt.Errorf("role '%s' not found for this tenant", roleSlug)
+		return "", fmt.Errorf("role_not_found_tenant")
 	}
 
 	if err := s.repo.CreateTenantMember(ctx, tx, userID, tenantID, &roleID, false); err != nil {

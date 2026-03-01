@@ -270,6 +270,7 @@ CREATE TABLE tenant_settings (
     tenant_id     UUID         NOT NULL UNIQUE REFERENCES tenants(id) ON DELETE CASCADE,
     layout        JSONB        NOT NULL DEFAULT '{"primary_color":"#4F46E5","secondary_color":"#10B981","logo":"","theme":"Aura"}',
     convert_webp  BOOLEAN      NOT NULL DEFAULT true,
+    language      VARCHAR(5)   NOT NULL DEFAULT 'pt-BR',
     created_at    TIMESTAMP    NOT NULL DEFAULT NOW(),
     updated_at    TIMESTAMP    NOT NULL DEFAULT NOW()
 );

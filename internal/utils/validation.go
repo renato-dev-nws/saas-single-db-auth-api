@@ -4,7 +4,10 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
+
+	"github.com/saas-single-db-api/internal/i18n"
 )
 
 // fieldLabels maps JSON field names to human-readable labels
@@ -38,17 +41,36 @@ var fieldLabels = map[string]string{
 
 // FormatValidationErrors converts Go validator errors into a user-friendly map
 // keyed by JSON field name with human-readable messages.
-func FormatValidationErrors(err error) map[string]string {
+// If a *gin.Context is provided, messages are localized via i18n.
+func FormatValidationErrors(err error, c ...*gin.Context) map[string]string {
 	errs, ok := err.(validator.ValidationErrors)
 	if !ok {
 		return map[string]string{"_error": err.Error()}
 	}
 
+	useI18n := len(c) > 0 && c[0] != nil
+	var lang string
+	if useI18n {
+		lang = c[0].GetString("language")
+		if lang == "" {
+			lang = i18n.DefaultLang
+		}
+	}
+
 	result := make(map[string]string, len(errs))
 	for _, fe := range errs {
 		field := jsonFieldName(fe)
-		label := fieldLabel(field)
-		result[field] = buildMessage(label, fe.Tag(), fe.Param())
+		var label string
+		if useI18n {
+			label = i18n.FieldLabel(lang, field)
+		} else {
+			label = fieldLabel(field)
+		}
+		if useI18n {
+			result[field] = buildMessageI18n(c[0], label, fe.Tag(), fe.Param())
+		} else {
+			result[field] = buildMessage(label, fe.Tag(), fe.Param())
+		}
 	}
 	return result
 }
@@ -96,6 +118,21 @@ func buildMessage(label, tag, param string) string {
 		return fmt.Sprintf("%s must be exactly %s characters", label, param)
 	default:
 		return fmt.Sprintf("%s is invalid", label)
+	}
+}
+
+// buildMessageI18n creates a localized validation message using i18n.
+func buildMessageI18n(c *gin.Context, label, tag, param string) string {
+	key := "validation." + tag
+	switch tag {
+	case "required", "email", "url", "uuid":
+		return i18n.Tf(c, key, label)
+	case "min", "max", "gte", "lte", "len":
+		return i18n.Tf(c, key, label, param)
+	case "oneof":
+		return i18n.Tf(c, key, label, param)
+	default:
+		return i18n.Tf(c, "validation.default", label)
 	}
 }
 

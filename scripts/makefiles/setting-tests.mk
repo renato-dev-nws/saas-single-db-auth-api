@@ -1,5 +1,6 @@
 .PHONY: test-settings-get test-settings-update \
-        test-layout-get test-layout-update
+        test-layout-get test-layout-update \
+        test-language test-language-all
 
 # Test settings GET (returns layout + convert_webp)
 test-settings-get:
@@ -60,3 +61,47 @@ test-layout-update:
 	curl -s -X GET http://localhost:8080/api/v1/$$URL_CODE/settings/layout \
 		-H "Authorization: Bearer $$TOKEN"
 	@echo ""
+
+# Test language switch (en → es → pt-BR round-trip)
+test-language:
+	@echo "Testing language switch..."
+	@LOGIN=$$(curl -s -X POST http://localhost:8080/api/v1/auth/login \
+		-H "Content-Type: application/json" \
+		-d '{"email":"joao@minha-loja.com","password":"senha12345"}'); \
+	TOKEN=$$(echo "$$LOGIN" | grep -o '"token":"[^"]*' | cut -d'"' -f4); \
+	URL_CODE=$$(echo "$$LOGIN" | grep -o '"current_tenant_code":"[^"]*' | cut -d'"' -f4); \
+	echo "1. Change language to en..."; \
+	curl -s -X PUT http://localhost:8080/api/v1/$$URL_CODE/settings/language \
+		-H "Content-Type: application/json" \
+		-H "Authorization: Bearer $$TOKEN" \
+		-d '{"language":"en"}'; \
+	echo ""; echo "2. Get settings (language=en)..."; \
+	curl -s -X GET http://localhost:8080/api/v1/$$URL_CODE/settings \
+		-H "Authorization: Bearer $$TOKEN"; \
+	echo ""; echo "3. Invalid language (should fail in English)..."; \
+	curl -s -X PUT http://localhost:8080/api/v1/$$URL_CODE/settings/language \
+		-H "Content-Type: application/json" \
+		-H "Authorization: Bearer $$TOKEN" \
+		-d '{"language":"xyz"}'; \
+	echo ""; echo "4. Change language to es..."; \
+	curl -s -X PUT http://localhost:8080/api/v1/$$URL_CODE/settings/language \
+		-H "Content-Type: application/json" \
+		-H "Authorization: Bearer $$TOKEN" \
+		-d '{"language":"es"}'; \
+	echo ""; echo "5. Invalid language (should fail in Spanish)..."; \
+	curl -s -X PUT http://localhost:8080/api/v1/$$URL_CODE/settings/language \
+		-H "Content-Type: application/json" \
+		-H "Authorization: Bearer $$TOKEN" \
+		-d '{"language":"xyz"}'; \
+	echo ""; echo "6. Change back to pt-BR..."; \
+	curl -s -X PUT http://localhost:8080/api/v1/$$URL_CODE/settings/language \
+		-H "Content-Type: application/json" \
+		-H "Authorization: Bearer $$TOKEN" \
+		-d '{"language":"pt-BR"}'; \
+	echo ""; echo "7. Verify settings (language=pt-BR)..."; \
+	curl -s -X GET http://localhost:8080/api/v1/$$URL_CODE/settings \
+		-H "Authorization: Bearer $$TOKEN"
+	@echo ""
+
+# Run all language tests
+test-language-all: test-language

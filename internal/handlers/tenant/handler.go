@@ -10,6 +10,7 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"github.com/saas-single-db-api/internal/cache"
+	"github.com/saas-single-db-api/internal/i18n"
 	_ "github.com/saas-single-db-api/internal/models/swagger"
 	repo "github.com/saas-single-db-api/internal/repository/tenant"
 	svc "github.com/saas-single-db-api/internal/services/tenant"
@@ -43,7 +44,7 @@ func NewHandler(s *svc.Service, r *repo.Repository, st storage.Provider, c *cach
 func (h *Handler) ListPlans(c *gin.Context) {
 	plans, err := h.repo.ListActivePlans(c.Request.Context())
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to list plans"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": i18n.T(c, "failed_list_plans")})
 		return
 	}
 	c.JSON(http.StatusOK, plans)
@@ -72,15 +73,13 @@ func (h *Handler) Subscribe(c *gin.Context) {
 		Subdomain    string  `json:"subdomain" binding:"required"`
 	}
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": utils.FormatValidationErrors(err)})
+		c.JSON(http.StatusBadRequest, gin.H{"error": utils.FormatValidationErrors(err, c)})
 		return
 	}
 
 	// company_name is required when is_company is true
 	if req.IsCompany && strings.TrimSpace(req.CompanyName) == "" {
-		c.JSON(http.StatusBadRequest, gin.H{"error": map[string]string{
-			"company_name": "Company name is required when is_company is true",
-		}})
+		c.JSON(http.StatusBadRequest, gin.H{"error": gin.H{"company_name": i18n.T(c, "company_name_required")}})
 		return
 	}
 
@@ -105,7 +104,7 @@ func (h *Handler) Subscribe(c *gin.Context) {
 		OwnerPass:    req.Password,
 	})
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		c.JSON(http.StatusBadRequest, gin.H{"error": i18n.T(c, err.Error())})
 		return
 	}
 
@@ -129,16 +128,16 @@ func (h *Handler) Subscribe(c *gin.Context) {
 func (h *Handler) VerifyEmail(c *gin.Context) {
 	token := c.Query("token")
 	if token == "" {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "token is required"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": i18n.T(c, "token_required")})
 		return
 	}
 
 	if err := h.service.VerifyEmail(c.Request.Context(), token); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		c.JSON(http.StatusBadRequest, gin.H{"error": i18n.T(c, err.Error())})
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"message": "email_verified"})
+	c.JSON(http.StatusOK, gin.H{"message": i18n.T(c, "email_verified")})
 }
 
 // ResendVerification godoc
@@ -154,16 +153,16 @@ func (h *Handler) VerifyEmail(c *gin.Context) {
 func (h *Handler) ResendVerification(c *gin.Context) {
 	userID := c.GetString("user_id")
 	if userID == "" {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		c.JSON(http.StatusUnauthorized, gin.H{"error": i18n.T(c, "authorization_required")})
 		return
 	}
 
 	if err := h.service.ResendVerification(c.Request.Context(), userID); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		c.JSON(http.StatusBadRequest, gin.H{"error": i18n.T(c, err.Error())})
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"message": "verification_email_sent"})
+	c.JSON(http.StatusOK, gin.H{"message": i18n.T(c, "verification_email_sent")})
 }
 
 // ==================== AUTH ====================
@@ -185,13 +184,13 @@ func (h *Handler) Login(c *gin.Context) {
 		Password string `json:"password" binding:"required"`
 	}
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": utils.FormatValidationErrors(err)})
+		c.JSON(http.StatusBadRequest, gin.H{"error": utils.FormatValidationErrors(err, c)})
 		return
 	}
 
 	result, err := h.service.Login(c.Request.Context(), req.Email, req.Password)
 	if err != nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
+		c.JSON(http.StatusUnauthorized, gin.H{"error": i18n.T(c, err.Error())})
 		return
 	}
 
@@ -217,7 +216,7 @@ func (h *Handler) Logout(c *gin.Context) {
 	if token != "" {
 		h.cache.SetBlacklist(c.Request.Context(), token)
 	}
-	c.JSON(http.StatusOK, gin.H{"message": "logged out"})
+	c.JSON(http.StatusOK, gin.H{"message": i18n.T(c, "logged_out")})
 }
 
 // Me godoc
@@ -233,7 +232,7 @@ func (h *Handler) Me(c *gin.Context) {
 	userID := c.GetString("user_id")
 	result, err := h.service.GetMe(c.Request.Context(), userID)
 	if err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
+		c.JSON(http.StatusNotFound, gin.H{"error": i18n.T(c, err.Error())})
 		return
 	}
 	c.JSON(http.StatusOK, result)
@@ -257,26 +256,26 @@ func (h *Handler) ChangePassword(c *gin.Context) {
 		NewPassword     string `json:"new_password" binding:"required,min=6"`
 	}
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": utils.FormatValidationErrors(err)})
+		c.JSON(http.StatusBadRequest, gin.H{"error": utils.FormatValidationErrors(err, c)})
 		return
 	}
 
 	user, err := h.repo.GetUserByID(c.Request.Context(), userID)
 	if err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "user not found"})
+		c.JSON(http.StatusNotFound, gin.H{"error": i18n.T(c, "user_not_found")})
 		return
 	}
 	if !utils.CheckPassword(req.CurrentPassword, user.HashPass) {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "current password is incorrect"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": i18n.T(c, "current_password_incorrect")})
 		return
 	}
 
 	hash, _ := utils.HashPassword(req.NewPassword)
 	if err := h.repo.UpdateUserPassword(c.Request.Context(), userID, hash); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to change password"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": i18n.T(c, "failed_change_password")})
 		return
 	}
-	c.JSON(http.StatusOK, gin.H{"message": "password changed"})
+	c.JSON(http.StatusOK, gin.H{"message": i18n.T(c, "password_changed")})
 }
 
 // SelectTenant godoc
@@ -296,12 +295,12 @@ func (h *Handler) SelectTenant(c *gin.Context) {
 
 	tenantID, err := h.repo.GetTenantByURLCode(c.Request.Context(), urlCode)
 	if err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "tenant not found"})
+		c.JSON(http.StatusNotFound, gin.H{"error": i18n.T(c, "tenant_not_found")})
 		return
 	}
 
 	if !h.repo.IsMember(c.Request.Context(), userID, tenantID) {
-		c.JSON(http.StatusForbidden, gin.H{"error": "not a member of this tenant"})
+		c.JSON(http.StatusForbidden, gin.H{"error": i18n.T(c, "not_tenant_member")})
 		return
 	}
 
@@ -309,7 +308,7 @@ func (h *Handler) SelectTenant(c *gin.Context) {
 
 	token, err := utils.GenerateUserToken(userID, tenantID, h.jwtSecret, h.jwtExpiry)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to generate token"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": i18n.T(c, "failed_generate_token")})
 		return
 	}
 
@@ -335,7 +334,7 @@ func (h *Handler) GetProfile(c *gin.Context) {
 	userID := c.GetString("user_id")
 	profile, err := h.repo.GetUserProfile(c.Request.Context(), userID)
 	if err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "profile not found"})
+		c.JSON(http.StatusNotFound, gin.H{"error": i18n.T(c, "profile_not_found")})
 		return
 	}
 	c.JSON(http.StatusOK, profile)
@@ -359,14 +358,14 @@ func (h *Handler) UpdateProfile(c *gin.Context) {
 		About    *string `json:"about"`
 	}
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": utils.FormatValidationErrors(err)})
+		c.JSON(http.StatusBadRequest, gin.H{"error": utils.FormatValidationErrors(err, c)})
 		return
 	}
 	if err := h.repo.UpdateUserProfile(c.Request.Context(), userID, req.FullName, req.About); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to update profile"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": i18n.T(c, "failed_update_profile")})
 		return
 	}
-	c.JSON(http.StatusOK, gin.H{"message": "profile updated"})
+	c.JSON(http.StatusOK, gin.H{"message": i18n.T(c, "profile_updated")})
 }
 
 // UploadAvatar godoc
@@ -384,14 +383,14 @@ func (h *Handler) UploadAvatar(c *gin.Context) {
 	userID := c.GetString("user_id")
 	file, header, err := c.Request.FormFile("avatar")
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "no file provided"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": i18n.T(c, "no_file_provided")})
 		return
 	}
 	defer file.Close()
 
 	publicURL, storagePath, err := h.storage.Upload(file, header, "avatars")
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to upload"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": i18n.T(c, "failed_upload")})
 		return
 	}
 
@@ -421,7 +420,7 @@ func (h *Handler) GetBootstrap(c *gin.Context) {
 
 	tenant, err := h.repo.GetTenantByID(c.Request.Context(), tenantID)
 	if err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "tenant not found"})
+		c.JSON(http.StatusNotFound, gin.H{"error": i18n.T(c, "tenant_not_found")})
 		return
 	}
 
@@ -479,7 +478,7 @@ func (h *Handler) GetTenantProfile(c *gin.Context) {
 	tenantID := c.GetString("tenant_id")
 	profile, err := h.repo.GetTenantProfile(c.Request.Context(), tenantID)
 	if err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "profile not found"})
+		c.JSON(http.StatusNotFound, gin.H{"error": i18n.T(c, "profile_not_found")})
 		return
 	}
 	c.JSON(http.StatusOK, profile)
@@ -501,7 +500,7 @@ func (h *Handler) UpdateTenantProfile(c *gin.Context) {
 	tenantID := c.GetString("tenant_id")
 	userID := c.GetString("user_id")
 	if !h.service.IsOwner(c.Request.Context(), userID, tenantID) {
-		c.JSON(http.StatusForbidden, gin.H{"error": "only owner can update tenant profile"})
+		c.JSON(http.StatusForbidden, gin.H{"error": i18n.T(c, "only_owner_update_profile")})
 		return
 	}
 
@@ -510,15 +509,15 @@ func (h *Handler) UpdateTenantProfile(c *gin.Context) {
 		CustomSettings interface{} `json:"custom_settings"`
 	}
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": utils.FormatValidationErrors(err)})
+		c.JSON(http.StatusBadRequest, gin.H{"error": utils.FormatValidationErrors(err, c)})
 		return
 	}
 
 	if err := h.repo.UpdateTenantProfile(c.Request.Context(), tenantID, req.About, req.CustomSettings); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to update profile"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": i18n.T(c, "failed_update_profile")})
 		return
 	}
-	c.JSON(http.StatusOK, gin.H{"message": "tenant profile updated"})
+	c.JSON(http.StatusOK, gin.H{"message": i18n.T(c, "tenant_profile_updated")})
 }
 
 // UploadLogo godoc
@@ -537,20 +536,20 @@ func (h *Handler) UploadLogo(c *gin.Context) {
 	tenantID := c.GetString("tenant_id")
 	userID := c.GetString("user_id")
 	if !h.service.IsOwner(c.Request.Context(), userID, tenantID) {
-		c.JSON(http.StatusForbidden, gin.H{"error": "only owner can upload logo"})
+		c.JSON(http.StatusForbidden, gin.H{"error": i18n.T(c, "only_owner_upload_logo")})
 		return
 	}
 
 	file, header, err := c.Request.FormFile("logo")
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "no file provided"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": i18n.T(c, "no_file_provided")})
 		return
 	}
 	defer file.Close()
 
 	publicURL, storagePath, err := h.storage.Upload(file, header, "logos")
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to upload"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": i18n.T(c, "failed_upload")})
 		return
 	}
 	_ = h.repo.UpdateTenantLogo(c.Request.Context(), tenantID, publicURL)
@@ -577,7 +576,7 @@ func (h *Handler) ListMembers(c *gin.Context) {
 	tenantID := c.GetString("tenant_id")
 	members, err := h.repo.ListTenantMembers(c.Request.Context(), tenantID)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to list members"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": i18n.T(c, "failed_list_members")})
 		return
 	}
 	c.JSON(http.StatusOK, members)
@@ -599,7 +598,7 @@ func (h *Handler) GetMember(c *gin.Context) {
 	memberID := c.Param("id")
 	member, err := h.repo.GetMember(c.Request.Context(), tenantID, memberID)
 	if err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "member not found"})
+		c.JSON(http.StatusNotFound, gin.H{"error": i18n.T(c, "member_not_found")})
 		return
 	}
 	c.JSON(http.StatusOK, member)
@@ -619,7 +618,7 @@ func (h *Handler) CanAddMember(c *gin.Context) {
 	tenantID := c.GetString("tenant_id")
 	canAdd, maxUsers, current, err := h.service.CanAddMember(c.Request.Context(), tenantID)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": i18n.T(c, err.Error())})
 		return
 	}
 	c.JSON(http.StatusOK, gin.H{
@@ -648,7 +647,7 @@ func (h *Handler) InviteMember(c *gin.Context) {
 
 	if !h.service.HasPermission(c.Request.Context(), userID, tenantID, "user_m") &&
 		!h.service.IsOwner(c.Request.Context(), userID, tenantID) {
-		c.JSON(http.StatusForbidden, gin.H{"error": "insufficient permissions"})
+		c.JSON(http.StatusForbidden, gin.H{"error": i18n.T(c, "insufficient_permissions")})
 		return
 	}
 
@@ -659,17 +658,17 @@ func (h *Handler) InviteMember(c *gin.Context) {
 		Role     string `json:"role" binding:"required"`
 	}
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": utils.FormatValidationErrors(err)})
+		c.JSON(http.StatusBadRequest, gin.H{"error": utils.FormatValidationErrors(err, c)})
 		return
 	}
 
 	newUserID, err := h.service.InviteMember(c.Request.Context(), tenantID, req.Email, req.Name, req.Password, req.Role)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		c.JSON(http.StatusBadRequest, gin.H{"error": i18n.T(c, err.Error())})
 		return
 	}
 
-	c.JSON(http.StatusCreated, gin.H{"user_id": newUserID, "message": "member added"})
+	c.JSON(http.StatusCreated, gin.H{"user_id": newUserID, "message": i18n.T(c, "member_added")})
 }
 
 // UpdateMemberRole godoc
@@ -693,7 +692,7 @@ func (h *Handler) UpdateMemberRole(c *gin.Context) {
 
 	if !h.service.HasPermission(c.Request.Context(), userID, tenantID, "user_m") &&
 		!h.service.IsOwner(c.Request.Context(), userID, tenantID) {
-		c.JSON(http.StatusForbidden, gin.H{"error": "insufficient permissions"})
+		c.JSON(http.StatusForbidden, gin.H{"error": i18n.T(c, "insufficient_permissions")})
 		return
 	}
 
@@ -701,15 +700,15 @@ func (h *Handler) UpdateMemberRole(c *gin.Context) {
 		RoleID string `json:"role_id" binding:"required"`
 	}
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": utils.FormatValidationErrors(err)})
+		c.JSON(http.StatusBadRequest, gin.H{"error": utils.FormatValidationErrors(err, c)})
 		return
 	}
 
 	if err := h.repo.UpdateMemberRole(c.Request.Context(), tenantID, memberID, req.RoleID); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to update role"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": i18n.T(c, "failed_update_role")})
 		return
 	}
-	c.JSON(http.StatusOK, gin.H{"message": "member role updated"})
+	c.JSON(http.StatusOK, gin.H{"message": i18n.T(c, "member_role_updated")})
 }
 
 // RemoveMember godoc
@@ -730,19 +729,19 @@ func (h *Handler) RemoveMember(c *gin.Context) {
 	memberID := c.Param("id")
 
 	if !h.service.IsOwner(c.Request.Context(), userID, tenantID) {
-		c.JSON(http.StatusForbidden, gin.H{"error": "only owner can remove members"})
+		c.JSON(http.StatusForbidden, gin.H{"error": i18n.T(c, "only_owner_remove")})
 		return
 	}
 	if memberID == userID {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "cannot remove yourself"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": i18n.T(c, "cannot_remove_self")})
 		return
 	}
 
 	if err := h.repo.RemoveMember(c.Request.Context(), tenantID, memberID); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to remove member"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": i18n.T(c, "failed_remove_member")})
 		return
 	}
-	c.JSON(http.StatusOK, gin.H{"message": "member removed"})
+	c.JSON(http.StatusOK, gin.H{"message": i18n.T(c, "member_removed")})
 }
 
 // ==================== ROLES ====================
@@ -761,7 +760,7 @@ func (h *Handler) ListRoles(c *gin.Context) {
 	tenantID := c.GetString("tenant_id")
 	roles, err := h.repo.ListTenantRoles(c.Request.Context(), tenantID)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to list roles"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": i18n.T(c, "failed_list_roles")})
 		return
 	}
 	c.JSON(http.StatusOK, roles)
@@ -783,7 +782,7 @@ func (h *Handler) GetRole(c *gin.Context) {
 	roleID := c.Param("id")
 	role, err := h.repo.GetTenantRoleByID(c.Request.Context(), tenantID, roleID)
 	if err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "role not found"})
+		c.JSON(http.StatusNotFound, gin.H{"error": i18n.T(c, "role_not_found")})
 		return
 	}
 	perms, _ := h.repo.GetRolePermissions(c.Request.Context(), roleID)
@@ -810,7 +809,7 @@ func (h *Handler) CreateRole(c *gin.Context) {
 	tenantID := c.GetString("tenant_id")
 	userID := c.GetString("user_id")
 	if !h.service.IsOwner(c.Request.Context(), userID, tenantID) {
-		c.JSON(http.StatusForbidden, gin.H{"error": "only owner can manage roles"})
+		c.JSON(http.StatusForbidden, gin.H{"error": i18n.T(c, "only_owner_manage_roles")})
 		return
 	}
 
@@ -818,14 +817,14 @@ func (h *Handler) CreateRole(c *gin.Context) {
 		Title string `json:"title" binding:"required"`
 	}
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": utils.FormatValidationErrors(err)})
+		c.JSON(http.StatusBadRequest, gin.H{"error": utils.FormatValidationErrors(err, c)})
 		return
 	}
 
 	slug := utils.Slugify(req.Title)
 	role, err := h.repo.CreateTenantRole(c.Request.Context(), tenantID, req.Title, slug)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to create role"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": i18n.T(c, "failed_create_role")})
 		return
 	}
 	c.JSON(http.StatusCreated, role)
@@ -849,7 +848,7 @@ func (h *Handler) UpdateRole(c *gin.Context) {
 	userID := c.GetString("user_id")
 	roleID := c.Param("id")
 	if !h.service.IsOwner(c.Request.Context(), userID, tenantID) {
-		c.JSON(http.StatusForbidden, gin.H{"error": "only owner can manage roles"})
+		c.JSON(http.StatusForbidden, gin.H{"error": i18n.T(c, "only_owner_manage_roles")})
 		return
 	}
 
@@ -857,15 +856,15 @@ func (h *Handler) UpdateRole(c *gin.Context) {
 		Title *string `json:"title"`
 	}
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": utils.FormatValidationErrors(err)})
+		c.JSON(http.StatusBadRequest, gin.H{"error": utils.FormatValidationErrors(err, c)})
 		return
 	}
 
 	if err := h.repo.UpdateTenantRole(c.Request.Context(), tenantID, roleID, req.Title); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to update role"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": i18n.T(c, "failed_update_role")})
 		return
 	}
-	c.JSON(http.StatusOK, gin.H{"message": "role updated"})
+	c.JSON(http.StatusOK, gin.H{"message": i18n.T(c, "role_updated")})
 }
 
 // DeleteRole godoc
@@ -884,15 +883,15 @@ func (h *Handler) DeleteRole(c *gin.Context) {
 	userID := c.GetString("user_id")
 	roleID := c.Param("id")
 	if !h.service.IsOwner(c.Request.Context(), userID, tenantID) {
-		c.JSON(http.StatusForbidden, gin.H{"error": "only owner can manage roles"})
+		c.JSON(http.StatusForbidden, gin.H{"error": i18n.T(c, "only_owner_manage_roles")})
 		return
 	}
 
 	if err := h.repo.DeleteTenantRole(c.Request.Context(), tenantID, roleID); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to delete role"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": i18n.T(c, "failed_delete_role")})
 		return
 	}
-	c.JSON(http.StatusOK, gin.H{"message": "role deleted"})
+	c.JSON(http.StatusOK, gin.H{"message": i18n.T(c, "role_deleted")})
 }
 
 // AssignPermission godoc
@@ -913,7 +912,7 @@ func (h *Handler) AssignPermission(c *gin.Context) {
 	userID := c.GetString("user_id")
 	roleID := c.Param("id")
 	if !h.service.IsOwner(c.Request.Context(), userID, tenantID) {
-		c.JSON(http.StatusForbidden, gin.H{"error": "only owner can manage permissions"})
+		c.JSON(http.StatusForbidden, gin.H{"error": i18n.T(c, "only_owner_manage_perms")})
 		return
 	}
 
@@ -921,15 +920,15 @@ func (h *Handler) AssignPermission(c *gin.Context) {
 		PermissionID string `json:"permission_id" binding:"required"`
 	}
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": utils.FormatValidationErrors(err)})
+		c.JSON(http.StatusBadRequest, gin.H{"error": utils.FormatValidationErrors(err, c)})
 		return
 	}
 
 	if err := h.repo.AssignPermissionToRole(c.Request.Context(), roleID, req.PermissionID); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to assign permission"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": i18n.T(c, "failed_assign_permission")})
 		return
 	}
-	c.JSON(http.StatusOK, gin.H{"message": "permission assigned"})
+	c.JSON(http.StatusOK, gin.H{"message": i18n.T(c, "permission_assigned")})
 }
 
 // RemovePermission godoc
@@ -949,16 +948,16 @@ func (h *Handler) RemovePermission(c *gin.Context) {
 	userID := c.GetString("user_id")
 	roleID := c.Param("id")
 	if !h.service.IsOwner(c.Request.Context(), userID, tenantID) {
-		c.JSON(http.StatusForbidden, gin.H{"error": "only owner can manage permissions"})
+		c.JSON(http.StatusForbidden, gin.H{"error": i18n.T(c, "only_owner_manage_perms")})
 		return
 	}
 
 	permID := c.Param("permId")
 	if err := h.repo.RemovePermissionFromRole(c.Request.Context(), roleID, permID); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to remove permission"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": i18n.T(c, "failed_remove_permission")})
 		return
 	}
-	c.JSON(http.StatusOK, gin.H{"message": "permission removed"})
+	c.JSON(http.StatusOK, gin.H{"message": i18n.T(c, "permission_removed")})
 }
 
 // ==================== PRODUCTS ====================
@@ -972,7 +971,7 @@ func (h *Handler) requireFeature(c *gin.Context, slug string) bool {
 			}
 		}
 	}
-	c.JSON(http.StatusForbidden, gin.H{"error": fmt.Sprintf("feature '%s' not available in your plan", slug)})
+	c.JSON(http.StatusForbidden, gin.H{"error": i18n.Tf(c, "feature_not_in_plan", slug)})
 	return false
 }
 
@@ -985,7 +984,7 @@ func (h *Handler) requirePermission(c *gin.Context, permSlug string) bool {
 	if h.service.HasPermission(c.Request.Context(), userID, tenantID, permSlug) {
 		return true
 	}
-	c.JSON(http.StatusForbidden, gin.H{"error": "insufficient permissions"})
+	c.JSON(http.StatusForbidden, gin.H{"error": i18n.T(c, "insufficient_permissions")})
 	return false
 }
 
@@ -1010,7 +1009,7 @@ func (h *Handler) ListProducts(c *gin.Context) {
 
 	products, total, err := h.repo.ListProducts(c.Request.Context(), tenantID, pag.PageSize, pag.Offset)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to list products"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": i18n.T(c, "failed_list_products")})
 		return
 	}
 	c.JSON(http.StatusOK, gin.H{
@@ -1040,7 +1039,7 @@ func (h *Handler) GetProduct(c *gin.Context) {
 	productID := c.Param("id")
 	product, err := h.repo.GetProduct(c.Request.Context(), tenantID, productID)
 	if err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "product not found"})
+		c.JSON(http.StatusNotFound, gin.H{"error": i18n.T(c, "product_not_found")})
 		return
 	}
 	c.JSON(http.StatusOK, product)
@@ -1072,13 +1071,13 @@ func (h *Handler) CreateProduct(c *gin.Context) {
 		Stock       int     `json:"stock"`
 	}
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": utils.FormatValidationErrors(err)})
+		c.JSON(http.StatusBadRequest, gin.H{"error": utils.FormatValidationErrors(err, c)})
 		return
 	}
 
 	id, err := h.repo.CreateProduct(c.Request.Context(), tenantID, req.Name, req.Description, req.Price, req.SKU, req.Stock)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to create product"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": i18n.T(c, "failed_create_product")})
 		return
 	}
 	c.JSON(http.StatusCreated, gin.H{"id": id})
@@ -1113,15 +1112,15 @@ func (h *Handler) UpdateProduct(c *gin.Context) {
 		IsActive    *bool    `json:"is_active"`
 	}
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": utils.FormatValidationErrors(err)})
+		c.JSON(http.StatusBadRequest, gin.H{"error": utils.FormatValidationErrors(err, c)})
 		return
 	}
 
 	if err := h.repo.UpdateProduct(c.Request.Context(), tenantID, productID, req.Name, req.Description, req.Price, req.SKU, req.Stock, req.IsActive); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to update product"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": i18n.T(c, "failed_update_product")})
 		return
 	}
-	c.JSON(http.StatusOK, gin.H{"message": "product updated"})
+	c.JSON(http.StatusOK, gin.H{"message": i18n.T(c, "product_updated")})
 }
 
 // DeleteProduct godoc
@@ -1142,10 +1141,10 @@ func (h *Handler) DeleteProduct(c *gin.Context) {
 	tenantID := c.GetString("tenant_id")
 	productID := c.Param("id")
 	if err := h.repo.DeleteProduct(c.Request.Context(), tenantID, productID); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to delete product"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": i18n.T(c, "failed_delete_product")})
 		return
 	}
-	c.JSON(http.StatusOK, gin.H{"message": "product deleted"})
+	c.JSON(http.StatusOK, gin.H{"message": i18n.T(c, "product_deleted")})
 }
 
 // UploadProductImage godoc
@@ -1171,7 +1170,7 @@ func (h *Handler) UploadProductImage(c *gin.Context) {
 
 	file, header, err := c.Request.FormFile("image")
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "no file provided"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": i18n.T(c, "no_file_provided")})
 		return
 	}
 	defer file.Close()
@@ -1180,7 +1179,7 @@ func (h *Handler) UploadProductImage(c *gin.Context) {
 	uploadPath := fmt.Sprintf("tenants/%s/images/products/%s", tenantID, productID)
 	publicURL, storagePath, err := h.storage.Upload(file, header, uploadPath)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to upload"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": i18n.T(c, "failed_upload")})
 		return
 	}
 
@@ -1191,7 +1190,7 @@ func (h *Handler) UploadProductImage(c *gin.Context) {
 
 	imageID, err := h.repo.CreateImageRecord(c.Request.Context(), tenantID, "products", productID, filename, header.Filename, mimeType, ext, storageDriver, storagePath, publicURL, header.Size)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to save image record"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": i18n.T(c, "failed_save_image")})
 		return
 	}
 
@@ -1228,7 +1227,7 @@ func (h *Handler) ListServices(c *gin.Context) {
 
 	services, total, err := h.repo.ListServices(c.Request.Context(), tenantID, pag.PageSize, pag.Offset)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to list services"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": i18n.T(c, "failed_list_services")})
 		return
 	}
 	c.JSON(http.StatusOK, gin.H{
@@ -1258,7 +1257,7 @@ func (h *Handler) GetService(c *gin.Context) {
 	serviceID := c.Param("id")
 	service, err := h.repo.GetService(c.Request.Context(), tenantID, serviceID)
 	if err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "service not found"})
+		c.JSON(http.StatusNotFound, gin.H{"error": i18n.T(c, "service_not_found")})
 		return
 	}
 	c.JSON(http.StatusOK, service)
@@ -1289,13 +1288,13 @@ func (h *Handler) CreateService(c *gin.Context) {
 		Duration    *int    `json:"duration"`
 	}
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": utils.FormatValidationErrors(err)})
+		c.JSON(http.StatusBadRequest, gin.H{"error": utils.FormatValidationErrors(err, c)})
 		return
 	}
 
 	id, err := h.repo.CreateService(c.Request.Context(), tenantID, req.Name, req.Description, req.Price, req.Duration)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to create service"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": i18n.T(c, "failed_create_service")})
 		return
 	}
 	c.JSON(http.StatusCreated, gin.H{"id": id})
@@ -1329,15 +1328,15 @@ func (h *Handler) UpdateService(c *gin.Context) {
 		IsActive    *bool    `json:"is_active"`
 	}
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": utils.FormatValidationErrors(err)})
+		c.JSON(http.StatusBadRequest, gin.H{"error": utils.FormatValidationErrors(err, c)})
 		return
 	}
 
 	if err := h.repo.UpdateService(c.Request.Context(), tenantID, serviceID, req.Name, req.Description, req.Price, req.Duration, req.IsActive); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to update service"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": i18n.T(c, "failed_update_service")})
 		return
 	}
-	c.JSON(http.StatusOK, gin.H{"message": "service updated"})
+	c.JSON(http.StatusOK, gin.H{"message": i18n.T(c, "service_updated")})
 }
 
 // DeleteService godoc
@@ -1358,10 +1357,10 @@ func (h *Handler) DeleteService(c *gin.Context) {
 	tenantID := c.GetString("tenant_id")
 	serviceID := c.Param("id")
 	if err := h.repo.DeleteService(c.Request.Context(), tenantID, serviceID); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to delete service"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": i18n.T(c, "failed_delete_service")})
 		return
 	}
-	c.JSON(http.StatusOK, gin.H{"message": "service deleted"})
+	c.JSON(http.StatusOK, gin.H{"message": i18n.T(c, "service_deleted")})
 }
 
 // UploadServiceImage godoc
@@ -1387,7 +1386,7 @@ func (h *Handler) UploadServiceImage(c *gin.Context) {
 
 	file, header, err := c.Request.FormFile("image")
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "no file provided"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": i18n.T(c, "no_file_provided")})
 		return
 	}
 	defer file.Close()
@@ -1396,7 +1395,7 @@ func (h *Handler) UploadServiceImage(c *gin.Context) {
 	uploadPath := fmt.Sprintf("tenants/%s/images/services/%s", tenantID, serviceID)
 	publicURL, storagePath, err := h.storage.Upload(file, header, uploadPath)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to upload"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": i18n.T(c, "failed_upload")})
 		return
 	}
 
@@ -1407,7 +1406,7 @@ func (h *Handler) UploadServiceImage(c *gin.Context) {
 
 	imageID, err := h.repo.CreateImageRecord(c.Request.Context(), tenantID, "services", serviceID, filename, header.Filename, mimeType, ext, storageDriver, storagePath, publicURL, header.Size)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to save image record"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": i18n.T(c, "failed_save_image")})
 		return
 	}
 
@@ -1473,7 +1472,7 @@ func (h *Handler) UpdateLayoutSettings(c *gin.Context) {
 
 	if !h.service.HasPermission(c.Request.Context(), userID, tenantID, "setg_m") &&
 		!h.service.IsOwner(c.Request.Context(), userID, tenantID) {
-		c.JSON(http.StatusForbidden, gin.H{"error": "insufficient permissions"})
+		c.JSON(http.StatusForbidden, gin.H{"error": i18n.T(c, "insufficient_permissions")})
 		return
 	}
 
@@ -1484,7 +1483,7 @@ func (h *Handler) UpdateLayoutSettings(c *gin.Context) {
 		Theme          string `json:"theme" binding:"required,oneof=Aura Lara"`
 	}
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": utils.FormatValidationErrors(err)})
+		c.JSON(http.StatusBadRequest, gin.H{"error": utils.FormatValidationErrors(err, c)})
 		return
 	}
 
@@ -1495,11 +1494,11 @@ func (h *Handler) UpdateLayoutSettings(c *gin.Context) {
 		"theme":           req.Theme,
 	}
 
-	if err := h.repo.UpsertTenantSettings(c.Request.Context(), tenantID, data, nil); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to save layout settings"})
+	if err := h.repo.UpsertTenantSettings(c.Request.Context(), tenantID, data, nil, nil); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": i18n.T(c, "failed_save_layout")})
 		return
 	}
-	c.JSON(http.StatusOK, gin.H{"message": "layout_settings_saved"})
+	c.JSON(http.StatusOK, gin.H{"message": i18n.T(c, "layout_settings_saved")})
 }
 
 // GetSettings godoc
@@ -1525,12 +1524,14 @@ func (h *Handler) GetSettings(c *gin.Context) {
 				"theme":           "Aura",
 			},
 			"convert_webp": true,
+			"language":     "pt-BR",
 		})
 		return
 	}
 	c.JSON(http.StatusOK, gin.H{
 		"layout":       settings.Layout,
 		"convert_webp": settings.ConvertWebp,
+		"language":     settings.Language,
 	})
 }
 
@@ -1553,7 +1554,7 @@ func (h *Handler) UpdateSettings(c *gin.Context) {
 
 	if !h.service.HasPermission(c.Request.Context(), userID, tenantID, "setg_m") &&
 		!h.service.IsOwner(c.Request.Context(), userID, tenantID) {
-		c.JSON(http.StatusForbidden, gin.H{"error": "insufficient permissions"})
+		c.JSON(http.StatusForbidden, gin.H{"error": i18n.T(c, "insufficient_permissions")})
 		return
 	}
 
@@ -1562,15 +1563,15 @@ func (h *Handler) UpdateSettings(c *gin.Context) {
 		ConvertWebp *bool       `json:"convert_webp"`
 	}
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": utils.FormatValidationErrors(err)})
+		c.JSON(http.StatusBadRequest, gin.H{"error": utils.FormatValidationErrors(err, c)})
 		return
 	}
 
-	if err := h.repo.UpsertTenantSettings(c.Request.Context(), tenantID, req.Layout, req.ConvertWebp); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to save settings"})
+	if err := h.repo.UpsertTenantSettings(c.Request.Context(), tenantID, req.Layout, req.ConvertWebp, nil); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": i18n.T(c, "failed_save_settings")})
 		return
 	}
-	c.JSON(http.StatusOK, gin.H{"message": "settings_saved"})
+	c.JSON(http.StatusOK, gin.H{"message": i18n.T(c, "settings_saved")})
 }
 
 // ==================== APP USERS (managed from backoffice) ====================
@@ -1593,7 +1594,7 @@ func (h *Handler) ListAppUsers(c *gin.Context) {
 
 	users, total, err := h.repo.ListAppUsers(c.Request.Context(), tenantID, pag.PageSize, pag.Offset)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to list app users"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": i18n.T(c, "failed_list_app_users")})
 		return
 	}
 	c.JSON(http.StatusOK, gin.H{
@@ -1620,7 +1621,7 @@ func (h *Handler) GetAppUser(c *gin.Context) {
 	appUserID := c.Param("id")
 	user, err := h.repo.GetAppUser(c.Request.Context(), tenantID, appUserID)
 	if err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "app user not found"})
+		c.JSON(http.StatusNotFound, gin.H{"error": i18n.T(c, "app_user_not_found")})
 		return
 	}
 	c.JSON(http.StatusOK, user)
@@ -1646,14 +1647,14 @@ func (h *Handler) UpdateAppUserStatus(c *gin.Context) {
 		Status string `json:"status" binding:"required,oneof=active blocked"`
 	}
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": utils.FormatValidationErrors(err)})
+		c.JSON(http.StatusBadRequest, gin.H{"error": utils.FormatValidationErrors(err, c)})
 		return
 	}
 	if err := h.repo.UpdateAppUserStatus(c.Request.Context(), tenantID, appUserID, req.Status); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to update status"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": i18n.T(c, "failed_update_status")})
 		return
 	}
-	c.JSON(http.StatusOK, gin.H{"message": "status updated"})
+	c.JSON(http.StatusOK, gin.H{"message": i18n.T(c, "status_updated")})
 }
 
 // DeleteAppUser godoc
@@ -1671,8 +1672,59 @@ func (h *Handler) DeleteAppUser(c *gin.Context) {
 	tenantID := c.GetString("tenant_id")
 	appUserID := c.Param("id")
 	if err := h.repo.SoftDeleteAppUser(c.Request.Context(), tenantID, appUserID); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to delete app user"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": i18n.T(c, "failed_delete_app_user")})
 		return
 	}
-	c.JSON(http.StatusOK, gin.H{"message": "app user deleted"})
+	c.JSON(http.StatusOK, gin.H{"message": i18n.T(c, "app_user_deleted")})
+}
+
+// UpdateLanguage godoc
+// @Summary Atualizar idioma do tenant
+// @Description Atualiza o idioma do tenant. Aceita: pt-BR, pt, en, es
+// @Tags Settings
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param url_code path string true "URL code do tenant"
+// @Param request body swagger.UpdateLanguageRequest true "Novo idioma"
+// @Success 200 {object} swagger.MessageResponse
+// @Failure 400 {object} swagger.ErrorResponse
+// @Failure 403 {object} swagger.ErrorResponse
+// @Router /{url_code}/settings/language [put]
+func (h *Handler) UpdateLanguage(c *gin.Context) {
+	tenantID := c.GetString("tenant_id")
+	userID := c.GetString("user_id")
+
+	if !h.service.HasPermission(c.Request.Context(), userID, tenantID, "setg_m") &&
+		!h.service.IsOwner(c.Request.Context(), userID, tenantID) {
+		c.JSON(http.StatusForbidden, gin.H{"error": i18n.T(c, "insufficient_permissions")})
+		return
+	}
+
+	var req struct {
+		Language string `json:"language" binding:"required"`
+	}
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": utils.FormatValidationErrors(err, c)})
+		return
+	}
+
+	if !i18n.IsValidLanguage(req.Language) {
+		c.JSON(http.StatusBadRequest, gin.H{"error": i18n.T(c, "invalid_language")})
+		return
+	}
+
+	if err := h.repo.UpdateLanguage(c.Request.Context(), tenantID, req.Language); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": i18n.T(c, "failed_save_settings")})
+		return
+	}
+
+	// Invalidate tenant cache so language takes effect
+	urlCode := c.Param("url_code")
+	if urlCode != "" {
+		cacheKey := fmt.Sprintf("tenant:urlcode:%s", urlCode)
+		h.cache.DelCache(c.Request.Context(), cacheKey)
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": i18n.T(c, "language_updated")})
 }
