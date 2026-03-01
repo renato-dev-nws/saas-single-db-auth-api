@@ -644,6 +644,9 @@ definitions:
       convert_webp:
         example: true
         type: boolean
+      language:
+        example: pt-BR
+        type: string
       layout: {}
     type: object
   github_com_saas-single-db-api_internal_models_swagger.UpdateUserProfileRequest:
@@ -1790,8 +1793,8 @@ paths:
     put:
       consumes:
       - application/json
-      description: Atualiza as configurações do tenant (layout e/ou convert_webp).
-        Requer permissão 'setg_m' ou ser owner.
+      description: Atualiza as configurações do tenant (layout, convert_webp e/ou
+        language). Requer permissão 'setg_m' ou ser owner.
       parameters:
       - description: URL code do tenant
         in: path

@@ -2075,7 +2075,7 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "Atualiza as configurações do tenant (layout e/ou convert_webp). Requer permissão 'setg_m' ou ser owner.",
+                "description": "Atualiza as configurações do tenant (layout, convert_webp e/ou language). Requer permissão 'setg_m' ou ser owner.",
                 "consumes": [
                     "application/json"
                 ],
@@ -3330,6 +3330,10 @@ const docTemplate = `{
                 "convert_webp": {
                     "type": "boolean",
                     "example": true
+                },
+                "language": {
+                    "type": "string",
+                    "example": "pt-BR"
                 },
                 "layout": {}
             }

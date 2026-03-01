@@ -631,6 +631,7 @@ type TenantSettingsResponse struct {
 type UpdateTenantSettingsRequest struct {
 	Layout      interface{} `json:"layout"`
 	ConvertWebp *bool       `json:"convert_webp" example:"true"`
+	Language    string      `json:"language" example:"pt-BR"`
 }
 
 // ResendVerificationRequest is the request for resending verification email

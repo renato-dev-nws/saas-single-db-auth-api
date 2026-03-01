@@ -1562,7 +1562,7 @@ func (h *Handler) GetSettings(c *gin.Context) {
 
 // UpdateSettings godoc
 // @Summary Atualizar configurações do tenant
-// @Description Atualiza as configurações do tenant (layout e/ou convert_webp). Requer permissão 'setg_m' ou ser owner.
+// @Description Atualiza as configurações do tenant (layout, convert_webp e/ou language). Requer permissão 'setg_m' ou ser owner.
 // @Tags Settings
 // @Accept json
 // @Produce json
@@ -1586,16 +1586,37 @@ func (h *Handler) UpdateSettings(c *gin.Context) {
 	var req struct {
 		Layout      interface{} `json:"layout"`
 		ConvertWebp *bool       `json:"convert_webp"`
+		Language    string      `json:"language"`
 	}
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": utils.FormatValidationErrors(err, c)})
 		return
 	}
 
-	if err := h.repo.UpsertTenantSettings(c.Request.Context(), tenantID, req.Layout, req.ConvertWebp, nil); err != nil {
+	// Validate language if provided
+	var langPtr *string
+	if req.Language != "" {
+		if !i18n.IsValidLanguage(req.Language) {
+			c.JSON(http.StatusBadRequest, gin.H{"error": i18n.T(c, "invalid_language")})
+			return
+		}
+		langPtr = &req.Language
+	}
+
+	if err := h.repo.UpsertTenantSettings(c.Request.Context(), tenantID, req.Layout, req.ConvertWebp, langPtr); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": i18n.T(c, "failed_save_settings")})
 		return
 	}
+
+	// Invalidate tenant cache if language changed
+	if langPtr != nil {
+		urlCode := c.Param("url_code")
+		if urlCode != "" {
+			cacheKey := fmt.Sprintf("tenant:urlcode:%s", urlCode)
+			h.cache.DelCache(c.Request.Context(), cacheKey)
+		}
+	}
+
 	c.JSON(http.StatusOK, gin.H{"message": i18n.T(c, "settings_saved")})
 }
 

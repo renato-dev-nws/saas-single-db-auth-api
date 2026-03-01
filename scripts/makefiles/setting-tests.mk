@@ -14,7 +14,7 @@ test-settings-get:
 		-H "Authorization: Bearer $$TOKEN"
 	@echo ""
 
-# Test settings UPDATE (layout + convert_webp)
+# Test settings UPDATE (layout + convert_webp + language)
 test-settings-update:
 	@echo "Testing settings UPDATE..."
 	@LOGIN=$$(curl -s -X POST http://localhost:8080/api/v1/auth/login \
@@ -27,7 +27,20 @@ test-settings-update:
 		-H "Content-Type: application/json" \
 		-H "Authorization: Bearer $$TOKEN" \
 		-d '{"layout":{"primary_color":"#FF5733","secondary_color":"#33FF57","logo":"https://example.com/logo.png","theme":"Lara"},"convert_webp":false}'; \
-	echo ""; echo "2. Read back settings..."; \
+	echo ""; echo "2. Update language to en via settings PUT..."; \
+	curl -s -X PUT http://localhost:8080/api/v1/$$URL_CODE/settings \
+		-H "Content-Type: application/json" \
+		-H "Authorization: Bearer $$TOKEN" \
+		-d '{"language":"en"}'; \
+	echo ""; echo "3. Read back settings (language=en)..."; \
+	curl -s -X GET http://localhost:8080/api/v1/$$URL_CODE/settings \
+		-H "Authorization: Bearer $$TOKEN"; \
+	echo ""; echo "4. Revert language to pt-BR..."; \
+	curl -s -X PUT http://localhost:8080/api/v1/$$URL_CODE/settings \
+		-H "Content-Type: application/json" \
+		-H "Authorization: Bearer $$TOKEN" \
+		-d '{"language":"pt-BR"}'; \
+	echo ""; echo "5. Read back settings (language=pt-BR)..."; \
 	curl -s -X GET http://localhost:8080/api/v1/$$URL_CODE/settings \
 		-H "Authorization: Bearer $$TOKEN"
 	@echo ""
