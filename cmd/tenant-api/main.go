@@ -133,6 +133,9 @@ func main() {
 				members.DELETE("/:id", handler.RemoveMember)
 			}
 
+			// Permissions
+			tenantScoped.GET("/permissions", handler.ListPermissions)
+
 			// Roles
 			roles := tenantScoped.Group("/roles")
 			{

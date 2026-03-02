@@ -771,6 +771,25 @@ func (h *Handler) RemoveMember(c *gin.Context) {
 
 // ==================== ROLES ====================
 
+// ListPermissions godoc
+// @Summary Listar permissões disponíveis
+// @Description Retorna todas as permissões do sistema disponíveis para atribuir a roles
+// @Tags Roles
+// @Produce json
+// @Security BearerAuth
+// @Param url_code path string true "URL code do tenant"
+// @Success 200 {object} swagger.AdminPermissionListResponse
+// @Failure 500 {object} swagger.ErrorResponse
+// @Router /{url_code}/permissions [get]
+func (h *Handler) ListPermissions(c *gin.Context) {
+	perms, err := h.repo.ListPermissions(c.Request.Context())
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": i18n.T(c, "failed_list_permissions")})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"data": perms})
+}
+
 // ListRoles godoc
 // @Summary Listar roles do tenant
 // @Description Retorna todas as roles do tenant

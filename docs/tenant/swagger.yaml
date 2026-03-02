@@ -1,5 +1,27 @@
 basePath: /api/v1
 definitions:
+  swagger.AdminPermissionDTO:
+    properties:
+      description:
+        example: Can manage system users
+        type: string
+      id:
+        example: 1
+        type: integer
+      slug:
+        example: manage_sys_users
+        type: string
+      title:
+        example: Manage Users
+        type: string
+    type: object
+  swagger.AdminPermissionListResponse:
+    properties:
+      data:
+        items:
+          $ref: '#/definitions/swagger.AdminPermissionDTO'
+        type: array
+    type: object
   swagger.AppUserListDTO:
     properties:
       created_at:
@@ -1275,6 +1297,32 @@ paths:
       summary: Verificar se pode adicionar membro
       tags:
       - Members
+  /{url_code}/permissions:
+    get:
+      description: Retorna todas as permissões do sistema disponíveis para atribuir
+        a roles
+      parameters:
+      - description: URL code do tenant
+        in: path
+        name: url_code
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/swagger.AdminPermissionListResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/swagger.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Listar permissões disponíveis
+      tags:
+      - Roles
   /{url_code}/products:
     get:
       description: Retorna produtos do tenant paginados. Requer feature 'products'.

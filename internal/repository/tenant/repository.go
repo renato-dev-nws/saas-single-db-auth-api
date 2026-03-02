@@ -663,6 +663,26 @@ func (r *Repository) DeleteTenantRole(ctx context.Context, tenantID, roleID stri
 	return err
 }
 
+func (r *Repository) ListPermissions(ctx context.Context) ([]permissionRow, error) {
+	rows, err := r.db.Query(ctx,
+		`SELECT id, title, slug, description FROM user_permissions ORDER BY slug`,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var perms []permissionRow
+	for rows.Next() {
+		var p permissionRow
+		if err := rows.Scan(&p.ID, &p.Title, &p.Slug, &p.Description); err != nil {
+			return nil, err
+		}
+		perms = append(perms, p)
+	}
+	return perms, nil
+}
+
 func (r *Repository) GetRolePermissions(ctx context.Context, roleID string) ([]permissionRow, error) {
 	rows, err := r.db.Query(ctx,
 		`SELECT p.id, p.title, p.slug, p.description

@@ -1111,6 +1111,46 @@
                 }
             }
         },
+        "/{url_code}/permissions": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Retorna todas as permissões do sistema disponíveis para atribuir a roles",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Roles"
+                ],
+                "summary": "Listar permissões disponíveis",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "URL code do tenant",
+                        "name": "url_code",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/swagger.AdminPermissionListResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/swagger.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/{url_code}/products": {
             "get": {
                 "security": [
@@ -2612,6 +2652,38 @@
         }
     },
     "definitions": {
+        "swagger.AdminPermissionDTO": {
+            "type": "object",
+            "properties": {
+                "description": {
+                    "type": "string",
+                    "example": "Can manage system users"
+                },
+                "id": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "slug": {
+                    "type": "string",
+                    "example": "manage_sys_users"
+                },
+                "title": {
+                    "type": "string",
+                    "example": "Manage Users"
+                }
+            }
+        },
+        "swagger.AdminPermissionListResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/swagger.AdminPermissionDTO"
+                    }
+                }
+            }
+        },
         "swagger.AppUserListDTO": {
             "type": "object",
             "properties": {
