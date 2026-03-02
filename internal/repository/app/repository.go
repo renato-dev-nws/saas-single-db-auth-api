@@ -132,7 +132,7 @@ func (r *Repository) ListActiveProducts(ctx context.Context, tenantID string, li
 	).Scan(&total)
 
 	rows, err := r.db.Query(ctx,
-		`SELECT id, name, description, price, sku, stock, image_url
+		`SELECT id, name, description, price, sku, stock, image_url, translations
 		 FROM products WHERE tenant_id = $1 AND is_active = true
 		 ORDER BY name LIMIT $2 OFFSET $3`, tenantID, limit, offset,
 	)
@@ -144,15 +144,16 @@ func (r *Repository) ListActiveProducts(ctx context.Context, tenantID string, li
 	var products []interface{}
 	for rows.Next() {
 		var p struct {
-			ID          string  `json:"id"`
-			Name        string  `json:"name"`
-			Description *string `json:"description"`
-			Price       float64 `json:"price"`
-			SKU         *string `json:"sku"`
-			Stock       int     `json:"stock"`
-			ImageURL    *string `json:"image_url"`
+			ID           string      `json:"id"`
+			Name         string      `json:"name"`
+			Description  *string     `json:"description"`
+			Price        float64     `json:"price"`
+			SKU          *string     `json:"sku"`
+			Stock        int         `json:"stock"`
+			ImageURL     *string     `json:"image_url"`
+			Translations interface{} `json:"translations"`
 		}
-		if err := rows.Scan(&p.ID, &p.Name, &p.Description, &p.Price, &p.SKU, &p.Stock, &p.ImageURL); err != nil {
+		if err := rows.Scan(&p.ID, &p.Name, &p.Description, &p.Price, &p.SKU, &p.Stock, &p.ImageURL, &p.Translations); err != nil {
 			return nil, 0, err
 		}
 		products = append(products, p)
@@ -162,19 +163,20 @@ func (r *Repository) ListActiveProducts(ctx context.Context, tenantID string, li
 
 func (r *Repository) GetActiveProduct(ctx context.Context, tenantID, productID string) (interface{}, error) {
 	var p struct {
-		ID          string  `json:"id"`
-		Name        string  `json:"name"`
-		Description *string `json:"description"`
-		Price       float64 `json:"price"`
-		SKU         *string `json:"sku"`
-		Stock       int     `json:"stock"`
-		ImageURL    *string `json:"image_url"`
+		ID           string      `json:"id"`
+		Name         string      `json:"name"`
+		Description  *string     `json:"description"`
+		Price        float64     `json:"price"`
+		SKU          *string     `json:"sku"`
+		Stock        int         `json:"stock"`
+		ImageURL     *string     `json:"image_url"`
+		Translations interface{} `json:"translations"`
 	}
 	err := r.db.QueryRow(ctx,
-		`SELECT id, name, description, price, sku, stock, image_url
+		`SELECT id, name, description, price, sku, stock, image_url, translations
 		 FROM products WHERE tenant_id = $1 AND id = $2 AND is_active = true`,
 		tenantID, productID,
-	).Scan(&p.ID, &p.Name, &p.Description, &p.Price, &p.SKU, &p.Stock, &p.ImageURL)
+	).Scan(&p.ID, &p.Name, &p.Description, &p.Price, &p.SKU, &p.Stock, &p.ImageURL, &p.Translations)
 	if err != nil {
 		return nil, err
 	}
@@ -188,7 +190,7 @@ func (r *Repository) ListActiveServices(ctx context.Context, tenantID string, li
 	).Scan(&total)
 
 	rows, err := r.db.Query(ctx,
-		`SELECT id, name, description, price, duration, image_url
+		`SELECT id, name, description, price, duration, image_url, translations
 		 FROM services WHERE tenant_id = $1 AND is_active = true
 		 ORDER BY name LIMIT $2 OFFSET $3`, tenantID, limit, offset,
 	)
@@ -200,14 +202,15 @@ func (r *Repository) ListActiveServices(ctx context.Context, tenantID string, li
 	var services []interface{}
 	for rows.Next() {
 		var s struct {
-			ID          string  `json:"id"`
-			Name        string  `json:"name"`
-			Description *string `json:"description"`
-			Price       float64 `json:"price"`
-			Duration    *int    `json:"duration"`
-			ImageURL    *string `json:"image_url"`
+			ID           string      `json:"id"`
+			Name         string      `json:"name"`
+			Description  *string     `json:"description"`
+			Price        float64     `json:"price"`
+			Duration     *int        `json:"duration"`
+			ImageURL     *string     `json:"image_url"`
+			Translations interface{} `json:"translations"`
 		}
-		if err := rows.Scan(&s.ID, &s.Name, &s.Description, &s.Price, &s.Duration, &s.ImageURL); err != nil {
+		if err := rows.Scan(&s.ID, &s.Name, &s.Description, &s.Price, &s.Duration, &s.ImageURL, &s.Translations); err != nil {
 			return nil, 0, err
 		}
 		services = append(services, s)
@@ -217,18 +220,19 @@ func (r *Repository) ListActiveServices(ctx context.Context, tenantID string, li
 
 func (r *Repository) GetActiveService(ctx context.Context, tenantID, serviceID string) (interface{}, error) {
 	var s struct {
-		ID          string  `json:"id"`
-		Name        string  `json:"name"`
-		Description *string `json:"description"`
-		Price       float64 `json:"price"`
-		Duration    *int    `json:"duration"`
-		ImageURL    *string `json:"image_url"`
+		ID           string      `json:"id"`
+		Name         string      `json:"name"`
+		Description  *string     `json:"description"`
+		Price        float64     `json:"price"`
+		Duration     *int        `json:"duration"`
+		ImageURL     *string     `json:"image_url"`
+		Translations interface{} `json:"translations"`
 	}
 	err := r.db.QueryRow(ctx,
-		`SELECT id, name, description, price, duration, image_url
+		`SELECT id, name, description, price, duration, image_url, translations
 		 FROM services WHERE tenant_id = $1 AND id = $2 AND is_active = true`,
 		tenantID, serviceID,
-	).Scan(&s.ID, &s.Name, &s.Description, &s.Price, &s.Duration, &s.ImageURL)
+	).Scan(&s.ID, &s.Name, &s.Description, &s.Price, &s.Duration, &s.ImageURL, &s.Translations)
 	if err != nil {
 		return nil, err
 	}

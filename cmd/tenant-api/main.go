@@ -162,7 +162,8 @@ func main() {
 				products.GET("/:id", handler.GetProduct)
 				products.PUT("/:id", handler.UpdateProduct)
 				products.DELETE("/:id", handler.DeleteProduct)
-				products.POST("/:id/image", handler.UploadProductImage)
+				products.POST("/:id/images", handler.UploadProductImage)
+				products.GET("/:id/images", handler.ListProductImages)
 			}
 
 			// Services
@@ -173,7 +174,15 @@ func main() {
 				services.GET("/:id", handler.GetService)
 				services.PUT("/:id", handler.UpdateService)
 				services.DELETE("/:id", handler.DeleteService)
-				services.POST("/:id/image", handler.UploadServiceImage)
+				services.POST("/:id/images", handler.UploadServiceImage)
+				services.GET("/:id/images", handler.ListServiceImages)
+			}
+
+			// Images
+			images := tenantScoped.Group("/images")
+			{
+				images.PUT("/:id", handler.UpdateImageTitle)
+				images.DELETE("/:id", handler.DeleteImage)
 			}
 
 			// Settings

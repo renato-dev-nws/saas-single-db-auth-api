@@ -39,8 +39,6 @@ DROP TABLE IF EXISTS email_verification_tokens CASCADE;
 DROP TABLE IF EXISTS email_templates CASCADE;
 
 -- Drop enums
-DROP TYPE IF EXISTS image_variant;
-DROP TYPE IF EXISTS media_type;
 DROP TYPE IF EXISTS plan_type CASCADE;
 DROP TYPE IF EXISTS discount_type CASCADE;
 DROP TYPE IF EXISTS storage_provider;

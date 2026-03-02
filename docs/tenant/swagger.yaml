@@ -1,6 +1,6 @@
 basePath: /api/v1
 definitions:
-  github_com_saas-single-db-api_internal_models_swagger.AppUserListDTO:
+  swagger.AppUserListDTO:
     properties:
       created_at:
         type: string
@@ -17,7 +17,7 @@ definitions:
         example: active
         type: string
     type: object
-  github_com_saas-single-db-api_internal_models_swagger.AssignPermissionRequest:
+  swagger.AssignPermissionRequest:
     properties:
       permission_id:
         example: uuid
@@ -25,7 +25,7 @@ definitions:
     required:
     - permission_id
     type: object
-  github_com_saas-single-db-api_internal_models_swagger.BackofficeUserDTO:
+  swagger.BackofficeUserDTO:
     properties:
       email:
         example: user@example.com
@@ -37,12 +37,12 @@ definitions:
         example: John
         type: string
       profile:
-        $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.UserProfileDTO'
+        $ref: '#/definitions/swagger.UserProfileDTO'
       status:
         example: active
         type: string
     type: object
-  github_com_saas-single-db-api_internal_models_swagger.BootstrapPlanDTO:
+  swagger.BootstrapPlanDTO:
     properties:
       is_multilang:
         example: true
@@ -54,7 +54,7 @@ definitions:
         example: Business Pro
         type: string
     type: object
-  github_com_saas-single-db-api_internal_models_swagger.BootstrapResponse:
+  swagger.BootstrapResponse:
     properties:
       features:
         items:
@@ -67,17 +67,17 @@ definitions:
         example: pt-BR
         type: string
       layout_settings:
-        $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.LayoutSettingsDTO'
+        $ref: '#/definitions/swagger.LayoutSettingsDTO'
       permissions:
         items:
           type: string
         type: array
       plan:
-        $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.BootstrapPlanDTO'
+        $ref: '#/definitions/swagger.BootstrapPlanDTO'
       tenant:
-        $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.TenantConfigDTO'
+        $ref: '#/definitions/swagger.TenantConfigDTO'
     type: object
-  github_com_saas-single-db-api_internal_models_swagger.CanAddMemberResponse:
+  swagger.CanAddMemberResponse:
     properties:
       available_slots:
         example: 3
@@ -96,7 +96,7 @@ definitions:
       upgrade_hint:
         type: string
     type: object
-  github_com_saas-single-db-api_internal_models_swagger.ChangePasswordRequest:
+  swagger.ChangePasswordRequest:
     properties:
       current_password:
         example: old_password
@@ -109,13 +109,13 @@ definitions:
     - current_password
     - new_password
     type: object
-  github_com_saas-single-db-api_internal_models_swagger.CreateIDResponse:
+  swagger.CreateIDResponse:
     properties:
       id:
         example: uuid
         type: string
     type: object
-  github_com_saas-single-db-api_internal_models_swagger.CreateProductRequest:
+  swagger.CreateProductRequest:
     properties:
       description:
         example: A premium widget
@@ -135,11 +135,12 @@ definitions:
       stock:
         example: 100
         type: integer
+      translations: {}
     required:
     - name
     - price
     type: object
-  github_com_saas-single-db-api_internal_models_swagger.CreateRoleRequest:
+  swagger.CreateRoleRequest:
     properties:
       slug:
         example: editor
@@ -151,7 +152,7 @@ definitions:
     - slug
     - title
     type: object
-  github_com_saas-single-db-api_internal_models_swagger.CreateServiceRequest:
+  swagger.CreateServiceRequest:
     properties:
       description:
         example: 1h consulting session
@@ -168,17 +169,18 @@ definitions:
       price:
         example: 150
         type: number
+      translations: {}
     required:
     - name
     - price
     type: object
-  github_com_saas-single-db-api_internal_models_swagger.ErrorResponse:
+  swagger.ErrorResponse:
     properties:
       error:
         example: error_message
         type: string
     type: object
-  github_com_saas-single-db-api_internal_models_swagger.FeatureResponse:
+  swagger.FeatureResponse:
     properties:
       code:
         example: products
@@ -203,7 +205,92 @@ definitions:
       updated_at:
         type: string
     type: object
-  github_com_saas-single-db-api_internal_models_swagger.InviteMemberRequest:
+  swagger.ImageListResponse:
+    properties:
+      images:
+        items:
+          $ref: '#/definitions/swagger.ImageResponse'
+        type: array
+    type: object
+  swagger.ImageResponse:
+    properties:
+      alt_text:
+        example: Photo of product
+        type: string
+      created_at:
+        type: string
+      display_order:
+        example: 0
+        type: integer
+      extension:
+        example: jpg
+        type: string
+      file_size:
+        example: 204800
+        type: integer
+      height:
+        example: 1080
+        type: integer
+      id:
+        example: uuid
+        type: string
+      medium_path:
+        type: string
+      medium_url:
+        type: string
+      mime_type:
+        example: image/jpeg
+        type: string
+      original_filename:
+        example: photo.jpg
+        type: string
+      original_path:
+        example: tenant/image.jpg
+        type: string
+      original_url:
+        example: http://localhost:8080/uploads/tenant/image.jpg
+        type: string
+      processing_status:
+        example: completed
+        type: string
+      small_path:
+        type: string
+      small_url:
+        type: string
+      thumb_path:
+        type: string
+      thumb_url:
+        type: string
+      title:
+        example: Product photo
+        type: string
+      translations: {}
+      updated_at:
+        type: string
+      width:
+        example: 1920
+        type: integer
+    type: object
+  swagger.ImageUploadItem:
+    properties:
+      id:
+        example: uuid
+        type: string
+      original_url:
+        example: http://localhost:8080/uploads/tenant/image.jpg
+        type: string
+      path:
+        example: tenant/image.jpg
+        type: string
+    type: object
+  swagger.ImageUploadResponse:
+    properties:
+      images:
+        items:
+          $ref: '#/definitions/swagger.ImageUploadItem'
+        type: array
+    type: object
+  swagger.InviteMemberRequest:
     properties:
       email:
         example: member@example.com
@@ -218,7 +305,7 @@ definitions:
     - email
     - name
     type: object
-  github_com_saas-single-db-api_internal_models_swagger.InviteMemberResponse:
+  swagger.InviteMemberResponse:
     properties:
       message:
         example: member_invited
@@ -227,7 +314,7 @@ definitions:
         example: uuid
         type: string
     type: object
-  github_com_saas-single-db-api_internal_models_swagger.LayoutSettingsDTO:
+  swagger.LayoutSettingsDTO:
     properties:
       logo:
         example: https://example.com/logo.png
@@ -242,7 +329,7 @@ definitions:
         example: Aura
         type: string
     type: object
-  github_com_saas-single-db-api_internal_models_swagger.LayoutSettingsRequest:
+  swagger.LayoutSettingsRequest:
     properties:
       logo:
         example: https://example.com/logo.png
@@ -261,7 +348,7 @@ definitions:
     - secondary_color
     - theme
     type: object
-  github_com_saas-single-db-api_internal_models_swagger.LayoutSettingsResponse:
+  swagger.LayoutSettingsResponse:
     properties:
       logo:
         example: https://example.com/logo.png
@@ -276,7 +363,7 @@ definitions:
         example: Aura
         type: string
     type: object
-  github_com_saas-single-db-api_internal_models_swagger.MemberDTO:
+  swagger.MemberDTO:
     properties:
       created_at:
         type: string
@@ -290,9 +377,9 @@ definitions:
         example: Jane Doe
         type: string
       profile:
-        $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.UserProfileDTO'
+        $ref: '#/definitions/swagger.UserProfileDTO'
       role:
-        $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.RoleBriefDTO'
+        $ref: '#/definitions/swagger.RoleBriefDTO'
       status:
         example: active
         type: string
@@ -300,13 +387,13 @@ definitions:
         example: uuid
         type: string
     type: object
-  github_com_saas-single-db-api_internal_models_swagger.MessageResponse:
+  swagger.MessageResponse:
     properties:
       message:
         example: operation_successful
         type: string
     type: object
-  github_com_saas-single-db-api_internal_models_swagger.PaginatedResponse:
+  swagger.PaginatedResponse:
     properties:
       data: {}
       page:
@@ -319,7 +406,7 @@ definitions:
         example: 100
         type: integer
     type: object
-  github_com_saas-single-db-api_internal_models_swagger.PlanResponse:
+  swagger.PlanResponse:
     properties:
       created_at:
         type: string
@@ -328,7 +415,7 @@ definitions:
         type: string
       features:
         items:
-          $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.FeatureResponse'
+          $ref: '#/definitions/swagger.FeatureResponse'
         type: array
       id:
         example: uuid
@@ -354,7 +441,7 @@ definitions:
       updated_at:
         type: string
     type: object
-  github_com_saas-single-db-api_internal_models_swagger.ProductResponse:
+  swagger.ProductResponse:
     properties:
       created_at:
         type: string
@@ -384,10 +471,11 @@ definitions:
       tenant_id:
         example: uuid
         type: string
+      translations: {}
       updated_at:
         type: string
     type: object
-  github_com_saas-single-db-api_internal_models_swagger.RoleBriefDTO:
+  swagger.RoleBriefDTO:
     properties:
       id:
         example: uuid
@@ -399,16 +487,16 @@ definitions:
         example: Editor
         type: string
     type: object
-  github_com_saas-single-db-api_internal_models_swagger.RoleDetailResponse:
+  swagger.RoleDetailResponse:
     properties:
       permissions:
         items:
-          $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.UserPermissionResponse'
+          $ref: '#/definitions/swagger.UserPermissionResponse'
         type: array
       role:
-        $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.UserRoleResponse'
+        $ref: '#/definitions/swagger.UserRoleResponse'
     type: object
-  github_com_saas-single-db-api_internal_models_swagger.ServiceResponse:
+  swagger.ServiceResponse:
     properties:
       created_at:
         type: string
@@ -435,10 +523,11 @@ definitions:
       tenant_id:
         example: uuid
         type: string
+      translations: {}
       updated_at:
         type: string
     type: object
-  github_com_saas-single-db-api_internal_models_swagger.SubscribeRequest:
+  swagger.SubscribeRequest:
     properties:
       billing_cycle:
         example: monthly
@@ -479,7 +568,7 @@ definitions:
     - plan_id
     - subdomain
     type: object
-  github_com_saas-single-db-api_internal_models_swagger.SubscriptionResponse:
+  swagger.SubscriptionResponse:
     properties:
       language:
         example: pt-BR
@@ -497,7 +586,7 @@ definitions:
         example: uuid
         type: string
     type: object
-  github_com_saas-single-db-api_internal_models_swagger.SwitchTenantResponse:
+  swagger.SwitchTenantResponse:
     properties:
       tenant_id:
         example: uuid
@@ -509,7 +598,7 @@ definitions:
         example: HRP1ZYERFVA
         type: string
     type: object
-  github_com_saas-single-db-api_internal_models_swagger.TenantBrief:
+  swagger.TenantBrief:
     properties:
       id:
         example: uuid
@@ -524,7 +613,7 @@ definitions:
         example: HRP1ZYERFVA
         type: string
     type: object
-  github_com_saas-single-db-api_internal_models_swagger.TenantConfigDTO:
+  swagger.TenantConfigDTO:
     properties:
       company_name:
         type: string
@@ -538,7 +627,7 @@ definitions:
         example: HRP1ZYERFVA
         type: string
     type: object
-  github_com_saas-single-db-api_internal_models_swagger.TenantProfileResponse:
+  swagger.TenantProfileResponse:
     properties:
       about:
         example: About our company
@@ -551,7 +640,7 @@ definitions:
         example: uuid
         type: string
     type: object
-  github_com_saas-single-db-api_internal_models_swagger.TenantSettingsResponse:
+  swagger.TenantSettingsResponse:
     properties:
       convert_webp:
         example: true
@@ -561,7 +650,7 @@ definitions:
         type: string
       layout: {}
     type: object
-  github_com_saas-single-db-api_internal_models_swagger.UpdateAppUserStatusRequest:
+  swagger.UpdateAppUserStatusRequest:
     properties:
       status:
         example: blocked
@@ -569,7 +658,17 @@ definitions:
     required:
     - status
     type: object
-  github_com_saas-single-db-api_internal_models_swagger.UpdateLanguageRequest:
+  swagger.UpdateImageRequest:
+    properties:
+      alt_text:
+        example: Photo of product
+        type: string
+      title:
+        example: Product photo
+        type: string
+      translations: {}
+    type: object
+  swagger.UpdateLanguageRequest:
     properties:
       language:
         example: en
@@ -577,7 +676,7 @@ definitions:
     required:
     - language
     type: object
-  github_com_saas-single-db-api_internal_models_swagger.UpdateMemberRoleRequest:
+  swagger.UpdateMemberRoleRequest:
     properties:
       role_id:
         example: uuid
@@ -585,7 +684,7 @@ definitions:
     required:
     - role_id
     type: object
-  github_com_saas-single-db-api_internal_models_swagger.UpdateProductRequest:
+  swagger.UpdateProductRequest:
     properties:
       description:
         example: Updated description
@@ -605,8 +704,9 @@ definitions:
       stock:
         example: 50
         type: integer
+      translations: {}
     type: object
-  github_com_saas-single-db-api_internal_models_swagger.UpdateRoleRequest:
+  swagger.UpdateRoleRequest:
     properties:
       title:
         example: Editor
@@ -614,7 +714,7 @@ definitions:
     required:
     - title
     type: object
-  github_com_saas-single-db-api_internal_models_swagger.UpdateServiceRequest:
+  swagger.UpdateServiceRequest:
     properties:
       description:
         example: Updated description
@@ -631,15 +731,16 @@ definitions:
       price:
         example: 200
         type: number
+      translations: {}
     type: object
-  github_com_saas-single-db-api_internal_models_swagger.UpdateTenantProfileRequest:
+  swagger.UpdateTenantProfileRequest:
     properties:
       about:
         example: About our company
         type: string
       custom_settings: {}
     type: object
-  github_com_saas-single-db-api_internal_models_swagger.UpdateTenantSettingsRequest:
+  swagger.UpdateTenantSettingsRequest:
     properties:
       convert_webp:
         example: true
@@ -649,7 +750,7 @@ definitions:
         type: string
       layout: {}
     type: object
-  github_com_saas-single-db-api_internal_models_swagger.UpdateUserProfileRequest:
+  swagger.UpdateUserProfileRequest:
     properties:
       about:
         example: About me
@@ -658,7 +759,7 @@ definitions:
         example: John Doe
         type: string
     type: object
-  github_com_saas-single-db-api_internal_models_swagger.UploadResponse:
+  swagger.UploadResponse:
     properties:
       path:
         example: /uploads/tenant/file.jpg
@@ -667,7 +768,7 @@ definitions:
         example: http://localhost:8080/uploads/tenant/file.jpg
         type: string
     type: object
-  github_com_saas-single-db-api_internal_models_swagger.UserLoginRequest:
+  swagger.UserLoginRequest:
     properties:
       email:
         example: user@example.com
@@ -679,7 +780,7 @@ definitions:
     - email
     - password
     type: object
-  github_com_saas-single-db-api_internal_models_swagger.UserLoginResponse:
+  swagger.UserLoginResponse:
     properties:
       current_tenant_code:
         example: HRP1ZYERFVA
@@ -695,13 +796,13 @@ definitions:
         type: string
       tenants:
         items:
-          $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.TenantBrief'
+          $ref: '#/definitions/swagger.TenantBrief'
         type: array
       token:
         example: eyJhbGciOiJIUzI1NiIs...
         type: string
     type: object
-  github_com_saas-single-db-api_internal_models_swagger.UserPermissionResponse:
+  swagger.UserPermissionResponse:
     properties:
       description:
         type: string
@@ -717,7 +818,7 @@ definitions:
         example: Create Products
         type: string
     type: object
-  github_com_saas-single-db-api_internal_models_swagger.UserProfileDTO:
+  swagger.UserProfileDTO:
     properties:
       about:
         example: About me
@@ -729,7 +830,7 @@ definitions:
         example: John Doe
         type: string
     type: object
-  github_com_saas-single-db-api_internal_models_swagger.UserRoleResponse:
+  swagger.UserRoleResponse:
     properties:
       created_at:
         type: string
@@ -780,11 +881,11 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.PaginatedResponse'
+            $ref: '#/definitions/swagger.PaginatedResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.ErrorResponse'
+            $ref: '#/definitions/swagger.ErrorResponse'
       security:
       - BearerAuth: []
       summary: Listar app users
@@ -810,11 +911,11 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.MessageResponse'
+            $ref: '#/definitions/swagger.MessageResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.ErrorResponse'
+            $ref: '#/definitions/swagger.ErrorResponse'
       security:
       - BearerAuth: []
       summary: Remover app user
@@ -839,11 +940,11 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.AppUserListDTO'
+            $ref: '#/definitions/swagger.AppUserListDTO'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.ErrorResponse'
+            $ref: '#/definitions/swagger.ErrorResponse'
       security:
       - BearerAuth: []
       summary: Obter app user
@@ -870,18 +971,18 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.UpdateAppUserStatusRequest'
+          $ref: '#/definitions/swagger.UpdateAppUserStatusRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.MessageResponse'
+            $ref: '#/definitions/swagger.MessageResponse'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.ErrorResponse'
+            $ref: '#/definitions/swagger.ErrorResponse'
       security:
       - BearerAuth: []
       summary: Atualizar status do app user
@@ -903,16 +1004,83 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.BootstrapResponse'
+            $ref: '#/definitions/swagger.BootstrapResponse'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.ErrorResponse'
+            $ref: '#/definitions/swagger.ErrorResponse'
       security:
       - BearerAuth: []
       summary: Obter bootstrap do tenant
       tags:
       - Bootstrap
+  /{url_code}/images/{id}:
+    delete:
+      description: Remove uma imagem e seus arquivos de variantes
+      parameters:
+      - description: URL code do tenant
+        in: path
+        name: url_code
+        required: true
+        type: string
+      - description: ID da imagem
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/swagger.MessageResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/swagger.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Remover imagem
+      tags:
+      - Images
+    put:
+      consumes:
+      - application/json
+      description: Atualiza título, alt_text e traduções de uma imagem
+      parameters:
+      - description: URL code do tenant
+        in: path
+        name: url_code
+        required: true
+        type: string
+      - description: ID da imagem
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Dados da imagem
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/swagger.UpdateImageRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/swagger.MessageResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/swagger.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Atualizar título da imagem
+      tags:
+      - Images
   /{url_code}/members:
     get:
       description: Retorna todos os membros do tenant
@@ -929,12 +1097,12 @@ paths:
           description: OK
           schema:
             items:
-              $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.MemberDTO'
+              $ref: '#/definitions/swagger.MemberDTO'
             type: array
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.ErrorResponse'
+            $ref: '#/definitions/swagger.ErrorResponse'
       security:
       - BearerAuth: []
       summary: Listar membros do tenant
@@ -956,22 +1124,22 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.InviteMemberRequest'
+          $ref: '#/definitions/swagger.InviteMemberRequest'
       produces:
       - application/json
       responses:
         "201":
           description: Created
           schema:
-            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.InviteMemberResponse'
+            $ref: '#/definitions/swagger.InviteMemberResponse'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.ErrorResponse'
+            $ref: '#/definitions/swagger.ErrorResponse'
         "403":
           description: Forbidden
           schema:
-            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.ErrorResponse'
+            $ref: '#/definitions/swagger.ErrorResponse'
       security:
       - BearerAuth: []
       summary: Convidar membro
@@ -997,15 +1165,15 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.MessageResponse'
+            $ref: '#/definitions/swagger.MessageResponse'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.ErrorResponse'
+            $ref: '#/definitions/swagger.ErrorResponse'
         "403":
           description: Forbidden
           schema:
-            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.ErrorResponse'
+            $ref: '#/definitions/swagger.ErrorResponse'
       security:
       - BearerAuth: []
       summary: Remover membro
@@ -1030,11 +1198,11 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.MemberDTO'
+            $ref: '#/definitions/swagger.MemberDTO'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.ErrorResponse'
+            $ref: '#/definitions/swagger.ErrorResponse'
       security:
       - BearerAuth: []
       summary: Obter membro por ID
@@ -1061,22 +1229,22 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.UpdateMemberRoleRequest'
+          $ref: '#/definitions/swagger.UpdateMemberRoleRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.MessageResponse'
+            $ref: '#/definitions/swagger.MessageResponse'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.ErrorResponse'
+            $ref: '#/definitions/swagger.ErrorResponse'
         "403":
           description: Forbidden
           schema:
-            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.ErrorResponse'
+            $ref: '#/definitions/swagger.ErrorResponse'
       security:
       - BearerAuth: []
       summary: Atualizar role do membro
@@ -1097,11 +1265,11 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.CanAddMemberResponse'
+            $ref: '#/definitions/swagger.CanAddMemberResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.ErrorResponse'
+            $ref: '#/definitions/swagger.ErrorResponse'
       security:
       - BearerAuth: []
       summary: Verificar se pode adicionar membro
@@ -1132,11 +1300,11 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.PaginatedResponse'
+            $ref: '#/definitions/swagger.PaginatedResponse'
         "403":
           description: Forbidden
           schema:
-            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.ErrorResponse'
+            $ref: '#/definitions/swagger.ErrorResponse'
       security:
       - BearerAuth: []
       summary: Listar produtos
@@ -1157,22 +1325,22 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.CreateProductRequest'
+          $ref: '#/definitions/swagger.CreateProductRequest'
       produces:
       - application/json
       responses:
         "201":
           description: Created
           schema:
-            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.CreateIDResponse'
+            $ref: '#/definitions/swagger.CreateIDResponse'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.ErrorResponse'
+            $ref: '#/definitions/swagger.ErrorResponse'
         "403":
           description: Forbidden
           schema:
-            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.ErrorResponse'
+            $ref: '#/definitions/swagger.ErrorResponse'
       security:
       - BearerAuth: []
       summary: Criar produto
@@ -1198,11 +1366,11 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.MessageResponse'
+            $ref: '#/definitions/swagger.MessageResponse'
         "403":
           description: Forbidden
           schema:
-            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.ErrorResponse'
+            $ref: '#/definitions/swagger.ErrorResponse'
       security:
       - BearerAuth: []
       summary: Remover produto
@@ -1227,11 +1395,11 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.ProductResponse'
+            $ref: '#/definitions/swagger.ProductResponse'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.ErrorResponse'
+            $ref: '#/definitions/swagger.ErrorResponse'
       security:
       - BearerAuth: []
       summary: Obter produto
@@ -1257,33 +1425,30 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.UpdateProductRequest'
+          $ref: '#/definitions/swagger.UpdateProductRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.MessageResponse'
+            $ref: '#/definitions/swagger.MessageResponse'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.ErrorResponse'
+            $ref: '#/definitions/swagger.ErrorResponse'
         "403":
           description: Forbidden
           schema:
-            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.ErrorResponse'
+            $ref: '#/definitions/swagger.ErrorResponse'
       security:
       - BearerAuth: []
       summary: Atualizar produto
       tags:
       - Products
-  /{url_code}/products/{id}/image:
-    post:
-      consumes:
-      - multipart/form-data
-      description: Faz upload de imagem para um produto. Requer feature 'products'
-        e permissão 'prod_u'.
+  /{url_code}/products/{id}/images:
+    get:
+      description: Retorna todas as imagens de um produto com suas variantes
       parameters:
       - description: URL code do tenant
         in: path
@@ -1295,9 +1460,41 @@ paths:
         name: id
         required: true
         type: string
-      - description: Imagem do produto
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/swagger.ImageListResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/swagger.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Listar imagens do produto
+      tags:
+      - Products
+    post:
+      consumes:
+      - multipart/form-data
+      description: Faz upload de uma ou mais imagens para um produto. Requer feature
+        'products' e permissão 'prod_u'.
+      parameters:
+      - description: URL code do tenant
+        in: path
+        name: url_code
+        required: true
+        type: string
+      - description: ID do produto
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Imagens do produto (campo 'images' ou 'image')
         in: formData
-        name: image
+        name: images
         required: true
         type: file
       produces:
@@ -1306,18 +1503,18 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.UploadResponse'
+            $ref: '#/definitions/swagger.ImageUploadResponse'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.ErrorResponse'
+            $ref: '#/definitions/swagger.ErrorResponse'
         "403":
           description: Forbidden
           schema:
-            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.ErrorResponse'
+            $ref: '#/definitions/swagger.ErrorResponse'
       security:
       - BearerAuth: []
-      summary: Upload de imagem do produto
+      summary: Upload de imagens do produto
       tags:
       - Products
   /{url_code}/roles:
@@ -1336,12 +1533,12 @@ paths:
           description: OK
           schema:
             items:
-              $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.UserRoleResponse'
+              $ref: '#/definitions/swagger.UserRoleResponse'
             type: array
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.ErrorResponse'
+            $ref: '#/definitions/swagger.ErrorResponse'
       security:
       - BearerAuth: []
       summary: Listar roles do tenant
@@ -1362,22 +1559,22 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.CreateRoleRequest'
+          $ref: '#/definitions/swagger.CreateRoleRequest'
       produces:
       - application/json
       responses:
         "201":
           description: Created
           schema:
-            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.UserRoleResponse'
+            $ref: '#/definitions/swagger.UserRoleResponse'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.ErrorResponse'
+            $ref: '#/definitions/swagger.ErrorResponse'
         "403":
           description: Forbidden
           schema:
-            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.ErrorResponse'
+            $ref: '#/definitions/swagger.ErrorResponse'
       security:
       - BearerAuth: []
       summary: Criar role
@@ -1403,11 +1600,11 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.MessageResponse'
+            $ref: '#/definitions/swagger.MessageResponse'
         "403":
           description: Forbidden
           schema:
-            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.ErrorResponse'
+            $ref: '#/definitions/swagger.ErrorResponse'
       security:
       - BearerAuth: []
       summary: Remover role
@@ -1432,11 +1629,11 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.RoleDetailResponse'
+            $ref: '#/definitions/swagger.RoleDetailResponse'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.ErrorResponse'
+            $ref: '#/definitions/swagger.ErrorResponse'
       security:
       - BearerAuth: []
       summary: Obter role com permissões
@@ -1462,18 +1659,18 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.UpdateRoleRequest'
+          $ref: '#/definitions/swagger.UpdateRoleRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.MessageResponse'
+            $ref: '#/definitions/swagger.MessageResponse'
         "403":
           description: Forbidden
           schema:
-            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.ErrorResponse'
+            $ref: '#/definitions/swagger.ErrorResponse'
       security:
       - BearerAuth: []
       summary: Atualizar role
@@ -1500,18 +1697,18 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.AssignPermissionRequest'
+          $ref: '#/definitions/swagger.AssignPermissionRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.MessageResponse'
+            $ref: '#/definitions/swagger.MessageResponse'
         "403":
           description: Forbidden
           schema:
-            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.ErrorResponse'
+            $ref: '#/definitions/swagger.ErrorResponse'
       security:
       - BearerAuth: []
       summary: Atribuir permissão a role
@@ -1542,11 +1739,11 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.MessageResponse'
+            $ref: '#/definitions/swagger.MessageResponse'
         "403":
           description: Forbidden
           schema:
-            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.ErrorResponse'
+            $ref: '#/definitions/swagger.ErrorResponse'
       security:
       - BearerAuth: []
       summary: Remover permissão da role
@@ -1577,11 +1774,11 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.PaginatedResponse'
+            $ref: '#/definitions/swagger.PaginatedResponse'
         "403":
           description: Forbidden
           schema:
-            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.ErrorResponse'
+            $ref: '#/definitions/swagger.ErrorResponse'
       security:
       - BearerAuth: []
       summary: Listar serviços
@@ -1602,22 +1799,22 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.CreateServiceRequest'
+          $ref: '#/definitions/swagger.CreateServiceRequest'
       produces:
       - application/json
       responses:
         "201":
           description: Created
           schema:
-            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.CreateIDResponse'
+            $ref: '#/definitions/swagger.CreateIDResponse'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.ErrorResponse'
+            $ref: '#/definitions/swagger.ErrorResponse'
         "403":
           description: Forbidden
           schema:
-            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.ErrorResponse'
+            $ref: '#/definitions/swagger.ErrorResponse'
       security:
       - BearerAuth: []
       summary: Criar serviço
@@ -1643,11 +1840,11 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.MessageResponse'
+            $ref: '#/definitions/swagger.MessageResponse'
         "403":
           description: Forbidden
           schema:
-            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.ErrorResponse'
+            $ref: '#/definitions/swagger.ErrorResponse'
       security:
       - BearerAuth: []
       summary: Remover serviço
@@ -1672,11 +1869,11 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.ServiceResponse'
+            $ref: '#/definitions/swagger.ServiceResponse'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.ErrorResponse'
+            $ref: '#/definitions/swagger.ErrorResponse'
       security:
       - BearerAuth: []
       summary: Obter serviço
@@ -1702,33 +1899,30 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.UpdateServiceRequest'
+          $ref: '#/definitions/swagger.UpdateServiceRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.MessageResponse'
+            $ref: '#/definitions/swagger.MessageResponse'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.ErrorResponse'
+            $ref: '#/definitions/swagger.ErrorResponse'
         "403":
           description: Forbidden
           schema:
-            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.ErrorResponse'
+            $ref: '#/definitions/swagger.ErrorResponse'
       security:
       - BearerAuth: []
       summary: Atualizar serviço
       tags:
       - Services
-  /{url_code}/services/{id}/image:
-    post:
-      consumes:
-      - multipart/form-data
-      description: Faz upload de imagem para um serviço. Requer feature 'services'
-        e permissão 'serv_u'.
+  /{url_code}/services/{id}/images:
+    get:
+      description: Retorna todas as imagens de um serviço com suas variantes
       parameters:
       - description: URL code do tenant
         in: path
@@ -1740,9 +1934,41 @@ paths:
         name: id
         required: true
         type: string
-      - description: Imagem do serviço
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/swagger.ImageListResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/swagger.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Listar imagens do serviço
+      tags:
+      - Services
+    post:
+      consumes:
+      - multipart/form-data
+      description: Faz upload de uma ou mais imagens para um serviço. Requer feature
+        'services' e permissão 'serv_u'.
+      parameters:
+      - description: URL code do tenant
+        in: path
+        name: url_code
+        required: true
+        type: string
+      - description: ID do serviço
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Imagens do serviço (campo 'images' ou 'image')
         in: formData
-        name: image
+        name: images
         required: true
         type: file
       produces:
@@ -1751,18 +1977,18 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.UploadResponse'
+            $ref: '#/definitions/swagger.ImageUploadResponse'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.ErrorResponse'
+            $ref: '#/definitions/swagger.ErrorResponse'
         "403":
           description: Forbidden
           schema:
-            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.ErrorResponse'
+            $ref: '#/definitions/swagger.ErrorResponse'
       security:
       - BearerAuth: []
-      summary: Upload de imagem do serviço
+      summary: Upload de imagens do serviço
       tags:
       - Services
   /{url_code}/settings:
@@ -1780,11 +2006,11 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.TenantSettingsResponse'
+            $ref: '#/definitions/swagger.TenantSettingsResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.ErrorResponse'
+            $ref: '#/definitions/swagger.ErrorResponse'
       security:
       - BearerAuth: []
       summary: Obter configurações do tenant
@@ -1806,22 +2032,22 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.UpdateTenantSettingsRequest'
+          $ref: '#/definitions/swagger.UpdateTenantSettingsRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.MessageResponse'
+            $ref: '#/definitions/swagger.MessageResponse'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.ErrorResponse'
+            $ref: '#/definitions/swagger.ErrorResponse'
         "403":
           description: Forbidden
           schema:
-            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.ErrorResponse'
+            $ref: '#/definitions/swagger.ErrorResponse'
       security:
       - BearerAuth: []
       summary: Atualizar configurações do tenant
@@ -1843,22 +2069,22 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.UpdateLanguageRequest'
+          $ref: '#/definitions/swagger.UpdateLanguageRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.MessageResponse'
+            $ref: '#/definitions/swagger.MessageResponse'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.ErrorResponse'
+            $ref: '#/definitions/swagger.ErrorResponse'
         "403":
           description: Forbidden
           schema:
-            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.ErrorResponse'
+            $ref: '#/definitions/swagger.ErrorResponse'
       security:
       - BearerAuth: []
       summary: Atualizar idioma do tenant
@@ -1879,11 +2105,11 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.LayoutSettingsResponse'
+            $ref: '#/definitions/swagger.LayoutSettingsResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.ErrorResponse'
+            $ref: '#/definitions/swagger.ErrorResponse'
       security:
       - BearerAuth: []
       summary: Obter configurações de layout
@@ -1905,22 +2131,22 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.LayoutSettingsRequest'
+          $ref: '#/definitions/swagger.LayoutSettingsRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.MessageResponse'
+            $ref: '#/definitions/swagger.MessageResponse'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.ErrorResponse'
+            $ref: '#/definitions/swagger.ErrorResponse'
         "403":
           description: Forbidden
           schema:
-            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.ErrorResponse'
+            $ref: '#/definitions/swagger.ErrorResponse'
       security:
       - BearerAuth: []
       summary: Atualizar configurações de layout
@@ -1941,11 +2167,11 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.TenantProfileResponse'
+            $ref: '#/definitions/swagger.TenantProfileResponse'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.ErrorResponse'
+            $ref: '#/definitions/swagger.ErrorResponse'
       security:
       - BearerAuth: []
       summary: Obter perfil do tenant
@@ -1973,11 +2199,11 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.UploadResponse'
+            $ref: '#/definitions/swagger.UploadResponse'
         "403":
           description: Forbidden
           schema:
-            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.ErrorResponse'
+            $ref: '#/definitions/swagger.ErrorResponse'
       security:
       - BearerAuth: []
       summary: Upload de logo do tenant
@@ -1999,18 +2225,18 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.UpdateTenantProfileRequest'
+          $ref: '#/definitions/swagger.UpdateTenantProfileRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.MessageResponse'
+            $ref: '#/definitions/swagger.MessageResponse'
         "403":
           description: Forbidden
           schema:
-            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.ErrorResponse'
+            $ref: '#/definitions/swagger.ErrorResponse'
       security:
       - BearerAuth: []
       summary: Atualizar perfil do tenant
@@ -2027,22 +2253,22 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.UserLoginRequest'
+          $ref: '#/definitions/swagger.UserLoginRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.UserLoginResponse'
+            $ref: '#/definitions/swagger.UserLoginResponse'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.ErrorResponse'
+            $ref: '#/definitions/swagger.ErrorResponse'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.ErrorResponse'
+            $ref: '#/definitions/swagger.ErrorResponse'
       summary: Login de usuário
       tags:
       - Auth
@@ -2055,7 +2281,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.MessageResponse'
+            $ref: '#/definitions/swagger.MessageResponse'
       security:
       - BearerAuth: []
       summary: Logout de usuário
@@ -2070,11 +2296,11 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.BackofficeUserDTO'
+            $ref: '#/definitions/swagger.BackofficeUserDTO'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.ErrorResponse'
+            $ref: '#/definitions/swagger.ErrorResponse'
       security:
       - BearerAuth: []
       summary: Dados do usuário autenticado
@@ -2089,15 +2315,15 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.MessageResponse'
+            $ref: '#/definitions/swagger.MessageResponse'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.ErrorResponse'
+            $ref: '#/definitions/swagger.ErrorResponse'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.ErrorResponse'
+            $ref: '#/definitions/swagger.ErrorResponse'
       security:
       - BearerAuth: []
       summary: Reenviar email de verificação
@@ -2119,15 +2345,15 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.SwitchTenantResponse'
+            $ref: '#/definitions/swagger.SwitchTenantResponse'
         "403":
           description: Forbidden
           schema:
-            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.ErrorResponse'
+            $ref: '#/definitions/swagger.ErrorResponse'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.ErrorResponse'
+            $ref: '#/definitions/swagger.ErrorResponse'
       security:
       - BearerAuth: []
       summary: Selecionar tenant
@@ -2148,11 +2374,11 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.MessageResponse'
+            $ref: '#/definitions/swagger.MessageResponse'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.ErrorResponse'
+            $ref: '#/definitions/swagger.ErrorResponse'
       summary: Verificar email
       tags:
       - Auth
@@ -2166,12 +2392,12 @@ paths:
           description: OK
           schema:
             items:
-              $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.PlanResponse'
+              $ref: '#/definitions/swagger.PlanResponse'
             type: array
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.ErrorResponse'
+            $ref: '#/definitions/swagger.ErrorResponse'
       summary: Listar planos ativos
       tags:
       - Plans
@@ -2184,11 +2410,11 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.UserProfileDTO'
+            $ref: '#/definitions/swagger.UserProfileDTO'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.ErrorResponse'
+            $ref: '#/definitions/swagger.ErrorResponse'
       security:
       - BearerAuth: []
       summary: Obter perfil do usuário
@@ -2204,18 +2430,18 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.UpdateUserProfileRequest'
+          $ref: '#/definitions/swagger.UpdateUserProfileRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.MessageResponse'
+            $ref: '#/definitions/swagger.MessageResponse'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.ErrorResponse'
+            $ref: '#/definitions/swagger.ErrorResponse'
       security:
       - BearerAuth: []
       summary: Atualizar perfil do usuário
@@ -2238,11 +2464,11 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.UploadResponse'
+            $ref: '#/definitions/swagger.UploadResponse'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.ErrorResponse'
+            $ref: '#/definitions/swagger.ErrorResponse'
       security:
       - BearerAuth: []
       summary: Upload de avatar
@@ -2259,18 +2485,18 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.ChangePasswordRequest'
+          $ref: '#/definitions/swagger.ChangePasswordRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.MessageResponse'
+            $ref: '#/definitions/swagger.MessageResponse'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.ErrorResponse'
+            $ref: '#/definitions/swagger.ErrorResponse'
       security:
       - BearerAuth: []
       summary: Alterar senha
@@ -2288,18 +2514,18 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.SubscribeRequest'
+          $ref: '#/definitions/swagger.SubscribeRequest'
       produces:
       - application/json
       responses:
         "201":
           description: Created
           schema:
-            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.SubscriptionResponse'
+            $ref: '#/definitions/swagger.SubscriptionResponse'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.ErrorResponse'
+            $ref: '#/definitions/swagger.ErrorResponse'
       summary: Criar assinatura (self-service)
       tags:
       - Subscription

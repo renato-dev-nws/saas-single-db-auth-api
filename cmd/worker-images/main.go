@@ -45,14 +45,12 @@ type imageRow struct {
 	TenantID         string
 	ImageableType    string
 	ImageableID      string
-	Filename         string
 	OriginalFilename *string
 	MimeType         string
 	Extension        string
-	Variant          string
 	StorageDriver    string
-	StoragePath      string
-	PublicURL        *string
+	OriginalPath     string
+	OriginalURL      *string
 	ProcessingStatus string
 	FileSize         *int64
 }
@@ -156,8 +154,8 @@ func (w *worker) processImage(ctx context.Context, imageID string) error {
 	}
 
 	// 2. Validate
-	if img.Variant != "original" || img.ProcessingStatus != "pending" {
-		return fmt.Errorf("image not eligible: variant=%s status=%s", img.Variant, img.ProcessingStatus)
+	if img.ProcessingStatus != "pending" {
+		return fmt.Errorf("image not eligible: status=%s", img.ProcessingStatus)
 	}
 
 	// 3. Set status to processing
@@ -169,7 +167,7 @@ func (w *worker) processImage(ctx context.Context, imageID string) error {
 	convertWebp := w.getConvertWebp(ctx, img.TenantID)
 
 	// 5. Download original from storage
-	reader, err := w.storage.GetReader(img.StoragePath)
+	reader, err := w.storage.GetReader(img.OriginalPath)
 	if err != nil {
 		w.updateStatus(ctx, imageID, "failed")
 		return fmt.Errorf("failed to get reader: %w", err)
@@ -189,20 +187,16 @@ func (w *worker) processImage(ctx context.Context, imageID string) error {
 	origHeight := bounds.Dy()
 	w.updateDimensions(ctx, imageID, origWidth, origHeight)
 
-	// 8. Generate variants
-	var createdPaths []string
+	// 8. Generate variants and update the same row
 	for _, v := range variants {
-		variantPath, err := w.generateVariant(ctx, img, srcImage, format, v, convertWebp)
+		variantPath, variantURL, err := w.generateVariant(ctx, img, srcImage, format, v, convertWebp)
 		if err != nil {
 			log.Printf("Error generating %s variant for image %s: %v", v.Name, imageID, err)
-			// Cleanup already-created variant files
-			for _, p := range createdPaths {
-				w.storage.Delete(p)
-			}
 			w.updateStatus(ctx, imageID, "failed")
 			return fmt.Errorf("failed to generate variant %s: %w", v.Name, err)
 		}
-		createdPaths = append(createdPaths, variantPath)
+		// Update the image row with the variant path and URL
+		w.updateVariant(ctx, imageID, v.Name, variantPath, variantURL)
 	}
 
 	// 9. Mark as completed
@@ -213,24 +207,23 @@ func (w *worker) processImage(ctx context.Context, imageID string) error {
 	return nil
 }
 
-func (w *worker) generateVariant(ctx context.Context, img *imageRow, srcImage image.Image, format string, vc variantConfig, convertWebp bool) (string, error) {
+func (w *worker) generateVariant(ctx context.Context, img *imageRow, srcImage image.Image, format string, vc variantConfig, convertWebp bool) (string, string, error) {
 	// Resize using Lanczos
 	resized := imaging.Fit(srcImage, vc.MaxWidth, vc.MaxHeight, imaging.Lanczos)
 
 	// Determine output format and extension
 	outExt := img.Extension
-	outMimeType := img.MimeType
 	if convertWebp {
 		outExt = "webp"
-		outMimeType = "image/webp"
 	}
 
-	// Build variant filename: {original_name_without_ext}_{variant}.{ext}
-	nameWithoutExt := strings.TrimSuffix(img.Filename, "."+img.Extension)
+	// Build variant filename from original path
+	origBase := filepath.Base(img.OriginalPath)
+	nameWithoutExt := strings.TrimSuffix(origBase, filepath.Ext(origBase))
 	variantFilename := fmt.Sprintf("%s_%s.%s", nameWithoutExt, vc.Name, outExt)
 
 	// Build storage path from original path
-	dir := filepath.Dir(img.StoragePath)
+	dir := filepath.Dir(img.OriginalPath)
 	variantStoragePath := filepath.Join(dir, variantFilename)
 
 	// Get full filesystem path for local storage
@@ -239,13 +232,13 @@ func (w *worker) generateVariant(ctx context.Context, img *imageRow, srcImage im
 
 	// Ensure directory exists
 	if err := os.MkdirAll(filepath.Dir(fullPath), 0755); err != nil {
-		return "", fmt.Errorf("failed to create dir: %w", err)
+		return "", "", fmt.Errorf("failed to create dir: %w", err)
 	}
 
 	// Create file
 	outFile, err := os.Create(fullPath)
 	if err != nil {
-		return "", fmt.Errorf("failed to create file: %w", err)
+		return "", "", fmt.Errorf("failed to create file: %w", err)
 	}
 	defer outFile.Close()
 
@@ -264,46 +257,39 @@ func (w *worker) generateVariant(ctx context.Context, img *imageRow, srcImage im
 	}
 	if err != nil {
 		os.Remove(fullPath)
-		return "", fmt.Errorf("failed to encode: %w", err)
+		return "", "", fmt.Errorf("failed to encode: %w", err)
 	}
-
-	// Get file info for size
-	fi, err := os.Stat(fullPath)
-	if err != nil {
-		return variantStoragePath, fmt.Errorf("failed to stat: %w", err)
-	}
-
-	// Get resized dimensions
-	vBounds := resized.Bounds()
-	vWidth := vBounds.Dx()
-	vHeight := vBounds.Dy()
 
 	// Build public URL
 	baseURL := cfg_storageBaseURL()
-	publicURL := fmt.Sprintf("%s/%s", baseURL, variantStoragePath)
+	variantURL := fmt.Sprintf("%s/%s", baseURL, variantStoragePath)
 
-	// Insert variant record in DB
-	_, err = w.db.Exec(ctx,
-		`INSERT INTO images (tenant_id, imageable_type, imageable_id, filename, original_filename, mime_type, extension, variant, parent_id, width, height, file_size, storage_driver, storage_path, public_url, processing_status, processed_at)
-		 VALUES ($1, $2, $3, $4, $5, $6, $7, $8::image_variant, $9, $10, $11, $12, $13, $14, $15, 'completed', NOW())`,
-		img.TenantID, img.ImageableType, img.ImageableID, variantFilename, img.OriginalFilename,
-		outMimeType, outExt, vc.Name, img.ID, vWidth, vHeight, fi.Size(),
-		img.StorageDriver, variantStoragePath, publicURL,
-	)
-	if err != nil {
-		os.Remove(fullPath)
-		return variantStoragePath, fmt.Errorf("failed to insert variant record: %w", err)
+	return variantStoragePath, variantURL, nil
+}
+
+// updateVariant updates the image row with the path and URL for a specific variant (medium, small, thumb).
+func (w *worker) updateVariant(ctx context.Context, imageID, variantName, variantPath, variantURL string) {
+	var col string
+	switch variantName {
+	case "medium":
+		col = "medium"
+	case "small":
+		col = "small"
+	case "thumb":
+		col = "thumb"
+	default:
+		return
 	}
-
-	return variantStoragePath, nil
+	query := fmt.Sprintf(`UPDATE images SET %s_path = $1, %s_url = $2, updated_at = NOW() WHERE id = $3`, col, col)
+	w.db.Exec(ctx, query, variantPath, variantURL, imageID)
 }
 
 func (w *worker) getImage(ctx context.Context, imageID string) (*imageRow, error) {
 	var img imageRow
 	err := w.db.QueryRow(ctx,
-		`SELECT id, tenant_id, imageable_type, imageable_id, filename, original_filename, mime_type, extension, variant, storage_driver, storage_path, public_url, processing_status, file_size
+		`SELECT id, tenant_id, imageable_type, imageable_id, original_filename, mime_type, extension, storage_driver, original_path, original_url, processing_status, file_size
 		 FROM images WHERE id = $1`, imageID,
-	).Scan(&img.ID, &img.TenantID, &img.ImageableType, &img.ImageableID, &img.Filename, &img.OriginalFilename, &img.MimeType, &img.Extension, &img.Variant, &img.StorageDriver, &img.StoragePath, &img.PublicURL, &img.ProcessingStatus, &img.FileSize)
+	).Scan(&img.ID, &img.TenantID, &img.ImageableType, &img.ImageableID, &img.OriginalFilename, &img.MimeType, &img.Extension, &img.StorageDriver, &img.OriginalPath, &img.OriginalURL, &img.ProcessingStatus, &img.FileSize)
 	if err != nil {
 		return nil, err
 	}

@@ -430,31 +430,33 @@ type UserPermissionResponse struct {
 
 // ProductResponse represents a product
 type ProductResponse struct {
-	ID          string    `json:"id" example:"uuid"`
-	TenantID    string    `json:"tenant_id" example:"uuid"`
-	Name        string    `json:"name" example:"Premium Widget"`
-	Description *string   `json:"description" example:"A premium widget"`
-	Price       float64   `json:"price" example:"29.90"`
-	SKU         *string   `json:"sku" example:"WDG-001"`
-	Stock       int       `json:"stock" example:"100"`
-	IsActive    bool      `json:"is_active" example:"true"`
-	ImageURL    *string   `json:"image_url"`
-	CreatedAt   time.Time `json:"created_at"`
-	UpdatedAt   time.Time `json:"updated_at"`
+	ID           string      `json:"id" example:"uuid"`
+	TenantID     string      `json:"tenant_id" example:"uuid"`
+	Name         string      `json:"name" example:"Premium Widget"`
+	Description  *string     `json:"description" example:"A premium widget"`
+	Price        float64     `json:"price" example:"29.90"`
+	SKU          *string     `json:"sku" example:"WDG-001"`
+	Stock        int         `json:"stock" example:"100"`
+	IsActive     bool        `json:"is_active" example:"true"`
+	ImageURL     *string     `json:"image_url"`
+	Translations interface{} `json:"translations"`
+	CreatedAt    time.Time   `json:"created_at"`
+	UpdatedAt    time.Time   `json:"updated_at"`
 }
 
 // ServiceResponse represents a service
 type ServiceResponse struct {
-	ID          string    `json:"id" example:"uuid"`
-	TenantID    string    `json:"tenant_id" example:"uuid"`
-	Name        string    `json:"name" example:"Consulting"`
-	Description *string   `json:"description" example:"1h consulting session"`
-	Price       float64   `json:"price" example:"150.00"`
-	Duration    *int      `json:"duration" example:"60"`
-	IsActive    bool      `json:"is_active" example:"true"`
-	ImageURL    *string   `json:"image_url"`
-	CreatedAt   time.Time `json:"created_at"`
-	UpdatedAt   time.Time `json:"updated_at"`
+	ID           string      `json:"id" example:"uuid"`
+	TenantID     string      `json:"tenant_id" example:"uuid"`
+	Name         string      `json:"name" example:"Consulting"`
+	Description  *string     `json:"description" example:"1h consulting session"`
+	Price        float64     `json:"price" example:"150.00"`
+	Duration     *int        `json:"duration" example:"60"`
+	IsActive     bool        `json:"is_active" example:"true"`
+	ImageURL     *string     `json:"image_url"`
+	Translations interface{} `json:"translations"`
+	CreatedAt    time.Time   `json:"created_at"`
+	UpdatedAt    time.Time   `json:"updated_at"`
 }
 
 // SettingResponse represents a tenant setting
@@ -467,11 +469,54 @@ type SettingResponse struct {
 	UpdatedAt time.Time   `json:"updated_at"`
 }
 
-// ImageResponse represents an uploaded image
+// ImageResponse represents an uploaded image (single-row with all variants)
 type ImageResponse struct {
-	ID        string `json:"id" example:"uuid"`
-	Path      string `json:"path" example:"/uploads/tenant/image.jpg"`
-	PublicURL string `json:"public_url" example:"http://localhost:8080/uploads/tenant/image.jpg"`
+	ID               string      `json:"id" example:"uuid"`
+	Title            *string     `json:"title" example:"Product photo"`
+	AltText          *string     `json:"alt_text" example:"Photo of product"`
+	Translations     interface{} `json:"translations"`
+	OriginalFilename string      `json:"original_filename" example:"photo.jpg"`
+	MimeType         string      `json:"mime_type" example:"image/jpeg"`
+	Extension        string      `json:"extension" example:"jpg"`
+	Width            *int        `json:"width" example:"1920"`
+	Height           *int        `json:"height" example:"1080"`
+	FileSize         *int64      `json:"file_size" example:"204800"`
+	OriginalURL      *string     `json:"original_url" example:"http://localhost:8080/uploads/tenant/image.jpg"`
+	OriginalPath     string      `json:"original_path" example:"tenant/image.jpg"`
+	MediumURL        *string     `json:"medium_url"`
+	MediumPath       *string     `json:"medium_path"`
+	SmallURL         *string     `json:"small_url"`
+	SmallPath        *string     `json:"small_path"`
+	ThumbURL         *string     `json:"thumb_url"`
+	ThumbPath        *string     `json:"thumb_path"`
+	ProcessingStatus string      `json:"processing_status" example:"completed"`
+	DisplayOrder     int         `json:"display_order" example:"0"`
+	CreatedAt        time.Time   `json:"created_at"`
+	UpdatedAt        time.Time   `json:"updated_at"`
+}
+
+// ImageUploadResponse represents the response from multi-image upload
+type ImageUploadResponse struct {
+	Images []ImageUploadItem `json:"images"`
+}
+
+// ImageUploadItem represents a single uploaded image in the response
+type ImageUploadItem struct {
+	ID          string `json:"id" example:"uuid"`
+	OriginalURL string `json:"original_url" example:"http://localhost:8080/uploads/tenant/image.jpg"`
+	Path        string `json:"path" example:"tenant/image.jpg"`
+}
+
+// ImageListResponse represents a list of images
+type ImageListResponse struct {
+	Images []ImageResponse `json:"images"`
+}
+
+// UpdateImageRequest is the request for updating an image title/alt
+type UpdateImageRequest struct {
+	Title        *string     `json:"title" example:"Product photo"`
+	AltText      *string     `json:"alt_text" example:"Photo of product"`
+	Translations interface{} `json:"translations"`
 }
 
 // UploadResponse represents a file upload response
@@ -569,40 +614,44 @@ type AssignPermissionRequest struct {
 
 // CreateProductRequest is the request for creating a product
 type CreateProductRequest struct {
-	Name        string  `json:"name" binding:"required" example:"Premium Widget"`
-	Description *string `json:"description" example:"A premium widget"`
-	Price       float64 `json:"price" binding:"required" example:"29.90"`
-	SKU         *string `json:"sku" example:"WDG-001"`
-	Stock       int     `json:"stock" example:"100"`
-	IsActive    bool    `json:"is_active" example:"true"`
+	Name         string      `json:"name" binding:"required" example:"Premium Widget"`
+	Description  *string     `json:"description" example:"A premium widget"`
+	Price        float64     `json:"price" binding:"required" example:"29.90"`
+	SKU          *string     `json:"sku" example:"WDG-001"`
+	Stock        int         `json:"stock" example:"100"`
+	IsActive     bool        `json:"is_active" example:"true"`
+	Translations interface{} `json:"translations"`
 }
 
 // UpdateProductRequest is the request for updating a product
 type UpdateProductRequest struct {
-	Name        *string  `json:"name" example:"Updated Widget"`
-	Description *string  `json:"description" example:"Updated description"`
-	Price       *float64 `json:"price" example:"39.90"`
-	SKU         *string  `json:"sku" example:"WDG-002"`
-	Stock       *int     `json:"stock" example:"50"`
-	IsActive    *bool    `json:"is_active" example:"true"`
+	Name         *string     `json:"name" example:"Updated Widget"`
+	Description  *string     `json:"description" example:"Updated description"`
+	Price        *float64    `json:"price" example:"39.90"`
+	SKU          *string     `json:"sku" example:"WDG-002"`
+	Stock        *int        `json:"stock" example:"50"`
+	IsActive     *bool       `json:"is_active" example:"true"`
+	Translations interface{} `json:"translations"`
 }
 
 // CreateServiceRequest is the request for creating a service
 type CreateServiceRequest struct {
-	Name        string  `json:"name" binding:"required" example:"Consulting"`
-	Description *string `json:"description" example:"1h consulting session"`
-	Price       float64 `json:"price" binding:"required" example:"150.00"`
-	Duration    *int    `json:"duration" example:"60"`
-	IsActive    bool    `json:"is_active" example:"true"`
+	Name         string      `json:"name" binding:"required" example:"Consulting"`
+	Description  *string     `json:"description" example:"1h consulting session"`
+	Price        float64     `json:"price" binding:"required" example:"150.00"`
+	Duration     *int        `json:"duration" example:"60"`
+	IsActive     bool        `json:"is_active" example:"true"`
+	Translations interface{} `json:"translations"`
 }
 
 // UpdateServiceRequest is the request for updating a service
 type UpdateServiceRequest struct {
-	Name        *string  `json:"name" example:"Updated Service"`
-	Description *string  `json:"description" example:"Updated description"`
-	Price       *float64 `json:"price" example:"200.00"`
-	Duration    *int     `json:"duration" example:"90"`
-	IsActive    *bool    `json:"is_active" example:"true"`
+	Name         *string     `json:"name" example:"Updated Service"`
+	Description  *string     `json:"description" example:"Updated description"`
+	Price        *float64    `json:"price" example:"200.00"`
+	Duration     *int        `json:"duration" example:"90"`
+	IsActive     *bool       `json:"is_active" example:"true"`
+	Translations interface{} `json:"translations"`
 }
 
 // UpsertSettingRequest is the request for upserting a setting

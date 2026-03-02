@@ -1089,18 +1089,25 @@ func (h *Handler) CreateProduct(c *gin.Context) {
 	}
 	tenantID := c.GetString("tenant_id")
 	var req struct {
-		Name        string  `json:"name" binding:"required"`
-		Description *string `json:"description"`
-		Price       float64 `json:"price" binding:"required,min=0"`
-		SKU         *string `json:"sku"`
-		Stock       int     `json:"stock"`
+		Name         string      `json:"name" binding:"required"`
+		Description  *string     `json:"description"`
+		Price        float64     `json:"price" binding:"required,min=0"`
+		SKU          *string     `json:"sku"`
+		Stock        int         `json:"stock"`
+		Translations interface{} `json:"translations"`
 	}
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": utils.FormatValidationErrors(err, c)})
 		return
 	}
 
-	id, err := h.repo.CreateProduct(c.Request.Context(), tenantID, req.Name, req.Description, req.Price, req.SKU, req.Stock)
+	var translationsJSON interface{}
+	if req.Translations != nil {
+		b, _ := json.Marshal(req.Translations)
+		translationsJSON = string(b)
+	}
+
+	id, err := h.repo.CreateProduct(c.Request.Context(), tenantID, req.Name, req.Description, req.Price, req.SKU, req.Stock, translationsJSON)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": i18n.T(c, "failed_create_product")})
 		return
@@ -1129,19 +1136,26 @@ func (h *Handler) UpdateProduct(c *gin.Context) {
 	tenantID := c.GetString("tenant_id")
 	productID := c.Param("id")
 	var req struct {
-		Name        *string  `json:"name"`
-		Description *string  `json:"description"`
-		Price       *float64 `json:"price"`
-		SKU         *string  `json:"sku"`
-		Stock       *int     `json:"stock"`
-		IsActive    *bool    `json:"is_active"`
+		Name         *string     `json:"name"`
+		Description  *string     `json:"description"`
+		Price        *float64    `json:"price"`
+		SKU          *string     `json:"sku"`
+		Stock        *int        `json:"stock"`
+		IsActive     *bool       `json:"is_active"`
+		Translations interface{} `json:"translations"`
 	}
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": utils.FormatValidationErrors(err, c)})
 		return
 	}
 
-	if err := h.repo.UpdateProduct(c.Request.Context(), tenantID, productID, req.Name, req.Description, req.Price, req.SKU, req.Stock, req.IsActive); err != nil {
+	var translationsJSON interface{}
+	if req.Translations != nil {
+		b, _ := json.Marshal(req.Translations)
+		translationsJSON = string(b)
+	}
+
+	if err := h.repo.UpdateProduct(c.Request.Context(), tenantID, productID, req.Name, req.Description, req.Price, req.SKU, req.Stock, req.IsActive, translationsJSON); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": i18n.T(c, "failed_update_product")})
 		return
 	}
@@ -1173,19 +1187,19 @@ func (h *Handler) DeleteProduct(c *gin.Context) {
 }
 
 // UploadProductImage godoc
-// @Summary Upload de imagem do produto
-// @Description Faz upload de imagem para um produto. Requer feature 'products' e permissão 'prod_u'.
+// @Summary Upload de imagens do produto
+// @Description Faz upload de uma ou mais imagens para um produto. Requer feature 'products' e permissão 'prod_u'.
 // @Tags Products
 // @Accept multipart/form-data
 // @Produce json
 // @Security BearerAuth
 // @Param url_code path string true "URL code do tenant"
 // @Param id path string true "ID do produto"
-// @Param image formData file true "Imagem do produto"
-// @Success 200 {object} swagger.UploadResponse
+// @Param images formData file true "Imagens do produto (campo 'images' ou 'image')"
+// @Success 200 {object} swagger.ImageUploadResponse
 // @Failure 400 {object} swagger.ErrorResponse
 // @Failure 403 {object} swagger.ErrorResponse
-// @Router /{url_code}/products/{id}/image [post]
+// @Router /{url_code}/products/{id}/images [post]
 func (h *Handler) UploadProductImage(c *gin.Context) {
 	if !h.requireFeature(c, "products") || !h.requirePermission(c, "prod_u") {
 		return
@@ -1193,40 +1207,59 @@ func (h *Handler) UploadProductImage(c *gin.Context) {
 	tenantID := c.GetString("tenant_id")
 	productID := c.Param("id")
 
-	file, header, err := c.Request.FormFile("image")
+	form, err := c.MultipartForm()
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": i18n.T(c, "no_file_provided")})
 		return
 	}
-	defer file.Close()
+	files := form.File["images"]
+	if len(files) == 0 {
+		// Fallback to single "image" field
+		files = form.File["image"]
+	}
+	if len(files) == 0 {
+		c.JSON(http.StatusBadRequest, gin.H{"error": i18n.T(c, "no_file_provided")})
+		return
+	}
 
-	// Upload original to structured path: tenants/{tenant_id}/images/products/{product_id}/
-	uploadPath := fmt.Sprintf("tenants/%s/images/products/%s", tenantID, productID)
-	publicURL, storagePath, err := h.storage.Upload(file, header, uploadPath)
-	if err != nil {
+	var results []gin.H
+	for _, header := range files {
+		file, err := header.Open()
+		if err != nil {
+			continue
+		}
+
+		uploadPath := fmt.Sprintf("tenants/%s/images/products/%s", tenantID, productID)
+		publicURL, storagePath, err := h.storage.Upload(file, header, uploadPath)
+		file.Close()
+		if err != nil {
+			continue
+		}
+
+		ext := strings.TrimPrefix(filepath.Ext(header.Filename), ".")
+		mimeType := header.Header.Get("Content-Type")
+		storageDriver := "local"
+
+		imageID, err := h.repo.CreateImageRecord(c.Request.Context(), tenantID, "products", productID, header.Filename, mimeType, ext, storageDriver, storagePath, publicURL, header.Size, nil)
+		if err != nil {
+			continue
+		}
+
+		// Set image_url on product if it's the first image
+		_ = h.repo.UpdateProductImage(c.Request.Context(), tenantID, productID, publicURL)
+
+		// Publish to Redis for async processing
+		msg, _ := json.Marshal(map[string]string{"image_id": imageID})
+		h.cache.Publish(c.Request.Context(), "image:process", string(msg))
+
+		results = append(results, gin.H{"image_id": imageID, "path": storagePath, "public_url": publicURL})
+	}
+
+	if len(results) == 0 {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": i18n.T(c, "failed_upload")})
 		return
 	}
-
-	ext := strings.TrimPrefix(filepath.Ext(header.Filename), ".")
-	filename := filepath.Base(storagePath)
-	mimeType := header.Header.Get("Content-Type")
-	storageDriver := "local"
-
-	imageID, err := h.repo.CreateImageRecord(c.Request.Context(), tenantID, "products", productID, filename, header.Filename, mimeType, ext, storageDriver, storagePath, publicURL, header.Size)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": i18n.T(c, "failed_save_image")})
-		return
-	}
-
-	// Update product image_url with original
-	_ = h.repo.UpdateProductImage(c.Request.Context(), tenantID, productID, publicURL)
-
-	// Publish to Redis for async processing
-	msg, _ := json.Marshal(map[string]string{"image_id": imageID})
-	h.cache.Publish(c.Request.Context(), "image:process", string(msg))
-
-	c.JSON(http.StatusOK, gin.H{"image_id": imageID, "path": storagePath, "public_url": publicURL})
+	c.JSON(http.StatusOK, gin.H{"images": results})
 }
 
 // ==================== SERVICES ====================
@@ -1307,17 +1340,24 @@ func (h *Handler) CreateService(c *gin.Context) {
 	}
 	tenantID := c.GetString("tenant_id")
 	var req struct {
-		Name        string  `json:"name" binding:"required"`
-		Description *string `json:"description"`
-		Price       float64 `json:"price" binding:"required,min=0"`
-		Duration    *int    `json:"duration"`
+		Name         string      `json:"name" binding:"required"`
+		Description  *string     `json:"description"`
+		Price        float64     `json:"price" binding:"required,min=0"`
+		Duration     *int        `json:"duration"`
+		Translations interface{} `json:"translations"`
 	}
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": utils.FormatValidationErrors(err, c)})
 		return
 	}
 
-	id, err := h.repo.CreateService(c.Request.Context(), tenantID, req.Name, req.Description, req.Price, req.Duration)
+	var translationsJSON interface{}
+	if req.Translations != nil {
+		b, _ := json.Marshal(req.Translations)
+		translationsJSON = string(b)
+	}
+
+	id, err := h.repo.CreateService(c.Request.Context(), tenantID, req.Name, req.Description, req.Price, req.Duration, translationsJSON)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": i18n.T(c, "failed_create_service")})
 		return
@@ -1346,18 +1386,25 @@ func (h *Handler) UpdateService(c *gin.Context) {
 	tenantID := c.GetString("tenant_id")
 	serviceID := c.Param("id")
 	var req struct {
-		Name        *string  `json:"name"`
-		Description *string  `json:"description"`
-		Price       *float64 `json:"price"`
-		Duration    *int     `json:"duration"`
-		IsActive    *bool    `json:"is_active"`
+		Name         *string     `json:"name"`
+		Description  *string     `json:"description"`
+		Price        *float64    `json:"price"`
+		Duration     *int        `json:"duration"`
+		IsActive     *bool       `json:"is_active"`
+		Translations interface{} `json:"translations"`
 	}
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": utils.FormatValidationErrors(err, c)})
 		return
 	}
 
-	if err := h.repo.UpdateService(c.Request.Context(), tenantID, serviceID, req.Name, req.Description, req.Price, req.Duration, req.IsActive); err != nil {
+	var translationsJSON interface{}
+	if req.Translations != nil {
+		b, _ := json.Marshal(req.Translations)
+		translationsJSON = string(b)
+	}
+
+	if err := h.repo.UpdateService(c.Request.Context(), tenantID, serviceID, req.Name, req.Description, req.Price, req.Duration, req.IsActive, translationsJSON); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": i18n.T(c, "failed_update_service")})
 		return
 	}
@@ -1389,19 +1436,19 @@ func (h *Handler) DeleteService(c *gin.Context) {
 }
 
 // UploadServiceImage godoc
-// @Summary Upload de imagem do serviço
-// @Description Faz upload de imagem para um serviço. Requer feature 'services' e permissão 'serv_u'.
+// @Summary Upload de imagens do serviço
+// @Description Faz upload de uma ou mais imagens para um serviço. Requer feature 'services' e permissão 'serv_u'.
 // @Tags Services
 // @Accept multipart/form-data
 // @Produce json
 // @Security BearerAuth
 // @Param url_code path string true "URL code do tenant"
 // @Param id path string true "ID do serviço"
-// @Param image formData file true "Imagem do serviço"
-// @Success 200 {object} swagger.UploadResponse
+// @Param images formData file true "Imagens do serviço (campo 'images' ou 'image')"
+// @Success 200 {object} swagger.ImageUploadResponse
 // @Failure 400 {object} swagger.ErrorResponse
 // @Failure 403 {object} swagger.ErrorResponse
-// @Router /{url_code}/services/{id}/image [post]
+// @Router /{url_code}/services/{id}/images [post]
 func (h *Handler) UploadServiceImage(c *gin.Context) {
 	if !h.requireFeature(c, "services") || !h.requirePermission(c, "serv_u") {
 		return
@@ -1409,40 +1456,56 @@ func (h *Handler) UploadServiceImage(c *gin.Context) {
 	tenantID := c.GetString("tenant_id")
 	serviceID := c.Param("id")
 
-	file, header, err := c.Request.FormFile("image")
+	form, err := c.MultipartForm()
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": i18n.T(c, "no_file_provided")})
 		return
 	}
-	defer file.Close()
+	files := form.File["images"]
+	if len(files) == 0 {
+		files = form.File["image"]
+	}
+	if len(files) == 0 {
+		c.JSON(http.StatusBadRequest, gin.H{"error": i18n.T(c, "no_file_provided")})
+		return
+	}
 
-	// Upload original to structured path: tenants/{tenant_id}/images/services/{service_id}/
-	uploadPath := fmt.Sprintf("tenants/%s/images/services/%s", tenantID, serviceID)
-	publicURL, storagePath, err := h.storage.Upload(file, header, uploadPath)
-	if err != nil {
+	var results []gin.H
+	for _, header := range files {
+		file, err := header.Open()
+		if err != nil {
+			continue
+		}
+
+		uploadPath := fmt.Sprintf("tenants/%s/images/services/%s", tenantID, serviceID)
+		publicURL, storagePath, err := h.storage.Upload(file, header, uploadPath)
+		file.Close()
+		if err != nil {
+			continue
+		}
+
+		ext := strings.TrimPrefix(filepath.Ext(header.Filename), ".")
+		mimeType := header.Header.Get("Content-Type")
+		storageDriver := "local"
+
+		imageID, err := h.repo.CreateImageRecord(c.Request.Context(), tenantID, "services", serviceID, header.Filename, mimeType, ext, storageDriver, storagePath, publicURL, header.Size, nil)
+		if err != nil {
+			continue
+		}
+
+		_ = h.repo.UpdateServiceImage(c.Request.Context(), tenantID, serviceID, publicURL)
+
+		msg, _ := json.Marshal(map[string]string{"image_id": imageID})
+		h.cache.Publish(c.Request.Context(), "image:process", string(msg))
+
+		results = append(results, gin.H{"image_id": imageID, "path": storagePath, "public_url": publicURL})
+	}
+
+	if len(results) == 0 {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": i18n.T(c, "failed_upload")})
 		return
 	}
-
-	ext := strings.TrimPrefix(filepath.Ext(header.Filename), ".")
-	filename := filepath.Base(storagePath)
-	mimeType := header.Header.Get("Content-Type")
-	storageDriver := "local"
-
-	imageID, err := h.repo.CreateImageRecord(c.Request.Context(), tenantID, "services", serviceID, filename, header.Filename, mimeType, ext, storageDriver, storagePath, publicURL, header.Size)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": i18n.T(c, "failed_save_image")})
-		return
-	}
-
-	// Update service image_url with original
-	_ = h.repo.UpdateServiceImage(c.Request.Context(), tenantID, serviceID, publicURL)
-
-	// Publish to Redis for async processing
-	msg, _ := json.Marshal(map[string]string{"image_id": imageID})
-	h.cache.Publish(c.Request.Context(), "image:process", string(msg))
-
-	c.JSON(http.StatusOK, gin.H{"image_id": imageID, "path": storagePath, "public_url": publicURL})
+	c.JSON(http.StatusOK, gin.H{"images": results})
 }
 
 // ==================== SETTINGS ====================
@@ -1618,6 +1681,141 @@ func (h *Handler) UpdateSettings(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{"message": i18n.T(c, "settings_saved")})
+}
+
+// ==================== IMAGES ====================
+
+// ListProductImages godoc
+// @Summary Listar imagens do produto
+// @Description Retorna todas as imagens de um produto com suas variantes
+// @Tags Products
+// @Produce json
+// @Security BearerAuth
+// @Param url_code path string true "URL code do tenant"
+// @Param id path string true "ID do produto"
+// @Success 200 {object} swagger.ImageListResponse
+// @Failure 500 {object} swagger.ErrorResponse
+// @Router /{url_code}/products/{id}/images [get]
+func (h *Handler) ListProductImages(c *gin.Context) {
+	if !h.requireFeature(c, "products") {
+		return
+	}
+	tenantID := c.GetString("tenant_id")
+	productID := c.Param("id")
+	images, err := h.repo.ListImages(c.Request.Context(), tenantID, "products", productID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": i18n.T(c, "failed_list_images")})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"images": images})
+}
+
+// ListServiceImages godoc
+// @Summary Listar imagens do serviço
+// @Description Retorna todas as imagens de um serviço com suas variantes
+// @Tags Services
+// @Produce json
+// @Security BearerAuth
+// @Param url_code path string true "URL code do tenant"
+// @Param id path string true "ID do serviço"
+// @Success 200 {object} swagger.ImageListResponse
+// @Failure 500 {object} swagger.ErrorResponse
+// @Router /{url_code}/services/{id}/images [get]
+func (h *Handler) ListServiceImages(c *gin.Context) {
+	if !h.requireFeature(c, "services") {
+		return
+	}
+	tenantID := c.GetString("tenant_id")
+	serviceID := c.Param("id")
+	images, err := h.repo.ListImages(c.Request.Context(), tenantID, "services", serviceID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": i18n.T(c, "failed_list_images")})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"images": images})
+}
+
+// UpdateImageTitle godoc
+// @Summary Atualizar título da imagem
+// @Description Atualiza título, alt_text e traduções de uma imagem
+// @Tags Images
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param url_code path string true "URL code do tenant"
+// @Param id path string true "ID da imagem"
+// @Param request body swagger.UpdateImageRequest true "Dados da imagem"
+// @Success 200 {object} swagger.MessageResponse
+// @Failure 400 {object} swagger.ErrorResponse
+// @Router /{url_code}/images/{id} [put]
+func (h *Handler) UpdateImageTitle(c *gin.Context) {
+	tenantID := c.GetString("tenant_id")
+	imageID := c.Param("id")
+	var req struct {
+		Title        *string     `json:"title"`
+		AltText      *string     `json:"alt_text"`
+		Translations interface{} `json:"translations"`
+	}
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": utils.FormatValidationErrors(err, c)})
+		return
+	}
+
+	var translationsJSON interface{}
+	if req.Translations != nil {
+		b, _ := json.Marshal(req.Translations)
+		translationsJSON = string(b)
+	}
+
+	if err := h.repo.UpdateImageTitle(c.Request.Context(), tenantID, imageID, req.Title, req.AltText, translationsJSON); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": i18n.T(c, "failed_update_image")})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"message": i18n.T(c, "image_updated")})
+}
+
+// DeleteImage godoc
+// @Summary Remover imagem
+// @Description Remove uma imagem e seus arquivos de variantes
+// @Tags Images
+// @Produce json
+// @Security BearerAuth
+// @Param url_code path string true "URL code do tenant"
+// @Param id path string true "ID da imagem"
+// @Success 200 {object} swagger.MessageResponse
+// @Failure 500 {object} swagger.ErrorResponse
+// @Router /{url_code}/images/{id} [delete]
+func (h *Handler) DeleteImage(c *gin.Context) {
+	tenantID := c.GetString("tenant_id")
+	imageID := c.Param("id")
+
+	// Get paths before deletion to clean up files
+	origPath, medPath, smPath, thPath, _, _, err := h.repo.GetImagePaths(c.Request.Context(), tenantID, imageID)
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": i18n.T(c, "image_not_found")})
+		return
+	}
+
+	if err := h.repo.DeleteImageRecord(c.Request.Context(), tenantID, imageID); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": i18n.T(c, "failed_delete_image")})
+		return
+	}
+
+	// Clean up files
+	if origPath != "" {
+		h.storage.Delete(origPath)
+	}
+	if medPath != "" {
+		h.storage.Delete(medPath)
+	}
+	if smPath != "" {
+		h.storage.Delete(smPath)
+	}
+	if thPath != "" {
+		h.storage.Delete(thPath)
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": i18n.T(c, "image_deleted")})
 }
 
 // ==================== APP USERS (managed from backoffice) ====================

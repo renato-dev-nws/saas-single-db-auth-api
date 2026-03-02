@@ -76,6 +76,6 @@ clean:
 
 # Swagger
 swagger:
-	swag init -g cmd/admin-api/main.go -o docs/admin --parseDependency --parseInternal --exclude ./internal/handlers/tenant,./internal/handlers/app,./cmd/tenant-api,./cmd/app-api
-	swag init -g cmd/tenant-api/main.go -o docs/tenant --parseDependency --parseInternal --exclude ./internal/handlers/admin,./internal/handlers/app,./cmd/admin-api,./cmd/app-api
-	swag init -g cmd/app-api/main.go -o docs/app --parseDependency --parseInternal --exclude ./internal/handlers/admin,./internal/handlers/tenant,./cmd/admin-api,./cmd/tenant-api
+	swag init -g main.go -d cmd/admin-api,internal/handlers/admin   -o docs/admin  --parseDependency
+	swag init -g main.go -d cmd/tenant-api,internal/handlers/tenant  -o docs/tenant --parseDependency
+	swag init -g main.go -d cmd/app-api,internal/handlers/app        -o docs/app    --parseDependency

@@ -717,7 +717,7 @@ func (r *Repository) ListProducts(ctx context.Context, tenantID string, limit, o
 	).Scan(&total)
 
 	rows, err := r.db.Query(ctx,
-		`SELECT id, name, description, price, sku, stock, is_active, image_url, created_at, updated_at
+		`SELECT id, name, description, price, sku, stock, is_active, image_url, translations, created_at, updated_at
 		 FROM products WHERE tenant_id = $1
 		 ORDER BY created_at DESC LIMIT $2 OFFSET $3`, tenantID, limit, offset,
 	)
@@ -729,18 +729,19 @@ func (r *Repository) ListProducts(ctx context.Context, tenantID string, limit, o
 	var products []interface{}
 	for rows.Next() {
 		var p struct {
-			ID          string      `json:"id"`
-			Name        string      `json:"name"`
-			Description *string     `json:"description"`
-			Price       float64     `json:"price"`
-			SKU         *string     `json:"sku"`
-			Stock       int         `json:"stock"`
-			IsActive    bool        `json:"is_active"`
-			ImageURL    *string     `json:"image_url"`
-			CreatedAt   interface{} `json:"created_at"`
-			UpdatedAt   interface{} `json:"updated_at"`
+			ID           string      `json:"id"`
+			Name         string      `json:"name"`
+			Description  *string     `json:"description"`
+			Price        float64     `json:"price"`
+			SKU          *string     `json:"sku"`
+			Stock        int         `json:"stock"`
+			IsActive     bool        `json:"is_active"`
+			ImageURL     *string     `json:"image_url"`
+			Translations interface{} `json:"translations"`
+			CreatedAt    interface{} `json:"created_at"`
+			UpdatedAt    interface{} `json:"updated_at"`
 		}
-		if err := rows.Scan(&p.ID, &p.Name, &p.Description, &p.Price, &p.SKU, &p.Stock, &p.IsActive, &p.ImageURL, &p.CreatedAt, &p.UpdatedAt); err != nil {
+		if err := rows.Scan(&p.ID, &p.Name, &p.Description, &p.Price, &p.SKU, &p.Stock, &p.IsActive, &p.ImageURL, &p.Translations, &p.CreatedAt, &p.UpdatedAt); err != nil {
 			return nil, 0, err
 		}
 		products = append(products, p)
@@ -750,37 +751,38 @@ func (r *Repository) ListProducts(ctx context.Context, tenantID string, limit, o
 
 func (r *Repository) GetProduct(ctx context.Context, tenantID, productID string) (interface{}, error) {
 	var p struct {
-		ID          string      `json:"id"`
-		Name        string      `json:"name"`
-		Description *string     `json:"description"`
-		Price       float64     `json:"price"`
-		SKU         *string     `json:"sku"`
-		Stock       int         `json:"stock"`
-		IsActive    bool        `json:"is_active"`
-		ImageURL    *string     `json:"image_url"`
-		CreatedAt   interface{} `json:"created_at"`
-		UpdatedAt   interface{} `json:"updated_at"`
+		ID           string      `json:"id"`
+		Name         string      `json:"name"`
+		Description  *string     `json:"description"`
+		Price        float64     `json:"price"`
+		SKU          *string     `json:"sku"`
+		Stock        int         `json:"stock"`
+		IsActive     bool        `json:"is_active"`
+		ImageURL     *string     `json:"image_url"`
+		Translations interface{} `json:"translations"`
+		CreatedAt    interface{} `json:"created_at"`
+		UpdatedAt    interface{} `json:"updated_at"`
 	}
 	err := r.db.QueryRow(ctx,
-		`SELECT id, name, description, price, sku, stock, is_active, image_url, created_at, updated_at
+		`SELECT id, name, description, price, sku, stock, is_active, image_url, translations, created_at, updated_at
 		 FROM products WHERE tenant_id = $1 AND id = $2`, tenantID, productID,
-	).Scan(&p.ID, &p.Name, &p.Description, &p.Price, &p.SKU, &p.Stock, &p.IsActive, &p.ImageURL, &p.CreatedAt, &p.UpdatedAt)
+	).Scan(&p.ID, &p.Name, &p.Description, &p.Price, &p.SKU, &p.Stock, &p.IsActive, &p.ImageURL, &p.Translations, &p.CreatedAt, &p.UpdatedAt)
 	if err != nil {
 		return nil, err
 	}
 	return p, nil
 }
 
-func (r *Repository) CreateProduct(ctx context.Context, tenantID, name string, description *string, price float64, sku *string, stock int) (string, error) {
+func (r *Repository) CreateProduct(ctx context.Context, tenantID, name string, description *string, price float64, sku *string, stock int, translations interface{}) (string, error) {
 	var id string
 	err := r.db.QueryRow(ctx,
-		`INSERT INTO products (tenant_id, name, description, price, sku, stock) VALUES ($1, $2, $3, $4, $5, $6) RETURNING id`,
-		tenantID, name, description, price, sku, stock,
+		`INSERT INTO products (tenant_id, name, description, price, sku, stock, translations) VALUES ($1, $2, $3, $4, $5, $6, COALESCE($7::jsonb, '{}')) RETURNING id`,
+		tenantID, name, description, price, sku, stock, translations,
 	).Scan(&id)
 	return id, err
 }
 
-func (r *Repository) UpdateProduct(ctx context.Context, tenantID, productID string, name *string, description *string, price *float64, sku *string, stock *int, isActive *bool) error {
+func (r *Repository) UpdateProduct(ctx context.Context, tenantID, productID string, name *string, description *string, price *float64, sku *string, stock *int, isActive *bool, translations interface{}) error {
 	query := `UPDATE products SET updated_at = NOW()`
 	args := []interface{}{}
 	argIdx := 1
@@ -815,6 +817,11 @@ func (r *Repository) UpdateProduct(ctx context.Context, tenantID, productID stri
 		args = append(args, *isActive)
 		argIdx++
 	}
+	if translations != nil {
+		query += fmt.Sprintf(", translations = $%d::jsonb", argIdx)
+		args = append(args, translations)
+		argIdx++
+	}
 
 	query += fmt.Sprintf(" WHERE tenant_id = $%d AND id = $%d", argIdx, argIdx+1)
 	args = append(args, tenantID, productID)
@@ -847,7 +854,7 @@ func (r *Repository) ListServices(ctx context.Context, tenantID string, limit, o
 	).Scan(&total)
 
 	rows, err := r.db.Query(ctx,
-		`SELECT id, name, description, price, duration, is_active, image_url, created_at, updated_at
+		`SELECT id, name, description, price, duration, is_active, image_url, translations, created_at, updated_at
 		 FROM services WHERE tenant_id = $1
 		 ORDER BY created_at DESC LIMIT $2 OFFSET $3`, tenantID, limit, offset,
 	)
@@ -859,17 +866,18 @@ func (r *Repository) ListServices(ctx context.Context, tenantID string, limit, o
 	var services []interface{}
 	for rows.Next() {
 		var s struct {
-			ID          string      `json:"id"`
-			Name        string      `json:"name"`
-			Description *string     `json:"description"`
-			Price       float64     `json:"price"`
-			Duration    *int        `json:"duration"`
-			IsActive    bool        `json:"is_active"`
-			ImageURL    *string     `json:"image_url"`
-			CreatedAt   interface{} `json:"created_at"`
-			UpdatedAt   interface{} `json:"updated_at"`
+			ID           string      `json:"id"`
+			Name         string      `json:"name"`
+			Description  *string     `json:"description"`
+			Price        float64     `json:"price"`
+			Duration     *int        `json:"duration"`
+			IsActive     bool        `json:"is_active"`
+			ImageURL     *string     `json:"image_url"`
+			Translations interface{} `json:"translations"`
+			CreatedAt    interface{} `json:"created_at"`
+			UpdatedAt    interface{} `json:"updated_at"`
 		}
-		if err := rows.Scan(&s.ID, &s.Name, &s.Description, &s.Price, &s.Duration, &s.IsActive, &s.ImageURL, &s.CreatedAt, &s.UpdatedAt); err != nil {
+		if err := rows.Scan(&s.ID, &s.Name, &s.Description, &s.Price, &s.Duration, &s.IsActive, &s.ImageURL, &s.Translations, &s.CreatedAt, &s.UpdatedAt); err != nil {
 			return nil, 0, err
 		}
 		services = append(services, s)
@@ -879,36 +887,37 @@ func (r *Repository) ListServices(ctx context.Context, tenantID string, limit, o
 
 func (r *Repository) GetService(ctx context.Context, tenantID, serviceID string) (interface{}, error) {
 	var s struct {
-		ID          string      `json:"id"`
-		Name        string      `json:"name"`
-		Description *string     `json:"description"`
-		Price       float64     `json:"price"`
-		Duration    *int        `json:"duration"`
-		IsActive    bool        `json:"is_active"`
-		ImageURL    *string     `json:"image_url"`
-		CreatedAt   interface{} `json:"created_at"`
-		UpdatedAt   interface{} `json:"updated_at"`
+		ID           string      `json:"id"`
+		Name         string      `json:"name"`
+		Description  *string     `json:"description"`
+		Price        float64     `json:"price"`
+		Duration     *int        `json:"duration"`
+		IsActive     bool        `json:"is_active"`
+		ImageURL     *string     `json:"image_url"`
+		Translations interface{} `json:"translations"`
+		CreatedAt    interface{} `json:"created_at"`
+		UpdatedAt    interface{} `json:"updated_at"`
 	}
 	err := r.db.QueryRow(ctx,
-		`SELECT id, name, description, price, duration, is_active, image_url, created_at, updated_at
+		`SELECT id, name, description, price, duration, is_active, image_url, translations, created_at, updated_at
 		 FROM services WHERE tenant_id = $1 AND id = $2`, tenantID, serviceID,
-	).Scan(&s.ID, &s.Name, &s.Description, &s.Price, &s.Duration, &s.IsActive, &s.ImageURL, &s.CreatedAt, &s.UpdatedAt)
+	).Scan(&s.ID, &s.Name, &s.Description, &s.Price, &s.Duration, &s.IsActive, &s.ImageURL, &s.Translations, &s.CreatedAt, &s.UpdatedAt)
 	if err != nil {
 		return nil, err
 	}
 	return s, nil
 }
 
-func (r *Repository) CreateService(ctx context.Context, tenantID, name string, description *string, price float64, duration *int) (string, error) {
+func (r *Repository) CreateService(ctx context.Context, tenantID, name string, description *string, price float64, duration *int, translations interface{}) (string, error) {
 	var id string
 	err := r.db.QueryRow(ctx,
-		`INSERT INTO services (tenant_id, name, description, price, duration) VALUES ($1, $2, $3, $4, $5) RETURNING id`,
-		tenantID, name, description, price, duration,
+		`INSERT INTO services (tenant_id, name, description, price, duration, translations) VALUES ($1, $2, $3, $4, $5, COALESCE($6::jsonb, '{}')) RETURNING id`,
+		tenantID, name, description, price, duration, translations,
 	).Scan(&id)
 	return id, err
 }
 
-func (r *Repository) UpdateService(ctx context.Context, tenantID, serviceID string, name *string, description *string, price *float64, duration *int, isActive *bool) error {
+func (r *Repository) UpdateService(ctx context.Context, tenantID, serviceID string, name *string, description *string, price *float64, duration *int, isActive *bool, translations interface{}) error {
 	query := `UPDATE services SET updated_at = NOW()`
 	args := []interface{}{}
 	argIdx := 1
@@ -936,6 +945,11 @@ func (r *Repository) UpdateService(ctx context.Context, tenantID, serviceID stri
 	if isActive != nil {
 		query += fmt.Sprintf(", is_active = $%d", argIdx)
 		args = append(args, *isActive)
+		argIdx++
+	}
+	if translations != nil {
+		query += fmt.Sprintf(", translations = $%d::jsonb", argIdx)
+		args = append(args, translations)
 		argIdx++
 	}
 
@@ -1036,14 +1050,176 @@ func (r *Repository) GetConvertWebp(ctx context.Context, tenantID string) (bool,
 
 // --- Images (Polymorphic) ---
 
-func (r *Repository) CreateImageRecord(ctx context.Context, tenantID, imageableType, imageableID, filename, originalFilename, mimeType, extension, storageDriver, storagePath, publicURL string, fileSize int64) (string, error) {
+func (r *Repository) CreateImageRecord(ctx context.Context, tenantID, imageableType, imageableID, originalFilename, mimeType, extension, storageDriver, originalPath, originalURL string, fileSize int64, title *string) (string, error) {
 	var id string
 	err := r.db.QueryRow(ctx,
-		`INSERT INTO images (tenant_id, imageable_type, imageable_id, filename, original_filename, mime_type, extension, storage_driver, storage_path, public_url, file_size, variant, processing_status)
-		 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, 'original', 'pending') RETURNING id`,
-		tenantID, imageableType, imageableID, filename, originalFilename, mimeType, extension, storageDriver, storagePath, publicURL, fileSize,
+		`INSERT INTO images (tenant_id, imageable_type, imageable_id, original_filename, mime_type, extension, storage_driver, original_path, original_url, file_size, title, processing_status)
+		 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, 'pending') RETURNING id`,
+		tenantID, imageableType, imageableID, originalFilename, mimeType, extension, storageDriver, originalPath, originalURL, fileSize, title,
 	).Scan(&id)
 	return id, err
+}
+
+func (r *Repository) ListImages(ctx context.Context, tenantID, imageableType, imageableID string) ([]interface{}, error) {
+	rows, err := r.db.Query(ctx,
+		`SELECT id, title, alt_text, translations, original_filename, mime_type, extension,
+		        width, height, file_size, original_url, original_path,
+		        medium_url, small_url, thumb_url,
+		        processing_status, display_order, created_at
+		 FROM images WHERE tenant_id = $1 AND imageable_type = $2 AND imageable_id = $3
+		 ORDER BY display_order, created_at`, tenantID, imageableType, imageableID,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var images []interface{}
+	for rows.Next() {
+		var img struct {
+			ID               string      `json:"id"`
+			Title            *string     `json:"title"`
+			AltText          *string     `json:"alt_text"`
+			Translations     interface{} `json:"translations"`
+			OriginalFilename *string     `json:"original_filename"`
+			MimeType         string      `json:"mime_type"`
+			Extension        string      `json:"extension"`
+			Width            *int        `json:"width"`
+			Height           *int        `json:"height"`
+			FileSize         *int64      `json:"file_size"`
+			OriginalURL      *string     `json:"original_url"`
+			OriginalPath     string      `json:"original_path"`
+			MediumURL        *string     `json:"medium_url"`
+			SmallURL         *string     `json:"small_url"`
+			ThumbURL         *string     `json:"thumb_url"`
+			ProcessingStatus string      `json:"processing_status"`
+			DisplayOrder     int         `json:"display_order"`
+			CreatedAt        interface{} `json:"created_at"`
+		}
+		if err := rows.Scan(&img.ID, &img.Title, &img.AltText, &img.Translations, &img.OriginalFilename, &img.MimeType, &img.Extension,
+			&img.Width, &img.Height, &img.FileSize, &img.OriginalURL, &img.OriginalPath,
+			&img.MediumURL, &img.SmallURL, &img.ThumbURL,
+			&img.ProcessingStatus, &img.DisplayOrder, &img.CreatedAt); err != nil {
+			return nil, err
+		}
+		images = append(images, img)
+	}
+	return images, nil
+}
+
+func (r *Repository) GetImage(ctx context.Context, tenantID, imageID string) (interface{}, error) {
+	var img struct {
+		ID               string      `json:"id"`
+		ImageableType    string      `json:"imageable_type"`
+		ImageableID      string      `json:"imageable_id"`
+		Title            *string     `json:"title"`
+		AltText          *string     `json:"alt_text"`
+		Translations     interface{} `json:"translations"`
+		OriginalFilename *string     `json:"original_filename"`
+		MimeType         string      `json:"mime_type"`
+		Extension        string      `json:"extension"`
+		Width            *int        `json:"width"`
+		Height           *int        `json:"height"`
+		FileSize         *int64      `json:"file_size"`
+		OriginalURL      *string     `json:"original_url"`
+		MediumURL        *string     `json:"medium_url"`
+		SmallURL         *string     `json:"small_url"`
+		ThumbURL         *string     `json:"thumb_url"`
+		ProcessingStatus string      `json:"processing_status"`
+		DisplayOrder     int         `json:"display_order"`
+		CreatedAt        interface{} `json:"created_at"`
+	}
+	err := r.db.QueryRow(ctx,
+		`SELECT id, imageable_type, imageable_id, title, alt_text, translations, original_filename, mime_type, extension,
+		        width, height, file_size, original_url, medium_url, small_url, thumb_url,
+		        processing_status, display_order, created_at
+		 FROM images WHERE tenant_id = $1 AND id = $2`, tenantID, imageID,
+	).Scan(&img.ID, &img.ImageableType, &img.ImageableID, &img.Title, &img.AltText, &img.Translations, &img.OriginalFilename, &img.MimeType, &img.Extension,
+		&img.Width, &img.Height, &img.FileSize, &img.OriginalURL, &img.MediumURL, &img.SmallURL, &img.ThumbURL,
+		&img.ProcessingStatus, &img.DisplayOrder, &img.CreatedAt)
+	if err != nil {
+		return nil, err
+	}
+	return img, nil
+}
+
+func (r *Repository) UpdateImageTitle(ctx context.Context, tenantID, imageID string, title *string, altText *string, translations interface{}) error {
+	query := `UPDATE images SET updated_at = NOW()`
+	args := []interface{}{}
+	argIdx := 1
+
+	if title != nil {
+		query += fmt.Sprintf(", title = $%d", argIdx)
+		args = append(args, *title)
+		argIdx++
+	}
+	if altText != nil {
+		query += fmt.Sprintf(", alt_text = $%d", argIdx)
+		args = append(args, *altText)
+		argIdx++
+	}
+	if translations != nil {
+		query += fmt.Sprintf(", translations = $%d::jsonb", argIdx)
+		args = append(args, translations)
+		argIdx++
+	}
+
+	query += fmt.Sprintf(" WHERE tenant_id = $%d AND id = $%d", argIdx, argIdx+1)
+	args = append(args, tenantID, imageID)
+
+	_, err := r.db.Exec(ctx, query, args...)
+	return err
+}
+
+func (r *Repository) DeleteImage(ctx context.Context, tenantID, imageID string) (string, string, string, error) {
+	var originalPath string
+	var mediumPath, smallPath, thumbPath *string
+	err := r.db.QueryRow(ctx,
+		`DELETE FROM images WHERE tenant_id = $1 AND id = $2
+		 RETURNING original_path, medium_path, small_path, thumb_path`,
+		tenantID, imageID,
+	).Scan(&originalPath, &mediumPath, &smallPath, &thumbPath)
+	if err != nil {
+		return "", "", "", err
+	}
+	// Return imageable info for potential image_url update
+	return originalPath, strPtrVal(mediumPath), strPtrVal(smallPath), err
+}
+
+func strPtrVal(s *string) string {
+	if s != nil {
+		return *s
+	}
+	return ""
+}
+
+func (r *Repository) GetImagePaths(ctx context.Context, tenantID, imageID string) (originalPath, mediumPath, smallPath, thumbPath, imageableType, imageableID string, err error) {
+	var mp, sp, tp *string
+	err = r.db.QueryRow(ctx,
+		`SELECT original_path, medium_path, small_path, thumb_path, imageable_type, imageable_id
+		 FROM images WHERE tenant_id = $1 AND id = $2`, tenantID, imageID,
+	).Scan(&originalPath, &mp, &sp, &tp, &imageableType, &imageableID)
+	mediumPath = strPtrVal(mp)
+	smallPath = strPtrVal(sp)
+	thumbPath = strPtrVal(tp)
+	return
+}
+
+func (r *Repository) DeleteImageRecord(ctx context.Context, tenantID, imageID string) error {
+	_, err := r.db.Exec(ctx,
+		`DELETE FROM images WHERE tenant_id = $1 AND id = $2`, tenantID, imageID,
+	)
+	return err
+}
+
+func (r *Repository) GetNextDisplayOrder(ctx context.Context, tenantID, imageableType, imageableID string) int {
+	var order int
+	r.db.QueryRow(ctx,
+		`SELECT COALESCE(MAX(display_order), 0) + 1 FROM images
+		 WHERE tenant_id = $1 AND imageable_type = $2 AND imageable_id = $3`,
+		tenantID, imageableType, imageableID,
+	).Scan(&order)
+	return order
 }
 
 // --- App Users (managed by backoffice) ---

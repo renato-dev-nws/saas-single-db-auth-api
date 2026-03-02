@@ -238,31 +238,33 @@ CREATE TABLE tenant_members (
 -- ============================================================
 
 CREATE TABLE products (
-    id          UUID           PRIMARY KEY DEFAULT uuid_generate_v4(),
-    tenant_id   UUID           NOT NULL REFERENCES tenants(id) ON DELETE CASCADE,
-    name        VARCHAR(255)   NOT NULL,
-    description TEXT,
-    price       DECIMAL(10,2)  NOT NULL DEFAULT 0,
-    sku         VARCHAR(100),
-    stock       INTEGER        NOT NULL DEFAULT 0,
-    is_active   BOOLEAN        NOT NULL DEFAULT true,
-    image_url   TEXT,
-    created_at  TIMESTAMP      NOT NULL DEFAULT NOW(),
-    updated_at  TIMESTAMP      NOT NULL DEFAULT NOW(),
+    id            UUID           PRIMARY KEY DEFAULT uuid_generate_v4(),
+    tenant_id     UUID           NOT NULL REFERENCES tenants(id) ON DELETE CASCADE,
+    name          VARCHAR(255)   NOT NULL,
+    description   TEXT,
+    price         DECIMAL(10,2)  NOT NULL DEFAULT 0,
+    sku           VARCHAR(100),
+    stock         INTEGER        NOT NULL DEFAULT 0,
+    is_active     BOOLEAN        NOT NULL DEFAULT true,
+    image_url     TEXT,
+    translations  JSONB          NOT NULL DEFAULT '{}',
+    created_at    TIMESTAMP      NOT NULL DEFAULT NOW(),
+    updated_at    TIMESTAMP      NOT NULL DEFAULT NOW(),
     UNIQUE (tenant_id, sku)
 );
 
 CREATE TABLE services (
-    id          UUID           PRIMARY KEY DEFAULT uuid_generate_v4(),
-    tenant_id   UUID           NOT NULL REFERENCES tenants(id) ON DELETE CASCADE,
-    name        VARCHAR(255)   NOT NULL,
-    description TEXT,
-    price       DECIMAL(10,2)  NOT NULL DEFAULT 0,
-    duration    INTEGER,
-    is_active   BOOLEAN        NOT NULL DEFAULT true,
-    image_url   TEXT,
-    created_at  TIMESTAMP      NOT NULL DEFAULT NOW(),
-    updated_at  TIMESTAMP      NOT NULL DEFAULT NOW()
+    id            UUID           PRIMARY KEY DEFAULT uuid_generate_v4(),
+    tenant_id     UUID           NOT NULL REFERENCES tenants(id) ON DELETE CASCADE,
+    name          VARCHAR(255)   NOT NULL,
+    description   TEXT,
+    price         DECIMAL(10,2)  NOT NULL DEFAULT 0,
+    duration      INTEGER,
+    is_active     BOOLEAN        NOT NULL DEFAULT true,
+    image_url     TEXT,
+    translations  JSONB          NOT NULL DEFAULT '{}',
+    created_at    TIMESTAMP      NOT NULL DEFAULT NOW(),
+    updated_at    TIMESTAMP      NOT NULL DEFAULT NOW()
 );
 
 CREATE TABLE tenant_settings (
@@ -337,29 +339,29 @@ CREATE TABLE email_templates (
 -- Images Table (Polymorphic)
 -- ============================================================
 
-CREATE TYPE media_type     AS ENUM ('image');
-CREATE TYPE image_variant  AS ENUM ('original', 'medium', 'small', 'thumb');
-
 CREATE TABLE images (
     id                 UUID           PRIMARY KEY DEFAULT uuid_generate_v4(),
     tenant_id          UUID           NOT NULL REFERENCES tenants(id) ON DELETE CASCADE,
     imageable_type     VARCHAR(50)    NOT NULL,
     imageable_id       UUID           NOT NULL,
-    filename           VARCHAR(255)   NOT NULL,
-    original_filename  VARCHAR(255),
     title              VARCHAR(255),
     alt_text           VARCHAR(255),
-    media_type         media_type     NOT NULL DEFAULT 'image',
+    translations       JSONB          NOT NULL DEFAULT '{}',
+    original_filename  VARCHAR(255),
     mime_type          VARCHAR(100)   NOT NULL,
     extension          VARCHAR(10)    NOT NULL,
-    variant            image_variant  NOT NULL DEFAULT 'original',
-    parent_id          UUID           REFERENCES images(id) ON DELETE CASCADE,
     width              INTEGER,
     height             INTEGER,
     file_size          BIGINT,
     storage_driver     VARCHAR(20)    NOT NULL DEFAULT 'local',
-    storage_path       TEXT           NOT NULL,
-    public_url         TEXT,
+    original_path      TEXT           NOT NULL,
+    original_url       TEXT,
+    medium_path        TEXT,
+    medium_url         TEXT,
+    small_path         TEXT,
+    small_url          TEXT,
+    thumb_path         TEXT,
+    thumb_url          TEXT,
     processing_status  VARCHAR(20)    DEFAULT 'pending',
     processed_at       TIMESTAMP,
     display_order      INTEGER        DEFAULT 0,
@@ -395,7 +397,7 @@ CREATE INDEX idx_services_tenant_id  ON services(tenant_id);
 CREATE INDEX idx_tenant_settings_tenant_id  ON tenant_settings(tenant_id);
 CREATE INDEX idx_images_tenant_id         ON images(tenant_id);
 CREATE INDEX idx_images_imageable         ON images(imageable_type, imageable_id);
-CREATE INDEX idx_images_parent_id         ON images(parent_id);
+
 CREATE INDEX idx_images_processing_status ON images(processing_status) WHERE processing_status IN ('pending', 'processing');
 
 CREATE INDEX idx_tenant_app_users_tenant_id ON tenant_app_users(tenant_id);

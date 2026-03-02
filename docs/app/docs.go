@@ -47,7 +47,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/github_com_saas-single-db-api_internal_models_swagger.AppChangePasswordRequest"
+                            "$ref": "#/definitions/swagger.AppChangePasswordRequest"
                         }
                     }
                 ],
@@ -55,13 +55,13 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_saas-single-db-api_internal_models_swagger.MessageResponse"
+                            "$ref": "#/definitions/swagger.MessageResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/github_com_saas-single-db-api_internal_models_swagger.ErrorResponse"
+                            "$ref": "#/definitions/swagger.ErrorResponse"
                         }
                     }
                 }
@@ -94,7 +94,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/github_com_saas-single-db-api_internal_models_swagger.AppForgotPasswordRequest"
+                            "$ref": "#/definitions/swagger.AppForgotPasswordRequest"
                         }
                     }
                 ],
@@ -102,7 +102,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_saas-single-db-api_internal_models_swagger.MessageResponse"
+                            "$ref": "#/definitions/swagger.MessageResponse"
                         }
                     }
                 }
@@ -135,7 +135,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/github_com_saas-single-db-api_internal_models_swagger.AppLoginRequest"
+                            "$ref": "#/definitions/swagger.AppLoginRequest"
                         }
                     }
                 ],
@@ -143,13 +143,13 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_saas-single-db-api_internal_models_swagger.AppAuthResponse"
+                            "$ref": "#/definitions/swagger.AppAuthResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/github_com_saas-single-db-api_internal_models_swagger.ErrorResponse"
+                            "$ref": "#/definitions/swagger.ErrorResponse"
                         }
                     }
                 }
@@ -183,7 +183,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_saas-single-db-api_internal_models_swagger.MessageResponse"
+                            "$ref": "#/definitions/swagger.MessageResponse"
                         }
                     }
                 }
@@ -217,13 +217,13 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_saas-single-db-api_internal_models_swagger.AppUserDTO"
+                            "$ref": "#/definitions/swagger.AppUserDTO"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/github_com_saas-single-db-api_internal_models_swagger.ErrorResponse"
+                            "$ref": "#/definitions/swagger.ErrorResponse"
                         }
                     }
                 }
@@ -256,7 +256,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/github_com_saas-single-db-api_internal_models_swagger.AppRegisterRequest"
+                            "$ref": "#/definitions/swagger.AppRegisterRequest"
                         }
                     }
                 ],
@@ -264,13 +264,13 @@ const docTemplate = `{
                     "201": {
                         "description": "Created",
                         "schema": {
-                            "$ref": "#/definitions/github_com_saas-single-db-api_internal_models_swagger.AppAuthResponse"
+                            "$ref": "#/definitions/swagger.AppAuthResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/github_com_saas-single-db-api_internal_models_swagger.ErrorResponse"
+                            "$ref": "#/definitions/swagger.ErrorResponse"
                         }
                     }
                 }
@@ -303,7 +303,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/github_com_saas-single-db-api_internal_models_swagger.AppResetPasswordRequest"
+                            "$ref": "#/definitions/swagger.AppResetPasswordRequest"
                         }
                     }
                 ],
@@ -311,13 +311,13 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_saas-single-db-api_internal_models_swagger.MessageResponse"
+                            "$ref": "#/definitions/swagger.MessageResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/github_com_saas-single-db-api_internal_models_swagger.ErrorResponse"
+                            "$ref": "#/definitions/swagger.ErrorResponse"
                         }
                     }
                 }
@@ -360,13 +360,13 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_saas-single-db-api_internal_models_swagger.PaginatedResponse"
+                            "$ref": "#/definitions/swagger.PaginatedResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/github_com_saas-single-db-api_internal_models_swagger.ErrorResponse"
+                            "$ref": "#/definitions/swagger.ErrorResponse"
                         }
                     }
                 }
@@ -402,13 +402,13 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_saas-single-db-api_internal_models_swagger.ProductResponse"
+                            "$ref": "#/definitions/swagger.ProductResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/github_com_saas-single-db-api_internal_models_swagger.ErrorResponse"
+                            "$ref": "#/definitions/swagger.ErrorResponse"
                         }
                     }
                 }
@@ -451,13 +451,13 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_saas-single-db-api_internal_models_swagger.PaginatedResponse"
+                            "$ref": "#/definitions/swagger.PaginatedResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/github_com_saas-single-db-api_internal_models_swagger.ErrorResponse"
+                            "$ref": "#/definitions/swagger.ErrorResponse"
                         }
                     }
                 }
@@ -493,13 +493,13 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_saas-single-db-api_internal_models_swagger.ServiceResponse"
+                            "$ref": "#/definitions/swagger.ServiceResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/github_com_saas-single-db-api_internal_models_swagger.ErrorResponse"
+                            "$ref": "#/definitions/swagger.ErrorResponse"
                         }
                     }
                 }
@@ -533,13 +533,13 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_saas-single-db-api_internal_models_swagger.AppUserProfileDTO"
+                            "$ref": "#/definitions/swagger.AppUserProfileDTO"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/github_com_saas-single-db-api_internal_models_swagger.ErrorResponse"
+                            "$ref": "#/definitions/swagger.ErrorResponse"
                         }
                     }
                 }
@@ -575,7 +575,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/github_com_saas-single-db-api_internal_models_swagger.AppUpdateProfileRequest"
+                            "$ref": "#/definitions/swagger.AppUpdateProfileRequest"
                         }
                     }
                 ],
@@ -583,13 +583,13 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_saas-single-db-api_internal_models_swagger.MessageResponse"
+                            "$ref": "#/definitions/swagger.MessageResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/github_com_saas-single-db-api_internal_models_swagger.ErrorResponse"
+                            "$ref": "#/definitions/swagger.ErrorResponse"
                         }
                     }
                 }
@@ -633,13 +633,13 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_saas-single-db-api_internal_models_swagger.UploadResponse"
+                            "$ref": "#/definitions/swagger.UploadResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/github_com_saas-single-db-api_internal_models_swagger.ErrorResponse"
+                            "$ref": "#/definitions/swagger.ErrorResponse"
                         }
                     }
                 }
@@ -647,7 +647,7 @@ const docTemplate = `{
         }
     },
     "definitions": {
-        "github_com_saas-single-db-api_internal_models_swagger.AppAuthResponse": {
+        "swagger.AppAuthResponse": {
             "type": "object",
             "properties": {
                 "token": {
@@ -655,11 +655,11 @@ const docTemplate = `{
                     "example": "eyJhbGciOiJIUzI1NiIs..."
                 },
                 "user": {
-                    "$ref": "#/definitions/github_com_saas-single-db-api_internal_models_swagger.AppUserDTO"
+                    "$ref": "#/definitions/swagger.AppUserDTO"
                 }
             }
         },
-        "github_com_saas-single-db-api_internal_models_swagger.AppChangePasswordRequest": {
+        "swagger.AppChangePasswordRequest": {
             "type": "object",
             "required": [
                 "current_password",
@@ -677,7 +677,7 @@ const docTemplate = `{
                 }
             }
         },
-        "github_com_saas-single-db-api_internal_models_swagger.AppForgotPasswordRequest": {
+        "swagger.AppForgotPasswordRequest": {
             "type": "object",
             "required": [
                 "email"
@@ -689,7 +689,7 @@ const docTemplate = `{
                 }
             }
         },
-        "github_com_saas-single-db-api_internal_models_swagger.AppLoginRequest": {
+        "swagger.AppLoginRequest": {
             "type": "object",
             "required": [
                 "email",
@@ -706,7 +706,7 @@ const docTemplate = `{
                 }
             }
         },
-        "github_com_saas-single-db-api_internal_models_swagger.AppRegisterRequest": {
+        "swagger.AppRegisterRequest": {
             "type": "object",
             "required": [
                 "email",
@@ -729,7 +729,7 @@ const docTemplate = `{
                 }
             }
         },
-        "github_com_saas-single-db-api_internal_models_swagger.AppResetPasswordRequest": {
+        "swagger.AppResetPasswordRequest": {
             "type": "object",
             "required": [
                 "new_password",
@@ -747,7 +747,7 @@ const docTemplate = `{
                 }
             }
         },
-        "github_com_saas-single-db-api_internal_models_swagger.AppUpdateProfileRequest": {
+        "swagger.AppUpdateProfileRequest": {
             "type": "object",
             "properties": {
                 "address": {
@@ -772,7 +772,7 @@ const docTemplate = `{
                 }
             }
         },
-        "github_com_saas-single-db-api_internal_models_swagger.AppUserDTO": {
+        "swagger.AppUserDTO": {
             "type": "object",
             "properties": {
                 "email": {
@@ -788,7 +788,7 @@ const docTemplate = `{
                     "example": "John"
                 },
                 "profile": {
-                    "$ref": "#/definitions/github_com_saas-single-db-api_internal_models_swagger.AppUserProfileDTO"
+                    "$ref": "#/definitions/swagger.AppUserProfileDTO"
                 },
                 "status": {
                     "type": "string",
@@ -796,7 +796,7 @@ const docTemplate = `{
                 }
             }
         },
-        "github_com_saas-single-db-api_internal_models_swagger.AppUserProfileDTO": {
+        "swagger.AppUserProfileDTO": {
             "type": "object",
             "properties": {
                 "address": {},
@@ -823,7 +823,7 @@ const docTemplate = `{
                 }
             }
         },
-        "github_com_saas-single-db-api_internal_models_swagger.ErrorResponse": {
+        "swagger.ErrorResponse": {
             "type": "object",
             "properties": {
                 "error": {
@@ -832,7 +832,7 @@ const docTemplate = `{
                 }
             }
         },
-        "github_com_saas-single-db-api_internal_models_swagger.MessageResponse": {
+        "swagger.MessageResponse": {
             "type": "object",
             "properties": {
                 "message": {
@@ -841,7 +841,7 @@ const docTemplate = `{
                 }
             }
         },
-        "github_com_saas-single-db-api_internal_models_swagger.PaginatedResponse": {
+        "swagger.PaginatedResponse": {
             "type": "object",
             "properties": {
                 "data": {},
@@ -859,7 +859,7 @@ const docTemplate = `{
                 }
             }
         },
-        "github_com_saas-single-db-api_internal_models_swagger.ProductResponse": {
+        "swagger.ProductResponse": {
             "type": "object",
             "properties": {
                 "created_at": {
@@ -900,12 +900,13 @@ const docTemplate = `{
                     "type": "string",
                     "example": "uuid"
                 },
+                "translations": {},
                 "updated_at": {
                     "type": "string"
                 }
             }
         },
-        "github_com_saas-single-db-api_internal_models_swagger.ServiceResponse": {
+        "swagger.ServiceResponse": {
             "type": "object",
             "properties": {
                 "created_at": {
@@ -942,12 +943,13 @@ const docTemplate = `{
                     "type": "string",
                     "example": "uuid"
                 },
+                "translations": {},
                 "updated_at": {
                     "type": "string"
                 }
             }
         },
-        "github_com_saas-single-db-api_internal_models_swagger.UploadResponse": {
+        "swagger.UploadResponse": {
             "type": "object",
             "properties": {
                 "path": {

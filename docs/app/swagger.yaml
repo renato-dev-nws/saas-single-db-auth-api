@@ -1,14 +1,14 @@
 basePath: /api/v1
 definitions:
-  github_com_saas-single-db-api_internal_models_swagger.AppAuthResponse:
+  swagger.AppAuthResponse:
     properties:
       token:
         example: eyJhbGciOiJIUzI1NiIs...
         type: string
       user:
-        $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.AppUserDTO'
+        $ref: '#/definitions/swagger.AppUserDTO'
     type: object
-  github_com_saas-single-db-api_internal_models_swagger.AppChangePasswordRequest:
+  swagger.AppChangePasswordRequest:
     properties:
       current_password:
         example: old_password
@@ -21,7 +21,7 @@ definitions:
     - current_password
     - new_password
     type: object
-  github_com_saas-single-db-api_internal_models_swagger.AppForgotPasswordRequest:
+  swagger.AppForgotPasswordRequest:
     properties:
       email:
         example: user@example.com
@@ -29,7 +29,7 @@ definitions:
     required:
     - email
     type: object
-  github_com_saas-single-db-api_internal_models_swagger.AppLoginRequest:
+  swagger.AppLoginRequest:
     properties:
       email:
         example: user@example.com
@@ -41,7 +41,7 @@ definitions:
     - email
     - password
     type: object
-  github_com_saas-single-db-api_internal_models_swagger.AppRegisterRequest:
+  swagger.AppRegisterRequest:
     properties:
       email:
         example: john@example.com
@@ -58,7 +58,7 @@ definitions:
     - name
     - password
     type: object
-  github_com_saas-single-db-api_internal_models_swagger.AppResetPasswordRequest:
+  swagger.AppResetPasswordRequest:
     properties:
       new_password:
         example: new_password
@@ -71,7 +71,7 @@ definitions:
     - new_password
     - token
     type: object
-  github_com_saas-single-db-api_internal_models_swagger.AppUpdateProfileRequest:
+  swagger.AppUpdateProfileRequest:
     properties:
       address:
         example: Rua A, 123
@@ -89,7 +89,7 @@ definitions:
         example: "+5511999999999"
         type: string
     type: object
-  github_com_saas-single-db-api_internal_models_swagger.AppUserDTO:
+  swagger.AppUserDTO:
     properties:
       email:
         example: user@example.com
@@ -101,12 +101,12 @@ definitions:
         example: John
         type: string
       profile:
-        $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.AppUserProfileDTO'
+        $ref: '#/definitions/swagger.AppUserProfileDTO'
       status:
         example: active
         type: string
     type: object
-  github_com_saas-single-db-api_internal_models_swagger.AppUserProfileDTO:
+  swagger.AppUserProfileDTO:
     properties:
       address: {}
       avatar_url:
@@ -126,19 +126,19 @@ definitions:
         example: "+5511999999999"
         type: string
     type: object
-  github_com_saas-single-db-api_internal_models_swagger.ErrorResponse:
+  swagger.ErrorResponse:
     properties:
       error:
         example: error_message
         type: string
     type: object
-  github_com_saas-single-db-api_internal_models_swagger.MessageResponse:
+  swagger.MessageResponse:
     properties:
       message:
         example: operation_successful
         type: string
     type: object
-  github_com_saas-single-db-api_internal_models_swagger.PaginatedResponse:
+  swagger.PaginatedResponse:
     properties:
       data: {}
       page:
@@ -151,7 +151,7 @@ definitions:
         example: 100
         type: integer
     type: object
-  github_com_saas-single-db-api_internal_models_swagger.ProductResponse:
+  swagger.ProductResponse:
     properties:
       created_at:
         type: string
@@ -181,10 +181,11 @@ definitions:
       tenant_id:
         example: uuid
         type: string
+      translations: {}
       updated_at:
         type: string
     type: object
-  github_com_saas-single-db-api_internal_models_swagger.ServiceResponse:
+  swagger.ServiceResponse:
     properties:
       created_at:
         type: string
@@ -211,10 +212,11 @@ definitions:
       tenant_id:
         example: uuid
         type: string
+      translations: {}
       updated_at:
         type: string
     type: object
-  github_com_saas-single-db-api_internal_models_swagger.UploadResponse:
+  swagger.UploadResponse:
     properties:
       path:
         example: /uploads/tenant/file.jpg
@@ -247,18 +249,18 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.AppChangePasswordRequest'
+          $ref: '#/definitions/swagger.AppChangePasswordRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.MessageResponse'
+            $ref: '#/definitions/swagger.MessageResponse'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.ErrorResponse'
+            $ref: '#/definitions/swagger.ErrorResponse'
       security:
       - BearerAuth: []
       summary: Alterar senha do app user
@@ -280,14 +282,14 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.AppForgotPasswordRequest'
+          $ref: '#/definitions/swagger.AppForgotPasswordRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.MessageResponse'
+            $ref: '#/definitions/swagger.MessageResponse'
       summary: Solicitar reset de senha
       tags:
       - Auth
@@ -307,18 +309,18 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.AppLoginRequest'
+          $ref: '#/definitions/swagger.AppLoginRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.AppAuthResponse'
+            $ref: '#/definitions/swagger.AppAuthResponse'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.ErrorResponse'
+            $ref: '#/definitions/swagger.ErrorResponse'
       summary: Login de app user
       tags:
       - Auth
@@ -337,7 +339,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.MessageResponse'
+            $ref: '#/definitions/swagger.MessageResponse'
       security:
       - BearerAuth: []
       summary: Logout de app user
@@ -358,11 +360,11 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.AppUserDTO'
+            $ref: '#/definitions/swagger.AppUserDTO'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.ErrorResponse'
+            $ref: '#/definitions/swagger.ErrorResponse'
       security:
       - BearerAuth: []
       summary: Dados do app user logado
@@ -384,18 +386,18 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.AppRegisterRequest'
+          $ref: '#/definitions/swagger.AppRegisterRequest'
       produces:
       - application/json
       responses:
         "201":
           description: Created
           schema:
-            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.AppAuthResponse'
+            $ref: '#/definitions/swagger.AppAuthResponse'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.ErrorResponse'
+            $ref: '#/definitions/swagger.ErrorResponse'
       summary: Registrar app user
       tags:
       - Auth
@@ -415,18 +417,18 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.AppResetPasswordRequest'
+          $ref: '#/definitions/swagger.AppResetPasswordRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.MessageResponse'
+            $ref: '#/definitions/swagger.MessageResponse'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.ErrorResponse'
+            $ref: '#/definitions/swagger.ErrorResponse'
       summary: Resetar senha
       tags:
       - Auth
@@ -455,11 +457,11 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.PaginatedResponse'
+            $ref: '#/definitions/swagger.PaginatedResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.ErrorResponse'
+            $ref: '#/definitions/swagger.ErrorResponse'
       summary: Listar produtos
       tags:
       - Catalog
@@ -483,11 +485,11 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.ProductResponse'
+            $ref: '#/definitions/swagger.ProductResponse'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.ErrorResponse'
+            $ref: '#/definitions/swagger.ErrorResponse'
       summary: Obter produto
       tags:
       - Catalog
@@ -516,11 +518,11 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.PaginatedResponse'
+            $ref: '#/definitions/swagger.PaginatedResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.ErrorResponse'
+            $ref: '#/definitions/swagger.ErrorResponse'
       summary: Listar serviços
       tags:
       - Catalog
@@ -544,11 +546,11 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.ServiceResponse'
+            $ref: '#/definitions/swagger.ServiceResponse'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.ErrorResponse'
+            $ref: '#/definitions/swagger.ErrorResponse'
       summary: Obter serviço
       tags:
       - Catalog
@@ -567,11 +569,11 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.AppUserProfileDTO'
+            $ref: '#/definitions/swagger.AppUserProfileDTO'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.ErrorResponse'
+            $ref: '#/definitions/swagger.ErrorResponse'
       security:
       - BearerAuth: []
       summary: Obter perfil do app user
@@ -592,18 +594,18 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.AppUpdateProfileRequest'
+          $ref: '#/definitions/swagger.AppUpdateProfileRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.MessageResponse'
+            $ref: '#/definitions/swagger.MessageResponse'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.ErrorResponse'
+            $ref: '#/definitions/swagger.ErrorResponse'
       security:
       - BearerAuth: []
       summary: Atualizar perfil do app user
@@ -631,11 +633,11 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.UploadResponse'
+            $ref: '#/definitions/swagger.UploadResponse'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/github_com_saas-single-db-api_internal_models_swagger.ErrorResponse'
+            $ref: '#/definitions/swagger.ErrorResponse'
       security:
       - BearerAuth: []
       summary: Upload de avatar do app user

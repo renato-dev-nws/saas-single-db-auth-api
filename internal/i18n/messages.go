@@ -112,6 +112,15 @@ var messages = map[string]map[string]string{
 		"failed_delete_product": "Falha ao excluir produto",
 		"failed_save_image":     "Falha ao salvar registro de imagem",
 
+		// --- Images ---
+		"failed_list_images":  "Falha ao listar imagens",
+		"image_not_found":     "Imagem não encontrada",
+		"image_updated":       "Imagem atualizada",
+		"failed_update_image": "Falha ao atualizar imagem",
+		"image_deleted":       "Imagem excluída",
+		"failed_delete_image": "Falha ao excluir imagem",
+		"no_images_provided":  "Nenhuma imagem fornecida",
+
 		// --- Services ---
 		"failed_list_services":  "Falha ao listar serviços",
 		"service_not_found":     "Serviço não encontrado",
@@ -304,6 +313,15 @@ var messages = map[string]map[string]string{
 		"product_deleted":       "Produto eliminado",
 		"failed_delete_product": "Falha ao eliminar produto",
 		"failed_save_image":     "Falha ao guardar registo de imagem",
+
+		// --- Images ---
+		"failed_list_images":  "Falha ao listar imagens",
+		"image_not_found":     "Imagem não encontrada",
+		"image_updated":       "Imagem atualizada",
+		"failed_update_image": "Falha ao atualizar imagem",
+		"image_deleted":       "Imagem eliminada",
+		"failed_delete_image": "Falha ao eliminar imagem",
+		"no_images_provided":  "Nenhuma imagem fornecida",
 
 		// --- Services ---
 		"failed_list_services":  "Falha ao listar serviços",
@@ -498,6 +516,15 @@ var messages = map[string]map[string]string{
 		"failed_delete_product": "Failed to delete product",
 		"failed_save_image":     "Failed to save image record",
 
+		// --- Images ---
+		"failed_list_images":  "Failed to list images",
+		"image_not_found":     "Image not found",
+		"image_updated":       "Image updated",
+		"failed_update_image": "Failed to update image",
+		"image_deleted":       "Image deleted",
+		"failed_delete_image": "Failed to delete image",
+		"no_images_provided":  "No images provided",
+
 		// --- Services ---
 		"failed_list_services":  "Failed to list services",
 		"service_not_found":     "Service not found",
@@ -690,6 +717,15 @@ var messages = map[string]map[string]string{
 		"product_deleted":       "Producto eliminado",
 		"failed_delete_product": "Error al eliminar producto",
 		"failed_save_image":     "Error al guardar registro de imagen",
+
+		// --- Images ---
+		"failed_list_images":  "Error al listar imágenes",
+		"image_not_found":     "Imagen no encontrada",
+		"image_updated":       "Imagen actualizada",
+		"failed_update_image": "Error al actualizar imagen",
+		"image_deleted":       "Imagen eliminada",
+		"failed_delete_image": "Error al eliminar imagen",
+		"no_images_provided":  "No se proporcionaron imágenes",
 
 		// --- Services ---
 		"failed_list_services":  "Error al listar servicios",
