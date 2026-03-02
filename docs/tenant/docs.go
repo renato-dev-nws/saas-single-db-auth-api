@@ -2975,6 +2975,7 @@ const docTemplate = `{
                     "type": "string",
                     "example": "Products"
                 },
+                "translations": {},
                 "updated_at": {
                     "type": "string"
                 }
@@ -3308,6 +3309,7 @@ const docTemplate = `{
                     "type": "number",
                     "example": 99.9
                 },
+                "translations": {},
                 "updated_at": {
                     "type": "string"
                 }
@@ -3839,7 +3841,8 @@ const docTemplate = `{
                 "title": {
                     "type": "string",
                     "example": "Create Products"
-                }
+                },
+                "translations": {}
             }
         },
         "swagger.UserProfileDTO": {
@@ -3880,6 +3883,7 @@ const docTemplate = `{
                     "type": "string",
                     "example": "Editor"
                 },
+                "translations": {},
                 "updated_at": {
                     "type": "string"
                 }

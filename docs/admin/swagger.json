@@ -2488,6 +2488,7 @@
                     "type": "string",
                     "example": "Products"
                 },
+                "translations": {},
                 "updated_at": {
                     "type": "string"
                 }
@@ -2588,6 +2589,7 @@
                     "type": "number",
                     "example": 99.9
                 },
+                "translations": {},
                 "updated_at": {
                     "type": "string"
                 }
@@ -2638,6 +2640,7 @@
                     "type": "string",
                     "example": "Launch Discount"
                 },
+                "translations": {},
                 "updated_at": {
                     "type": "string"
                 },
@@ -2855,7 +2858,8 @@
                 },
                 "title": {
                     "type": "string"
-                }
+                },
+                "translations": {}
             }
         },
         "tenant.CreatePlanRequest": {
@@ -2889,7 +2893,8 @@
                 },
                 "price": {
                     "type": "number"
-                }
+                },
+                "translations": {}
             }
         },
         "tenant.CreatePromotionRequest": {
@@ -2919,6 +2924,7 @@
                 "plan_id": {
                     "type": "string"
                 },
+                "translations": {},
                 "valid_from": {
                     "type": "string"
                 },
@@ -2990,7 +2996,8 @@
                 },
                 "title": {
                     "type": "string"
-                }
+                },
+                "translations": {}
             }
         },
         "tenant.UpdatePlanRequest": {
@@ -3013,7 +3020,8 @@
                 },
                 "price": {
                     "type": "number"
-                }
+                },
+                "translations": {}
             }
         },
         "tenant.UpdatePromotionRequest": {
@@ -3037,6 +3045,7 @@
                 "name": {
                     "type": "string"
                 },
+                "translations": {},
                 "valid_from": {
                     "type": "string"
                 },

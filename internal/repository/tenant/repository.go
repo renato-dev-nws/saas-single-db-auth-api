@@ -168,8 +168,8 @@ func (r *Repository) CreateUserProfile(ctx context.Context, tx pgx.Tx, userID, f
 
 func (r *Repository) CopyGlobalRolesToTenant(ctx context.Context, tx pgx.Tx, tenantID string) error {
 	_, err := tx.Exec(ctx,
-		`INSERT INTO user_roles (tenant_id, title, slug)
-		 SELECT $1, title, slug FROM user_roles WHERE tenant_id IS NULL`,
+		`INSERT INTO user_roles (tenant_id, title, slug, translations)
+		 SELECT $1, title, slug, translations FROM user_roles WHERE tenant_id IS NULL`,
 		tenantID,
 	)
 	if err != nil {
@@ -591,7 +591,7 @@ func (r *Repository) RemoveMember(ctx context.Context, tenantID, userID string) 
 
 func (r *Repository) ListTenantRoles(ctx context.Context, tenantID string) ([]roleRow, error) {
 	rows, err := r.db.Query(ctx,
-		`SELECT id, title, slug FROM user_roles WHERE tenant_id = $1 ORDER BY title`, tenantID,
+		`SELECT id, title, slug, translations FROM user_roles WHERE tenant_id = $1 ORDER BY title`, tenantID,
 	)
 	if err != nil {
 		return nil, err
@@ -601,7 +601,7 @@ func (r *Repository) ListTenantRoles(ctx context.Context, tenantID string) ([]ro
 	var roles []roleRow
 	for rows.Next() {
 		var role roleRow
-		if err := rows.Scan(&role.ID, &role.Title, &role.Slug); err != nil {
+		if err := rows.Scan(&role.ID, &role.Title, &role.Slug, &role.Translations); err != nil {
 			return nil, err
 		}
 		roles = append(roles, role)
@@ -610,16 +610,17 @@ func (r *Repository) ListTenantRoles(ctx context.Context, tenantID string) ([]ro
 }
 
 type roleRow struct {
-	ID    string `json:"id"`
-	Title string `json:"title"`
-	Slug  string `json:"slug"`
+	ID           string      `json:"id"`
+	Title        string      `json:"title"`
+	Slug         string      `json:"slug"`
+	Translations interface{} `json:"translations"`
 }
 
 func (r *Repository) GetTenantRoleByID(ctx context.Context, tenantID, roleID string) (*roleRow, error) {
 	var role roleRow
 	err := r.db.QueryRow(ctx,
-		`SELECT id, title, slug FROM user_roles WHERE tenant_id = $1 AND id = $2`, tenantID, roleID,
-	).Scan(&role.ID, &role.Title, &role.Slug)
+		`SELECT id, title, slug, translations FROM user_roles WHERE tenant_id = $1 AND id = $2`, tenantID, roleID,
+	).Scan(&role.ID, &role.Title, &role.Slug, &role.Translations)
 	if err != nil {
 		return nil, err
 	}
@@ -629,9 +630,9 @@ func (r *Repository) GetTenantRoleByID(ctx context.Context, tenantID, roleID str
 func (r *Repository) CreateTenantRole(ctx context.Context, tenantID, title, slug string) (*roleRow, error) {
 	var role roleRow
 	err := r.db.QueryRow(ctx,
-		`INSERT INTO user_roles (tenant_id, title, slug) VALUES ($1, $2, $3) RETURNING id, title, slug`,
+		`INSERT INTO user_roles (tenant_id, title, slug) VALUES ($1, $2, $3) RETURNING id, title, slug, translations`,
 		tenantID, title, slug,
-	).Scan(&role.ID, &role.Title, &role.Slug)
+	).Scan(&role.ID, &role.Title, &role.Slug, &role.Translations)
 	if err != nil {
 		return nil, err
 	}
@@ -665,7 +666,7 @@ func (r *Repository) DeleteTenantRole(ctx context.Context, tenantID, roleID stri
 
 func (r *Repository) ListPermissions(ctx context.Context) ([]permissionRow, error) {
 	rows, err := r.db.Query(ctx,
-		`SELECT id, title, slug, description FROM user_permissions ORDER BY slug`,
+		`SELECT id, title, slug, description, translations FROM user_permissions ORDER BY slug`,
 	)
 	if err != nil {
 		return nil, err
@@ -675,7 +676,7 @@ func (r *Repository) ListPermissions(ctx context.Context) ([]permissionRow, erro
 	var perms []permissionRow
 	for rows.Next() {
 		var p permissionRow
-		if err := rows.Scan(&p.ID, &p.Title, &p.Slug, &p.Description); err != nil {
+		if err := rows.Scan(&p.ID, &p.Title, &p.Slug, &p.Description, &p.Translations); err != nil {
 			return nil, err
 		}
 		perms = append(perms, p)
@@ -685,7 +686,7 @@ func (r *Repository) ListPermissions(ctx context.Context) ([]permissionRow, erro
 
 func (r *Repository) GetRolePermissions(ctx context.Context, roleID string) ([]permissionRow, error) {
 	rows, err := r.db.Query(ctx,
-		`SELECT p.id, p.title, p.slug, p.description
+		`SELECT p.id, p.title, p.slug, p.description, p.translations
 		 FROM user_permissions p
 		 JOIN user_role_permissions rp ON rp.permission_id = p.id
 		 WHERE rp.role_id = $1 ORDER BY p.slug`, roleID,
@@ -698,7 +699,7 @@ func (r *Repository) GetRolePermissions(ctx context.Context, roleID string) ([]p
 	var perms []permissionRow
 	for rows.Next() {
 		var p permissionRow
-		if err := rows.Scan(&p.ID, &p.Title, &p.Slug, &p.Description); err != nil {
+		if err := rows.Scan(&p.ID, &p.Title, &p.Slug, &p.Description, &p.Translations); err != nil {
 			return nil, err
 		}
 		perms = append(perms, p)
@@ -707,10 +708,11 @@ func (r *Repository) GetRolePermissions(ctx context.Context, roleID string) ([]p
 }
 
 type permissionRow struct {
-	ID          string  `json:"id"`
-	Title       string  `json:"title"`
-	Slug        string  `json:"slug"`
-	Description *string `json:"description"`
+	ID           string      `json:"id"`
+	Title        string      `json:"title"`
+	Slug         string      `json:"slug"`
+	Description  *string     `json:"description"`
+	Translations interface{} `json:"translations"`
 }
 
 func (r *Repository) AssignPermissionToRole(ctx context.Context, roleID, permissionID string) error {

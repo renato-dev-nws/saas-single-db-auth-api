@@ -77,20 +77,22 @@ CREATE TABLE saas_admin_role_permissions (
 -- ============================================================
 
 CREATE TABLE saas_features (
-    id          UUID         PRIMARY KEY DEFAULT uuid_generate_v4(),
-    title       VARCHAR(255) NOT NULL,
-    slug        VARCHAR(100) UNIQUE NOT NULL,
-    code        VARCHAR(10)  UNIQUE NOT NULL,
-    description TEXT,
-    is_active   BOOLEAN      NOT NULL DEFAULT true,
-    created_at  TIMESTAMP    NOT NULL DEFAULT NOW(),
-    updated_at  TIMESTAMP    NOT NULL DEFAULT NOW()
+    id           UUID         PRIMARY KEY DEFAULT uuid_generate_v4(),
+    title        VARCHAR(255) NOT NULL,
+    slug         VARCHAR(100) UNIQUE NOT NULL,
+    code         VARCHAR(10)  UNIQUE NOT NULL,
+    description  TEXT,
+    translations JSONB        NOT NULL DEFAULT '{}',
+    is_active    BOOLEAN      NOT NULL DEFAULT true,
+    created_at   TIMESTAMP    NOT NULL DEFAULT NOW(),
+    updated_at   TIMESTAMP    NOT NULL DEFAULT NOW()
 );
 
 CREATE TABLE saas_plans (
     id            UUID           PRIMARY KEY DEFAULT uuid_generate_v4(),
     name          VARCHAR(255)   NOT NULL,
     description   TEXT,
+    translations  JSONB          NOT NULL DEFAULT '{}',
     plan_type     plan_type      NOT NULL DEFAULT 'individual',
     price         DECIMAL(10,2)  NOT NULL DEFAULT 0,
     max_users     INTEGER        NOT NULL DEFAULT 1,
@@ -116,6 +118,7 @@ CREATE TABLE saas_plans_promotions (
     plan_id         UUID           REFERENCES saas_plans(id) ON DELETE SET NULL,
     name            VARCHAR(255)   NOT NULL,
     description     TEXT,
+    translations    JSONB          NOT NULL DEFAULT '{}',
     discount_type   discount_type  NOT NULL,
     discount_value  DECIMAL(10,2)  NOT NULL,
     duration_months INTEGER        NOT NULL DEFAULT 1,
@@ -196,23 +199,25 @@ CREATE TABLE user_profiles (
 );
 
 CREATE TABLE user_roles (
-    id         UUID         PRIMARY KEY DEFAULT uuid_generate_v4(),
-    tenant_id  UUID         REFERENCES tenants(id) ON DELETE CASCADE,
-    title      VARCHAR(255) NOT NULL,
-    slug       VARCHAR(100) NOT NULL,
-    created_at TIMESTAMP    NOT NULL DEFAULT NOW(),
-    updated_at TIMESTAMP    NOT NULL DEFAULT NOW(),
+    id           UUID         PRIMARY KEY DEFAULT uuid_generate_v4(),
+    tenant_id    UUID         REFERENCES tenants(id) ON DELETE CASCADE,
+    title        VARCHAR(255) NOT NULL,
+    slug         VARCHAR(100) NOT NULL,
+    translations JSONB        NOT NULL DEFAULT '{}',
+    created_at   TIMESTAMP    NOT NULL DEFAULT NOW(),
+    updated_at   TIMESTAMP    NOT NULL DEFAULT NOW(),
     UNIQUE (tenant_id, slug)
 );
 
 CREATE TABLE user_permissions (
-    id          UUID         PRIMARY KEY DEFAULT uuid_generate_v4(),
-    feature_id  UUID         REFERENCES saas_features(id) ON DELETE CASCADE,
-    title       VARCHAR(255) NOT NULL,
-    slug        VARCHAR(100) UNIQUE NOT NULL,
-    description TEXT,
-    created_at  TIMESTAMP    NOT NULL DEFAULT NOW(),
-    updated_at  TIMESTAMP    NOT NULL DEFAULT NOW()
+    id           UUID         PRIMARY KEY DEFAULT uuid_generate_v4(),
+    feature_id   UUID         REFERENCES saas_features(id) ON DELETE CASCADE,
+    title        VARCHAR(255) NOT NULL,
+    slug         VARCHAR(100) UNIQUE NOT NULL,
+    description  TEXT,
+    translations JSONB        NOT NULL DEFAULT '{}',
+    created_at   TIMESTAMP    NOT NULL DEFAULT NOW(),
+    updated_at   TIMESTAMP    NOT NULL DEFAULT NOW()
 );
 
 CREATE TABLE user_role_permissions (
@@ -464,16 +469,19 @@ INSERT INTO saas_admin_user_roles (admin_user_id, admin_role_id)
     WHERE u.email = 'admin@saas.com' AND r.slug = 'super_admin';
 
 -- Default features
-INSERT INTO saas_features (id, title, slug, code) VALUES
-    ('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', 'Products', 'products', 'prod'),
-    ('bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb', 'Services', 'services', 'serv');
+INSERT INTO saas_features (id, title, slug, code, translations) VALUES
+    ('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', 'Products', 'products', 'prod',
+     '{"title":{"pt-BR":"Produtos","pt":"Produtos","en":"Products","es":"Productos"},"description":{"pt-BR":"Gerenciamento de produtos do catálogo","pt":"Gestão de produtos do catálogo","en":"Product catalog management","es":"Gestión del catálogo de productos"}}'),
+    ('bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb', 'Services', 'services', 'serv',
+     '{"title":{"pt-BR":"Serviços","pt":"Serviços","en":"Services","es":"Servicios"},"description":{"pt-BR":"Gerenciamento de serviços do catálogo","pt":"Gestão de serviços do catálogo","en":"Service catalog management","es":"Gestión del catálogo de servicios"}}');
 
 -- Default promotion
-INSERT INTO saas_plans_promotions (id, plan_id, name, description, discount_type, discount_value, duration_months, valid_from, is_active) VALUES
+INSERT INTO saas_plans_promotions (id, plan_id, name, description, translations, discount_type, discount_value, duration_months, valid_from, is_active) VALUES
     ('cc000000-0000-0000-0000-000000000001',
      NULL,
      'Lançamento 50% off',
      '50% de desconto nos primeiros 3 meses',
+     '{"name":{"pt-BR":"Lançamento 50% off","pt":"Lançamento 50% off","en":"Launch 50% off","es":"Lanzamiento 50% de descuento"},"description":{"pt-BR":"50% de desconto nos primeiros 3 meses","pt":"50% de desconto nos primeiros 3 meses","en":"50% off for the first 3 months","es":"50% de descuento en los primeros 3 meses"}}',
      'percent', 50.00, 3,
      NOW(), true);
 
@@ -482,40 +490,79 @@ INSERT INTO saas_plans_promotions (id, plan_id, name, description, discount_type
 -- Individual: always 1 user (with and without multilang)
 -- Business: 1, 5 and 10 users (with and without multilang)
 -- ============================================================
-INSERT INTO saas_plans (id, name, description, plan_type, price, max_users, is_multilang) VALUES
+INSERT INTO saas_plans (id, name, description, translations, plan_type, price, max_users, is_multilang) VALUES
     -- Individual plans (1 user always)
-    ('10000000-0000-0000-0000-000000000001', 'Individual',           'Plano individual sem multilang',            'individual',  29.90,  1, false),
-    ('10000000-0000-0000-0000-000000000002', 'Individual Multi',     'Plano individual com multilang',            'individual',  49.90,  1, true),
+    ('10000000-0000-0000-0000-000000000001', 'Individual',        'Plano individual sem multilang',
+     '{"name":{"pt-BR":"Individual","pt":"Individual","en":"Individual","es":"Individual"},"description":{"pt-BR":"Plano individual sem suporte multilíngue","pt":"Plano individual sem suporte multilíngue","en":"Individual plan without multilingual support","es":"Plan individual sin soporte multilingüe"}}',
+     'individual', 29.90, 1, false),
+    ('10000000-0000-0000-0000-000000000002', 'Individual Multi',  'Plano individual com multilang',
+     '{"name":{"pt-BR":"Individual Multi","pt":"Individual Multi","en":"Individual Multi","es":"Individual Multi"},"description":{"pt-BR":"Plano individual com suporte multilíngue","pt":"Plano individual com suporte multilíngue","en":"Individual plan with multilingual support","es":"Plan individual con soporte multilingüe"}}',
+     'individual', 49.90, 1, true),
     -- Business plans (1, 5, 10 users)
-    ('20000000-0000-0000-0000-000000000001', 'Business 1',           'Plano empresarial 1 usuário',               'business',    59.90,  1, false),
-    ('20000000-0000-0000-0000-000000000002', 'Business 1 Multi',     'Plano empresarial 1 usuário com multilang', 'business',    79.90,  1, true),
-    ('20000000-0000-0000-0000-000000000003', 'Business 5',           'Plano empresarial 5 usuários',              'business',    99.90,  5, false),
-    ('20000000-0000-0000-0000-000000000004', 'Business 5 Multi',     'Plano empresarial 5 usuários com multilang','business',   129.90,  5, true),
-    ('20000000-0000-0000-0000-000000000005', 'Business 10',          'Plano empresarial 10 usuários',             'business',   199.90, 10, false),
-    ('20000000-0000-0000-0000-000000000006', 'Business 10 Multi',    'Plano empresarial 10 usuários com multilang','business',  249.90, 10, true);
+    ('20000000-0000-0000-0000-000000000001', 'Business 1',        'Plano empresarial 1 usuário',
+     '{"name":{"pt-BR":"Business 1","pt":"Business 1","en":"Business 1","es":"Business 1"},"description":{"pt-BR":"Plano empresarial para 1 usuário","pt":"Plano empresarial para 1 utilizador","en":"Business plan for 1 user","es":"Plan empresarial para 1 usuario"}}',
+     'business', 59.90, 1, false),
+    ('20000000-0000-0000-0000-000000000002', 'Business 1 Multi',  'Plano empresarial 1 usuário com multilang',
+     '{"name":{"pt-BR":"Business 1 Multi","pt":"Business 1 Multi","en":"Business 1 Multi","es":"Business 1 Multi"},"description":{"pt-BR":"Plano empresarial para 1 usuário com multilíngue","pt":"Plano empresarial para 1 utilizador com multilíngue","en":"Business plan for 1 user with multilingual","es":"Plan empresarial para 1 usuario con multilingüe"}}',
+     'business', 79.90, 1, true),
+    ('20000000-0000-0000-0000-000000000003', 'Business 5',        'Plano empresarial 5 usuários',
+     '{"name":{"pt-BR":"Business 5","pt":"Business 5","en":"Business 5","es":"Business 5"},"description":{"pt-BR":"Plano empresarial para até 5 usuários","pt":"Plano empresarial para até 5 utilizadores","en":"Business plan for up to 5 users","es":"Plan empresarial para hasta 5 usuarios"}}',
+     'business', 99.90, 5, false),
+    ('20000000-0000-0000-0000-000000000004', 'Business 5 Multi',  'Plano empresarial 5 usuários com multilang',
+     '{"name":{"pt-BR":"Business 5 Multi","pt":"Business 5 Multi","en":"Business 5 Multi","es":"Business 5 Multi"},"description":{"pt-BR":"Plano empresarial para até 5 usuários com multilíngue","pt":"Plano empresarial para até 5 utilizadores com multilíngue","en":"Business plan for up to 5 users with multilingual","es":"Plan empresarial para hasta 5 usuarios con multilingüe"}}',
+     'business', 129.90, 5, true),
+    ('20000000-0000-0000-0000-000000000005', 'Business 10',       'Plano empresarial 10 usuários',
+     '{"name":{"pt-BR":"Business 10","pt":"Business 10","en":"Business 10","es":"Business 10"},"description":{"pt-BR":"Plano empresarial para até 10 usuários","pt":"Plano empresarial para até 10 utilizadores","en":"Business plan for up to 10 users","es":"Plan empresarial para hasta 10 usuarios"}}',
+     'business', 199.90, 10, false),
+    ('20000000-0000-0000-0000-000000000006', 'Business 10 Multi', 'Plano empresarial 10 usuários com multilang',
+     '{"name":{"pt-BR":"Business 10 Multi","pt":"Business 10 Multi","en":"Business 10 Multi","es":"Business 10 Multi"},"description":{"pt-BR":"Plano empresarial para até 10 usuários com multilíngue","pt":"Plano empresarial para até 10 utilizadores com multilíngue","en":"Business plan for up to 10 users with multilingual","es":"Plan empresarial para hasta 10 usuarios con multilingüe"}}',
+     'business', 249.90, 10, true);
 
 -- Assign all features to all plans
 INSERT INTO saas_features_plans (plan_id, feature_id)
 SELECT p.id, f.id FROM saas_plans p, saas_features f;
 
 -- User permissions (backoffice)
-INSERT INTO user_permissions (id, title, slug, feature_id) VALUES
-    (uuid_generate_v4(), 'Create Product', 'prod_c', 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa'),
-    (uuid_generate_v4(), 'Read Product',   'prod_r', 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa'),
-    (uuid_generate_v4(), 'Update Product', 'prod_u', 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa'),
-    (uuid_generate_v4(), 'Delete Product', 'prod_d', 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa'),
-    (uuid_generate_v4(), 'Create Service', 'serv_c', 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb'),
-    (uuid_generate_v4(), 'Read Service',   'serv_r', 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb'),
-    (uuid_generate_v4(), 'Update Service', 'serv_u', 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb'),
-    (uuid_generate_v4(), 'Delete Service', 'serv_d', 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb'),
-    (uuid_generate_v4(), 'Manage Users',   'user_m', NULL),
-    (uuid_generate_v4(), 'Manage Settings','setg_m', NULL);
+INSERT INTO user_permissions (id, title, slug, feature_id, description, translations) VALUES
+    (uuid_generate_v4(), 'Create Product', 'prod_c', 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
+     'Criar novos produtos no catálogo',
+     '{"title":{"pt-BR":"Criar Produto","pt":"Criar Produto","en":"Create Product","es":"Crear Producto"},"description":{"pt-BR":"Criar novos produtos no catálogo","pt":"Criar novos produtos no catálogo","en":"Create new products in the catalog","es":"Crear nuevos productos en el catálogo"}}'),
+    (uuid_generate_v4(), 'Read Product',   'prod_r', 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
+     'Visualizar produtos do catálogo',
+     '{"title":{"pt-BR":"Visualizar Produto","pt":"Visualizar Produto","en":"Read Product","es":"Ver Producto"},"description":{"pt-BR":"Visualizar produtos do catálogo","pt":"Visualizar produtos do catálogo","en":"View products in the catalog","es":"Ver productos en el catálogo"}}'),
+    (uuid_generate_v4(), 'Update Product', 'prod_u', 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
+     'Editar produtos existentes',
+     '{"title":{"pt-BR":"Editar Produto","pt":"Editar Produto","en":"Update Product","es":"Editar Producto"},"description":{"pt-BR":"Editar produtos existentes no catálogo","pt":"Editar produtos existentes no catálogo","en":"Edit existing products in the catalog","es":"Editar productos existentes en el catálogo"}}'),
+    (uuid_generate_v4(), 'Delete Product', 'prod_d', 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
+     'Remover produtos do catálogo',
+     '{"title":{"pt-BR":"Remover Produto","pt":"Remover Produto","en":"Delete Product","es":"Eliminar Producto"},"description":{"pt-BR":"Remover produtos do catálogo","pt":"Remover produtos do catálogo","en":"Remove products from the catalog","es":"Eliminar productos del catálogo"}}'),
+    (uuid_generate_v4(), 'Create Service', 'serv_c', 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb',
+     'Criar novos serviços no catálogo',
+     '{"title":{"pt-BR":"Criar Serviço","pt":"Criar Serviço","en":"Create Service","es":"Crear Servicio"},"description":{"pt-BR":"Criar novos serviços no catálogo","pt":"Criar novos serviços no catálogo","en":"Create new services in the catalog","es":"Crear nuevos servicios en el catálogo"}}'),
+    (uuid_generate_v4(), 'Read Service',   'serv_r', 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb',
+     'Visualizar serviços do catálogo',
+     '{"title":{"pt-BR":"Visualizar Serviço","pt":"Visualizar Serviço","en":"Read Service","es":"Ver Servicio"},"description":{"pt-BR":"Visualizar serviços do catálogo","pt":"Visualizar serviços do catálogo","en":"View services in the catalog","es":"Ver servicios en el catálogo"}}'),
+    (uuid_generate_v4(), 'Update Service', 'serv_u', 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb',
+     'Editar serviços existentes',
+     '{"title":{"pt-BR":"Editar Serviço","pt":"Editar Serviço","en":"Update Service","es":"Editar Servicio"},"description":{"pt-BR":"Editar serviços existentes no catálogo","pt":"Editar serviços existentes no catálogo","en":"Edit existing services in the catalog","es":"Editar servicios existentes en el catálogo"}}'),
+    (uuid_generate_v4(), 'Delete Service', 'serv_d', 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb',
+     'Remover serviços do catálogo',
+     '{"title":{"pt-BR":"Remover Serviço","pt":"Remover Serviço","en":"Delete Service","es":"Eliminar Servicio"},"description":{"pt-BR":"Remover serviços do catálogo","pt":"Remover serviços do catálogo","en":"Remove services from the catalog","es":"Eliminar servicios del catálogo"}}'),
+    (uuid_generate_v4(), 'Manage Users',    'user_m', NULL,
+     'Gerenciar usuários do tenant',
+     '{"title":{"pt-BR":"Gerenciar Usuários","pt":"Gerir Utilizadores","en":"Manage Users","es":"Gestionar Usuarios"},"description":{"pt-BR":"Gerenciar usuários e membros do tenant","pt":"Gerir utilizadores e membros do tenant","en":"Manage tenant users and members","es":"Gestionar usuarios y miembros del tenant"}}'),
+    (uuid_generate_v4(), 'Manage Settings', 'setg_m', NULL,
+     'Gerenciar configurações do sistema',
+     '{"title":{"pt-BR":"Gerenciar Configurações","pt":"Gerir Configurações","en":"Manage Settings","es":"Gestionar Configuración"},"description":{"pt-BR":"Gerenciar configurações e personalização do sistema","pt":"Gerir configurações e personalização do sistema","en":"Manage system settings and customization","es":"Gestionar configuración y personalización del sistema"}}');
 
 -- Global user roles (tenant_id NULL = templates copied when creating a tenant)
-INSERT INTO user_roles (id, tenant_id, title, slug) VALUES
-    ('eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee', NULL, 'Owner',  'owner'),
-    ('ffffffff-ffff-ffff-ffff-ffffffffffff', NULL, 'Admin',  'admin'),
-    ('eeeeeeee-eeee-eeee-eeee-111111111111', NULL, 'Member', 'member')
+INSERT INTO user_roles (id, tenant_id, title, slug, translations) VALUES
+    ('eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee', NULL, 'Owner',  'owner',
+     '{"title":{"pt-BR":"Proprietário","pt":"Proprietário","en":"Owner","es":"Propietario"}}'),
+    ('ffffffff-ffff-ffff-ffff-ffffffffffff', NULL, 'Admin',  'admin',
+     '{"title":{"pt-BR":"Administrador","pt":"Administrador","en":"Admin","es":"Administrador"}}'),
+    ('eeeeeeee-eeee-eeee-eeee-111111111111', NULL, 'Member', 'member',
+     '{"title":{"pt-BR":"Membro","pt":"Membro","en":"Member","es":"Miembro"}}')
 ON CONFLICT (id) DO NOTHING;
 
 -- Assign all permissions to owner template role

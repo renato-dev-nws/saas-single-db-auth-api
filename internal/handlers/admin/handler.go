@@ -1024,7 +1024,7 @@ func (h *Handler) CreatePlan(c *gin.Context) {
 		maxUsers = 1
 	}
 
-	id, err := h.service.Repo().CreatePlan(c.Request.Context(), req.Name, req.Description, req.PlanType, req.Price, maxUsers, req.IsMultilang)
+	id, err := h.service.Repo().CreatePlan(c.Request.Context(), req.Name, req.Description, req.PlanType, req.Price, maxUsers, req.IsMultilang, req.Translations)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": i18n.T(c, "failed_create_plan")})
 		return
@@ -1080,7 +1080,7 @@ func (h *Handler) UpdatePlan(c *gin.Context) {
 		return
 	}
 
-	if err := h.service.Repo().UpdatePlan(c.Request.Context(), id, req.Name, req.Description, req.Price, req.MaxUsers, req.IsMultilang, req.IsActive); err != nil {
+	if err := h.service.Repo().UpdatePlan(c.Request.Context(), id, req.Name, req.Description, req.Price, req.MaxUsers, req.IsMultilang, req.IsActive, req.Translations); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": i18n.T(c, "failed_update_plan")})
 		return
 	}
@@ -1193,7 +1193,7 @@ func (h *Handler) CreateFeature(c *gin.Context) {
 		return
 	}
 
-	id, err := h.service.Repo().CreateFeature(c.Request.Context(), req.Title, req.Slug, req.Code, req.Description, req.IsActive)
+	id, err := h.service.Repo().CreateFeature(c.Request.Context(), req.Title, req.Slug, req.Code, req.Description, req.IsActive, req.Translations)
 	if err != nil {
 		c.JSON(http.StatusConflict, gin.H{"error": i18n.T(c, "feature_already_exists")})
 		return
@@ -1244,7 +1244,7 @@ func (h *Handler) UpdateFeature(c *gin.Context) {
 		return
 	}
 
-	if err := h.service.Repo().UpdateFeature(c.Request.Context(), id, req.Title, req.Description, req.IsActive); err != nil {
+	if err := h.service.Repo().UpdateFeature(c.Request.Context(), id, req.Title, req.Description, req.IsActive, req.Translations); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": i18n.T(c, "failed_update_feature")})
 		return
 	}
@@ -1309,7 +1309,7 @@ func (h *Handler) CreatePromotion(c *gin.Context) {
 		return
 	}
 
-	id, err := h.service.Repo().CreatePromotion(c.Request.Context(), req.Name, req.Description, req.DiscountType, req.DiscountValue, req.DurationMonths, req.ValidFrom, req.ValidUntil, req.PlanID)
+	id, err := h.service.Repo().CreatePromotion(c.Request.Context(), req.Name, req.Description, req.DiscountType, req.DiscountValue, req.DurationMonths, req.ValidFrom, req.ValidUntil, req.PlanID, req.Translations)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": i18n.T(c, "failed_create_promotion")})
 		return
@@ -1360,7 +1360,7 @@ func (h *Handler) UpdatePromotion(c *gin.Context) {
 		return
 	}
 
-	if err := h.service.Repo().UpdatePromotion(c.Request.Context(), id, req); err != nil {
+	if err := h.service.Repo().UpdatePromotion(c.Request.Context(), id, req.Name, req.Description, req.DiscountType, req.DiscountValue, req.DurationMonths, req.ValidFrom, req.ValidUntil, req.IsActive, req.Translations); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": i18n.T(c, "failed_update_promotion")})
 		return
 	}
@@ -1406,8 +1406,8 @@ func calculatePromoPrice(basePrice float64, discountType string, discountValue f
 func copyGlobalRolesToTenant(ctx context.Context, tx pgx.Tx, tenantID string) {
 	// Copy global template roles (tenant_id IS NULL) to the new tenant
 	tx.Exec(ctx,
-		`INSERT INTO user_roles (tenant_id, title, slug)
-		 SELECT $1, title, slug FROM user_roles WHERE tenant_id IS NULL`,
+		`INSERT INTO user_roles (tenant_id, title, slug, translations)
+		 SELECT $1, title, slug, translations FROM user_roles WHERE tenant_id IS NULL`,
 		tenantID,
 	)
 

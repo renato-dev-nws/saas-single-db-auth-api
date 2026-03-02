@@ -2494,6 +2494,7 @@ const docTemplate = `{
                     "type": "string",
                     "example": "Products"
                 },
+                "translations": {},
                 "updated_at": {
                     "type": "string"
                 }
@@ -2594,6 +2595,7 @@ const docTemplate = `{
                     "type": "number",
                     "example": 99.9
                 },
+                "translations": {},
                 "updated_at": {
                     "type": "string"
                 }
@@ -2644,6 +2646,7 @@ const docTemplate = `{
                     "type": "string",
                     "example": "Launch Discount"
                 },
+                "translations": {},
                 "updated_at": {
                     "type": "string"
                 },
@@ -2861,7 +2864,8 @@ const docTemplate = `{
                 },
                 "title": {
                     "type": "string"
-                }
+                },
+                "translations": {}
             }
         },
         "tenant.CreatePlanRequest": {
@@ -2895,7 +2899,8 @@ const docTemplate = `{
                 },
                 "price": {
                     "type": "number"
-                }
+                },
+                "translations": {}
             }
         },
         "tenant.CreatePromotionRequest": {
@@ -2925,6 +2930,7 @@ const docTemplate = `{
                 "plan_id": {
                     "type": "string"
                 },
+                "translations": {},
                 "valid_from": {
                     "type": "string"
                 },
@@ -2996,7 +3002,8 @@ const docTemplate = `{
                 },
                 "title": {
                     "type": "string"
-                }
+                },
+                "translations": {}
             }
         },
         "tenant.UpdatePlanRequest": {
@@ -3019,7 +3026,8 @@ const docTemplate = `{
                 },
                 "price": {
                     "type": "number"
-                }
+                },
+                "translations": {}
             }
         },
         "tenant.UpdatePromotionRequest": {
@@ -3043,6 +3051,7 @@ const docTemplate = `{
                 "name": {
                     "type": "string"
                 },
+                "translations": {},
                 "valid_from": {
                     "type": "string"
                 },

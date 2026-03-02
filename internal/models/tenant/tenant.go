@@ -183,63 +183,69 @@ type UserBriefDTO struct {
 
 // CreatePlanRequest is the request to create a plan
 type CreatePlanRequest struct {
-	Name        string   `json:"name" binding:"required"`
-	Description *string  `json:"description"`
-	PlanType    string   `json:"plan_type" binding:"required"`
-	Price       float64  `json:"price" binding:"required"`
-	MaxUsers    int      `json:"max_users"`
-	IsMultilang bool     `json:"is_multilang"`
-	FeatureIDs  []string `json:"feature_ids"`
+	Name         string      `json:"name" binding:"required"`
+	Description  *string     `json:"description"`
+	PlanType     string      `json:"plan_type" binding:"required"`
+	Price        float64     `json:"price" binding:"required"`
+	MaxUsers     int         `json:"max_users"`
+	IsMultilang  bool        `json:"is_multilang"`
+	FeatureIDs   []string    `json:"feature_ids"`
+	Translations interface{} `json:"translations"`
 }
 
 // UpdatePlanRequest is the request to update a plan
 type UpdatePlanRequest struct {
-	Name        *string  `json:"name"`
-	Description *string  `json:"description"`
-	Price       *float64 `json:"price"`
-	MaxUsers    *int     `json:"max_users"`
-	IsMultilang *bool    `json:"is_multilang"`
-	IsActive    *bool    `json:"is_active"`
+	Name         *string     `json:"name"`
+	Description  *string     `json:"description"`
+	Price        *float64    `json:"price"`
+	MaxUsers     *int        `json:"max_users"`
+	IsMultilang  *bool       `json:"is_multilang"`
+	IsActive     *bool       `json:"is_active"`
+	Translations interface{} `json:"translations"`
 }
 
 // CreateFeatureRequest is the request to create a feature
 type CreateFeatureRequest struct {
-	Title       string  `json:"title" binding:"required"`
-	Slug        string  `json:"slug" binding:"required"`
-	Code        string  `json:"code" binding:"required"`
-	Description *string `json:"description"`
-	IsActive    bool    `json:"is_active"`
+	Title        string      `json:"title" binding:"required"`
+	Slug         string      `json:"slug" binding:"required"`
+	Code         string      `json:"code" binding:"required"`
+	Description  *string     `json:"description"`
+	IsActive     bool        `json:"is_active"`
+	Translations interface{} `json:"translations"`
 }
 
 // UpdateFeatureRequest is the request to update a feature
 type UpdateFeatureRequest struct {
-	Title       *string `json:"title"`
-	Description *string `json:"description"`
-	IsActive    *bool   `json:"is_active"`
+	Title        *string     `json:"title"`
+	Description  *string     `json:"description"`
+	IsActive     *bool       `json:"is_active"`
+	Translations interface{} `json:"translations"`
 }
 
 // CreatePromotionRequest is the request to create a promotion
 type CreatePromotionRequest struct {
-	Name           string     `json:"name" binding:"required"`
-	Description    *string    `json:"description"`
-	DiscountType   string     `json:"discount_type" binding:"required"`
-	DiscountValue  float64    `json:"discount_value" binding:"required"`
-	DurationMonths int        `json:"duration_months" binding:"required"`
-	ValidFrom      *time.Time `json:"valid_from"`
-	ValidUntil     *time.Time `json:"valid_until"`
-	PlanID         *string    `json:"plan_id"`
+	Name           string      `json:"name" binding:"required"`
+	Description    *string     `json:"description"`
+	DiscountType   string      `json:"discount_type" binding:"required"`
+	DiscountValue  float64     `json:"discount_value" binding:"required"`
+	DurationMonths int         `json:"duration_months" binding:"required"`
+	ValidFrom      *time.Time  `json:"valid_from"`
+	ValidUntil     *time.Time  `json:"valid_until"`
+	PlanID         *string     `json:"plan_id"`
+	Translations   interface{} `json:"translations"`
 }
 
 // UpdatePromotionRequest is the request to update a promotion
 type UpdatePromotionRequest struct {
-	Name           *string    `json:"name"`
-	Description    *string    `json:"description"`
-	DiscountType   *string    `json:"discount_type"`
-	DiscountValue  *float64   `json:"discount_value"`
-	DurationMonths *int       `json:"duration_months"`
-	ValidFrom      *time.Time `json:"valid_from"`
-	ValidUntil     *time.Time `json:"valid_until"`
-	IsActive       *bool      `json:"is_active"`
+	Name           *string     `json:"name"`
+	Description    *string     `json:"description"`
+	DiscountType   *string     `json:"discount_type"`
+	DiscountValue  *float64    `json:"discount_value"`
+	DurationMonths *int        `json:"duration_months"`
+	ValidFrom      *time.Time  `json:"valid_from"`
+	ValidUntil     *time.Time  `json:"valid_until"`
+	IsActive       *bool       `json:"is_active"`
+	Translations   interface{} `json:"translations"`
 }
 
 // PlanFeatureRequest adds/removes a feature from a plan

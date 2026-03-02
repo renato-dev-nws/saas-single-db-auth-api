@@ -2969,6 +2969,7 @@
                     "type": "string",
                     "example": "Products"
                 },
+                "translations": {},
                 "updated_at": {
                     "type": "string"
                 }
@@ -3302,6 +3303,7 @@
                     "type": "number",
                     "example": 99.9
                 },
+                "translations": {},
                 "updated_at": {
                     "type": "string"
                 }
@@ -3833,7 +3835,8 @@
                 "title": {
                     "type": "string",
                     "example": "Create Products"
-                }
+                },
+                "translations": {}
             }
         },
         "swagger.UserProfileDTO": {
@@ -3874,6 +3877,7 @@
                     "type": "string",
                     "example": "Editor"
                 },
+                "translations": {},
                 "updated_at": {
                     "type": "string"
                 }

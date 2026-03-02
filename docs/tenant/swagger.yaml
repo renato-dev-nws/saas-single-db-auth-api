@@ -224,6 +224,7 @@ definitions:
       title:
         example: Products
         type: string
+      translations: {}
       updated_at:
         type: string
     type: object
@@ -460,6 +461,7 @@ definitions:
       price:
         example: 99.9
         type: number
+      translations: {}
       updated_at:
         type: string
     type: object
@@ -839,6 +841,7 @@ definitions:
       title:
         example: Create Products
         type: string
+      translations: {}
     type: object
   swagger.UserProfileDTO:
     properties:
@@ -867,6 +870,7 @@ definitions:
       title:
         example: Editor
         type: string
+      translations: {}
       updated_at:
         type: string
     type: object

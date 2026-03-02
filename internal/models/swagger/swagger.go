@@ -134,17 +134,18 @@ type OwnerBrief struct {
 
 // PlanResponse represents a plan with features
 type PlanResponse struct {
-	ID          string            `json:"id" example:"uuid"`
-	Name        string            `json:"name" example:"Business Pro"`
-	Description *string           `json:"description" example:"Business plan with all features"`
-	PlanType    string            `json:"plan_type" example:"business"`
-	Price       float64           `json:"price" example:"99.90"`
-	MaxUsers    int               `json:"max_users" example:"5"`
-	IsMultilang bool              `json:"is_multilang" example:"true"`
-	IsActive    bool              `json:"is_active" example:"true"`
-	Features    []FeatureResponse `json:"features,omitempty"`
-	CreatedAt   time.Time         `json:"created_at"`
-	UpdatedAt   time.Time         `json:"updated_at"`
+	ID           string            `json:"id" example:"uuid"`
+	Name         string            `json:"name" example:"Business Pro"`
+	Description  *string           `json:"description" example:"Business plan with all features"`
+	Translations interface{}       `json:"translations"`
+	PlanType     string            `json:"plan_type" example:"business"`
+	Price        float64           `json:"price" example:"99.90"`
+	MaxUsers     int               `json:"max_users" example:"5"`
+	IsMultilang  bool              `json:"is_multilang" example:"true"`
+	IsActive     bool              `json:"is_active" example:"true"`
+	Features     []FeatureResponse `json:"features,omitempty"`
+	CreatedAt    time.Time         `json:"created_at"`
+	UpdatedAt    time.Time         `json:"updated_at"`
 }
 
 // PlanListResponse wraps a list of plans
@@ -154,14 +155,15 @@ type PlanListResponse struct {
 
 // FeatureResponse represents a feature entity
 type FeatureResponse struct {
-	ID          string    `json:"id" example:"uuid"`
-	Title       string    `json:"title" example:"Products"`
-	Slug        string    `json:"slug" example:"products"`
-	Code        string    `json:"code" example:"products"`
-	Description *string   `json:"description" example:"Product management feature"`
-	IsActive    bool      `json:"is_active" example:"true"`
-	CreatedAt   time.Time `json:"created_at"`
-	UpdatedAt   time.Time `json:"updated_at"`
+	ID           string      `json:"id" example:"uuid"`
+	Title        string      `json:"title" example:"Products"`
+	Slug         string      `json:"slug" example:"products"`
+	Code         string      `json:"code" example:"products"`
+	Description  *string     `json:"description" example:"Product management feature"`
+	Translations interface{} `json:"translations"`
+	IsActive     bool        `json:"is_active" example:"true"`
+	CreatedAt    time.Time   `json:"created_at"`
+	UpdatedAt    time.Time   `json:"updated_at"`
 }
 
 // FeatureListResponse wraps a list of features
@@ -171,17 +173,18 @@ type FeatureListResponse struct {
 
 // PromotionResponse represents a promotion entity
 type PromotionResponse struct {
-	ID             string     `json:"id" example:"uuid"`
-	Name           string     `json:"name" example:"Launch Discount"`
-	Description    *string    `json:"description" example:"50% off for 3 months"`
-	DiscountType   string     `json:"discount_type" example:"percentage"`
-	DiscountValue  float64    `json:"discount_value" example:"50"`
-	DurationMonths int        `json:"duration_months" example:"3"`
-	ValidFrom      time.Time  `json:"valid_from"`
-	ValidUntil     *time.Time `json:"valid_until"`
-	IsActive       bool       `json:"is_active" example:"true"`
-	CreatedAt      time.Time  `json:"created_at"`
-	UpdatedAt      time.Time  `json:"updated_at"`
+	ID             string      `json:"id" example:"uuid"`
+	Name           string      `json:"name" example:"Launch Discount"`
+	Description    *string     `json:"description" example:"50% off for 3 months"`
+	Translations   interface{} `json:"translations"`
+	DiscountType   string      `json:"discount_type" example:"percentage"`
+	DiscountValue  float64     `json:"discount_value" example:"50"`
+	DurationMonths int         `json:"duration_months" example:"3"`
+	ValidFrom      time.Time   `json:"valid_from"`
+	ValidUntil     *time.Time  `json:"valid_until"`
+	IsActive       bool        `json:"is_active" example:"true"`
+	CreatedAt      time.Time   `json:"created_at"`
+	UpdatedAt      time.Time   `json:"updated_at"`
 }
 
 // PromotionListResponse wraps a list of promotions
@@ -405,12 +408,13 @@ type InviteMemberResponse struct {
 
 // UserRoleResponse represents a role
 type UserRoleResponse struct {
-	ID        string    `json:"id" example:"uuid"`
-	TenantID  *string   `json:"tenant_id"`
-	Title     string    `json:"title" example:"Editor"`
-	Slug      string    `json:"slug" example:"editor"`
-	CreatedAt time.Time `json:"created_at"`
-	UpdatedAt time.Time `json:"updated_at"`
+	ID           string      `json:"id" example:"uuid"`
+	TenantID     *string     `json:"tenant_id"`
+	Title        string      `json:"title" example:"Editor"`
+	Slug         string      `json:"slug" example:"editor"`
+	Translations interface{} `json:"translations"`
+	CreatedAt    time.Time   `json:"created_at"`
+	UpdatedAt    time.Time   `json:"updated_at"`
 }
 
 // RoleDetailResponse is a role with permissions
@@ -421,11 +425,12 @@ type RoleDetailResponse struct {
 
 // UserPermissionResponse represents a permission
 type UserPermissionResponse struct {
-	ID          string  `json:"id" example:"uuid"`
-	FeatureID   *string `json:"feature_id"`
-	Title       string  `json:"title" example:"Create Products"`
-	Slug        string  `json:"slug" example:"prod_c"`
-	Description *string `json:"description"`
+	ID           string      `json:"id" example:"uuid"`
+	FeatureID    *string     `json:"feature_id"`
+	Title        string      `json:"title" example:"Create Products"`
+	Slug         string      `json:"slug" example:"prod_c"`
+	Description  *string     `json:"description"`
+	Translations interface{} `json:"translations"`
 }
 
 // ProductResponse represents a product

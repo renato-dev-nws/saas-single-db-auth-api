@@ -212,6 +212,7 @@ definitions:
       title:
         example: Products
         type: string
+      translations: {}
       updated_at:
         type: string
     type: object
@@ -282,6 +283,7 @@ definitions:
       price:
         example: 99.9
         type: number
+      translations: {}
       updated_at:
         type: string
     type: object
@@ -317,6 +319,7 @@ definitions:
       name:
         example: Launch Discount
         type: string
+      translations: {}
       updated_at:
         type: string
       valid_from:
@@ -464,6 +467,7 @@ definitions:
         type: string
       title:
         type: string
+      translations: {}
     required:
     - code
     - slug
@@ -487,6 +491,7 @@ definitions:
         type: string
       price:
         type: number
+      translations: {}
     required:
     - name
     - plan_type
@@ -506,6 +511,7 @@ definitions:
         type: string
       plan_id:
         type: string
+      translations: {}
       valid_from:
         type: string
       valid_until:
@@ -559,6 +565,7 @@ definitions:
         type: boolean
       title:
         type: string
+      translations: {}
     type: object
   tenant.UpdatePlanRequest:
     properties:
@@ -574,6 +581,7 @@ definitions:
         type: string
       price:
         type: number
+      translations: {}
     type: object
   tenant.UpdatePromotionRequest:
     properties:
@@ -589,6 +597,7 @@ definitions:
         type: boolean
       name:
         type: string
+      translations: {}
       valid_from:
         type: string
       valid_until:

@@ -2,6 +2,7 @@ package admin
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 
 	"github.com/jackc/pgx/v5"
@@ -502,7 +503,7 @@ type memberRow struct {
 
 func (r *Repository) ListPlans(ctx context.Context) ([]planWithFeatures, error) {
 	rows, err := r.db.Query(ctx,
-		`SELECT p.id, p.name, p.description, p.plan_type, p.price, p.max_users, p.is_multilang, p.is_active,
+		`SELECT p.id, p.name, p.description, p.translations, p.plan_type, p.price, p.max_users, p.is_multilang, p.is_active,
 		        p.created_at, p.updated_at
 		 FROM saas_plans p ORDER BY p.price`,
 	)
@@ -514,7 +515,7 @@ func (r *Repository) ListPlans(ctx context.Context) ([]planWithFeatures, error) 
 	var plans []planWithFeatures
 	for rows.Next() {
 		var p planWithFeatures
-		if err := rows.Scan(&p.ID, &p.Name, &p.Description, &p.PlanType, &p.Price, &p.MaxUsers,
+		if err := rows.Scan(&p.ID, &p.Name, &p.Description, &p.Translations, &p.PlanType, &p.Price, &p.MaxUsers,
 			&p.IsMultilang, &p.IsActive, &p.CreatedAt, &p.UpdatedAt); err != nil {
 			return nil, err
 		}
@@ -530,32 +531,34 @@ func (r *Repository) ListPlans(ctx context.Context) ([]planWithFeatures, error) 
 }
 
 type planWithFeatures struct {
-	ID          string
-	Name        string
-	Description *string
-	PlanType    string
-	Price       float64
-	MaxUsers    int
-	IsMultilang bool
-	IsActive    bool
-	CreatedAt   interface{}
-	UpdatedAt   interface{}
-	Features    []featureRow
+	ID           string
+	Name         string
+	Description  *string
+	Translations interface{}
+	PlanType     string
+	Price        float64
+	MaxUsers     int
+	IsMultilang  bool
+	IsActive     bool
+	CreatedAt    interface{}
+	UpdatedAt    interface{}
+	Features     []featureRow
 }
 
 type featureRow struct {
-	ID    string
-	Title string
-	Slug  string
-	Code  string
+	ID           string
+	Title        string
+	Slug         string
+	Code         string
+	Translations interface{}
 }
 
 func (r *Repository) GetPlanByID(ctx context.Context, id string) (*planWithFeatures, error) {
 	var p planWithFeatures
 	err := r.db.QueryRow(ctx,
-		`SELECT id, name, description, plan_type, price, max_users, is_multilang, is_active, created_at, updated_at
+		`SELECT id, name, description, translations, plan_type, price, max_users, is_multilang, is_active, created_at, updated_at
 		 FROM saas_plans WHERE id = $1`, id,
-	).Scan(&p.ID, &p.Name, &p.Description, &p.PlanType, &p.Price, &p.MaxUsers, &p.IsMultilang, &p.IsActive, &p.CreatedAt, &p.UpdatedAt)
+	).Scan(&p.ID, &p.Name, &p.Description, &p.Translations, &p.PlanType, &p.Price, &p.MaxUsers, &p.IsMultilang, &p.IsActive, &p.CreatedAt, &p.UpdatedAt)
 	if err != nil {
 		return nil, err
 	}
@@ -563,16 +566,22 @@ func (r *Repository) GetPlanByID(ctx context.Context, id string) (*planWithFeatu
 	return &p, nil
 }
 
-func (r *Repository) CreatePlan(ctx context.Context, name string, description *string, planType string, price float64, maxUsers int, isMultilang bool) (string, error) {
+func (r *Repository) CreatePlan(ctx context.Context, name string, description *string, planType string, price float64, maxUsers int, isMultilang bool, translations interface{}) (string, error) {
+	tJSON := "{}"
+	if translations != nil {
+		if b, err := json.Marshal(translations); err == nil {
+			tJSON = string(b)
+		}
+	}
 	var id string
 	err := r.db.QueryRow(ctx,
-		`INSERT INTO saas_plans (name, description, plan_type, price, max_users, is_multilang) VALUES ($1, $2, $3::plan_type, $4, $5, $6) RETURNING id`,
-		name, description, planType, price, maxUsers, isMultilang,
+		`INSERT INTO saas_plans (name, description, translations, plan_type, price, max_users, is_multilang) VALUES ($1, $2, $3::jsonb, $4::plan_type, $5, $6, $7) RETURNING id`,
+		name, description, tJSON, planType, price, maxUsers, isMultilang,
 	).Scan(&id)
 	return id, err
 }
 
-func (r *Repository) UpdatePlan(ctx context.Context, id string, name *string, description *string, price *float64, maxUsers *int, isMultilang *bool, isActive *bool) error {
+func (r *Repository) UpdatePlan(ctx context.Context, id string, name *string, description *string, price *float64, maxUsers *int, isMultilang *bool, isActive *bool, translations interface{}) error {
 	query := `UPDATE saas_plans SET updated_at = NOW()`
 	args := []interface{}{}
 	argIdx := 1
@@ -607,6 +616,13 @@ func (r *Repository) UpdatePlan(ctx context.Context, id string, name *string, de
 		args = append(args, *isActive)
 		argIdx++
 	}
+	if translations != nil {
+		if b, err := json.Marshal(translations); err == nil {
+			query += fmt.Sprintf(", translations = $%d::jsonb", argIdx)
+			args = append(args, string(b))
+			argIdx++
+		}
+	}
 
 	query += fmt.Sprintf(" WHERE id = $%d", argIdx)
 	args = append(args, id)
@@ -622,7 +638,7 @@ func (r *Repository) DeletePlan(ctx context.Context, id string) error {
 
 func (r *Repository) GetPlanFeatures(ctx context.Context, planID string) ([]featureRow, error) {
 	rows, err := r.db.Query(ctx,
-		`SELECT f.id, f.title, f.slug, f.code
+		`SELECT f.id, f.title, f.slug, f.code, f.translations
 		 FROM saas_features f
 		 JOIN saas_features_plans pf ON pf.feature_id = f.id
 		 WHERE pf.plan_id = $1`, planID,
@@ -635,7 +651,7 @@ func (r *Repository) GetPlanFeatures(ctx context.Context, planID string) ([]feat
 	var features []featureRow
 	for rows.Next() {
 		var f featureRow
-		if err := rows.Scan(&f.ID, &f.Title, &f.Slug, &f.Code); err != nil {
+		if err := rows.Scan(&f.ID, &f.Title, &f.Slug, &f.Code, &f.Translations); err != nil {
 			return nil, err
 		}
 		features = append(features, f)
@@ -662,7 +678,7 @@ func (r *Repository) RemoveFeatureFromPlan(ctx context.Context, planID, featureI
 
 func (r *Repository) ListFeatures(ctx context.Context) ([]featureFullRow, error) {
 	rows, err := r.db.Query(ctx,
-		`SELECT id, title, slug, code, description, is_active, created_at, updated_at FROM saas_features ORDER BY title`,
+		`SELECT id, title, slug, code, description, translations, is_active, created_at, updated_at FROM saas_features ORDER BY title`,
 	)
 	if err != nil {
 		return nil, err
@@ -672,7 +688,7 @@ func (r *Repository) ListFeatures(ctx context.Context) ([]featureFullRow, error)
 	var features []featureFullRow
 	for rows.Next() {
 		var f featureFullRow
-		if err := rows.Scan(&f.ID, &f.Title, &f.Slug, &f.Code, &f.Description, &f.IsActive, &f.CreatedAt, &f.UpdatedAt); err != nil {
+		if err := rows.Scan(&f.ID, &f.Title, &f.Slug, &f.Code, &f.Description, &f.Translations, &f.IsActive, &f.CreatedAt, &f.UpdatedAt); err != nil {
 			return nil, err
 		}
 		features = append(features, f)
@@ -681,37 +697,44 @@ func (r *Repository) ListFeatures(ctx context.Context) ([]featureFullRow, error)
 }
 
 type featureFullRow struct {
-	ID          string
-	Title       string
-	Slug        string
-	Code        string
-	Description *string
-	IsActive    bool
-	CreatedAt   interface{}
-	UpdatedAt   interface{}
+	ID           string
+	Title        string
+	Slug         string
+	Code         string
+	Description  *string
+	Translations interface{}
+	IsActive     bool
+	CreatedAt    interface{}
+	UpdatedAt    interface{}
 }
 
 func (r *Repository) GetFeatureByID(ctx context.Context, id string) (*featureFullRow, error) {
 	var f featureFullRow
 	err := r.db.QueryRow(ctx,
-		`SELECT id, title, slug, code, description, is_active, created_at, updated_at FROM saas_features WHERE id = $1`, id,
-	).Scan(&f.ID, &f.Title, &f.Slug, &f.Code, &f.Description, &f.IsActive, &f.CreatedAt, &f.UpdatedAt)
+		`SELECT id, title, slug, code, description, translations, is_active, created_at, updated_at FROM saas_features WHERE id = $1`, id,
+	).Scan(&f.ID, &f.Title, &f.Slug, &f.Code, &f.Description, &f.Translations, &f.IsActive, &f.CreatedAt, &f.UpdatedAt)
 	if err != nil {
 		return nil, err
 	}
 	return &f, nil
 }
 
-func (r *Repository) CreateFeature(ctx context.Context, title, slug, code string, description *string, isActive bool) (string, error) {
+func (r *Repository) CreateFeature(ctx context.Context, title, slug, code string, description *string, isActive bool, translations interface{}) (string, error) {
+	tJSON := "{}"
+	if translations != nil {
+		if b, err := json.Marshal(translations); err == nil {
+			tJSON = string(b)
+		}
+	}
 	var id string
 	err := r.db.QueryRow(ctx,
-		`INSERT INTO saas_features (title, slug, code, description, is_active) VALUES ($1, $2, $3, $4, $5) RETURNING id`,
-		title, slug, code, description, isActive,
+		`INSERT INTO saas_features (title, slug, code, description, translations, is_active) VALUES ($1, $2, $3, $4, $5::jsonb, $6) RETURNING id`,
+		title, slug, code, description, tJSON, isActive,
 	).Scan(&id)
 	return id, err
 }
 
-func (r *Repository) UpdateFeature(ctx context.Context, id string, title *string, description *string, isActive *bool) error {
+func (r *Repository) UpdateFeature(ctx context.Context, id string, title *string, description *string, isActive *bool, translations interface{}) error {
 	query := `UPDATE saas_features SET updated_at = NOW()`
 	args := []interface{}{}
 	argIdx := 1
@@ -731,6 +754,13 @@ func (r *Repository) UpdateFeature(ctx context.Context, id string, title *string
 		args = append(args, *isActive)
 		argIdx++
 	}
+	if translations != nil {
+		if b, err := json.Marshal(translations); err == nil {
+			query += fmt.Sprintf(", translations = $%d::jsonb", argIdx)
+			args = append(args, string(b))
+			argIdx++
+		}
+	}
 
 	query += fmt.Sprintf(" WHERE id = $%d", argIdx)
 	args = append(args, id)
@@ -748,7 +778,7 @@ func (r *Repository) DeleteFeature(ctx context.Context, id string) error {
 
 func (r *Repository) ListPromotions(ctx context.Context) ([]promotionRow, error) {
 	rows, err := r.db.Query(ctx,
-		`SELECT id, name, description, discount_type, discount_value, duration_months,
+		`SELECT id, name, description, translations, discount_type, discount_value, duration_months,
 		        valid_from, valid_until, is_active, plan_id, created_at, updated_at
 		 FROM saas_plans_promotions ORDER BY created_at DESC`,
 	)
@@ -760,7 +790,7 @@ func (r *Repository) ListPromotions(ctx context.Context) ([]promotionRow, error)
 	var promos []promotionRow
 	for rows.Next() {
 		var p promotionRow
-		if err := rows.Scan(&p.ID, &p.Name, &p.Description, &p.DiscountType, &p.DiscountValue,
+		if err := rows.Scan(&p.ID, &p.Name, &p.Description, &p.Translations, &p.DiscountType, &p.DiscountValue,
 			&p.DurationMonths, &p.ValidFrom, &p.ValidUntil, &p.IsActive, &p.PlanID, &p.CreatedAt, &p.UpdatedAt); err != nil {
 			return nil, err
 		}
@@ -773,6 +803,7 @@ type promotionRow struct {
 	ID             string
 	Name           string
 	Description    *string
+	Translations   interface{}
 	DiscountType   string
 	DiscountValue  float64
 	DurationMonths int
@@ -787,10 +818,10 @@ type promotionRow struct {
 func (r *Repository) GetPromotionByID(ctx context.Context, id string) (*promotionRow, error) {
 	var p promotionRow
 	err := r.db.QueryRow(ctx,
-		`SELECT id, name, description, discount_type, discount_value, duration_months,
+		`SELECT id, name, description, translations, discount_type, discount_value, duration_months,
 		        valid_from, valid_until, is_active, plan_id, created_at, updated_at
 		 FROM saas_plans_promotions WHERE id = $1`, id,
-	).Scan(&p.ID, &p.Name, &p.Description, &p.DiscountType, &p.DiscountValue,
+	).Scan(&p.ID, &p.Name, &p.Description, &p.Translations, &p.DiscountType, &p.DiscountValue,
 		&p.DurationMonths, &p.ValidFrom, &p.ValidUntil, &p.IsActive, &p.PlanID, &p.CreatedAt, &p.UpdatedAt)
 	if err != nil {
 		return nil, err
@@ -798,18 +829,79 @@ func (r *Repository) GetPromotionByID(ctx context.Context, id string) (*promotio
 	return &p, nil
 }
 
-func (r *Repository) CreatePromotion(ctx context.Context, name string, description *string, discountType string, discountValue float64, durationMonths int, validFrom, validUntil interface{}, planID *string) (string, error) {
+func (r *Repository) CreatePromotion(ctx context.Context, name string, description *string, discountType string, discountValue float64, durationMonths int, validFrom, validUntil interface{}, planID *string, translations interface{}) (string, error) {
+	tJSON := "{}"
+	if translations != nil {
+		if b, err := json.Marshal(translations); err == nil {
+			tJSON = string(b)
+		}
+	}
 	var id string
 	err := r.db.QueryRow(ctx,
-		`INSERT INTO saas_plans_promotions (name, description, discount_type, discount_value, duration_months, valid_from, valid_until, plan_id)
-		 VALUES ($1, $2, $3::discount_type, $4, $5, COALESCE($6::timestamp, NOW()), $7::timestamp, $8) RETURNING id`,
-		name, description, discountType, discountValue, durationMonths, validFrom, validUntil, planID,
+		`INSERT INTO saas_plans_promotions (name, description, translations, discount_type, discount_value, duration_months, valid_from, valid_until, plan_id)
+		 VALUES ($1, $2, $3::jsonb, $4::discount_type, $5, $6, COALESCE($7::timestamp, NOW()), $8::timestamp, $9) RETURNING id`,
+		name, description, tJSON, discountType, discountValue, durationMonths, validFrom, validUntil, planID,
 	).Scan(&id)
 	return id, err
 }
 
-func (r *Repository) UpdatePromotion(ctx context.Context, id string, req interface{}) error {
-	_, err := r.db.Exec(ctx, `UPDATE saas_plans_promotions SET updated_at = NOW() WHERE id = $1`, id)
+func (r *Repository) UpdatePromotion(ctx context.Context, id string, name *string, description *string, discountType *string, discountValue *float64, durationMonths *int, validFrom, validUntil interface{}, isActive *bool, translations interface{}) error {
+	query := `UPDATE saas_plans_promotions SET updated_at = NOW()`
+	args := []interface{}{}
+	argIdx := 1
+
+	if name != nil {
+		query += fmt.Sprintf(", name = $%d", argIdx)
+		args = append(args, *name)
+		argIdx++
+	}
+	if description != nil {
+		query += fmt.Sprintf(", description = $%d", argIdx)
+		args = append(args, *description)
+		argIdx++
+	}
+	if discountType != nil {
+		query += fmt.Sprintf(", discount_type = $%d::discount_type", argIdx)
+		args = append(args, *discountType)
+		argIdx++
+	}
+	if discountValue != nil {
+		query += fmt.Sprintf(", discount_value = $%d", argIdx)
+		args = append(args, *discountValue)
+		argIdx++
+	}
+	if durationMonths != nil {
+		query += fmt.Sprintf(", duration_months = $%d", argIdx)
+		args = append(args, *durationMonths)
+		argIdx++
+	}
+	if validFrom != nil {
+		query += fmt.Sprintf(", valid_from = $%d::timestamp", argIdx)
+		args = append(args, validFrom)
+		argIdx++
+	}
+	if validUntil != nil {
+		query += fmt.Sprintf(", valid_until = $%d::timestamp", argIdx)
+		args = append(args, validUntil)
+		argIdx++
+	}
+	if isActive != nil {
+		query += fmt.Sprintf(", is_active = $%d", argIdx)
+		args = append(args, *isActive)
+		argIdx++
+	}
+	if translations != nil {
+		if b, err := json.Marshal(translations); err == nil {
+			query += fmt.Sprintf(", translations = $%d::jsonb", argIdx)
+			args = append(args, string(b))
+			argIdx++
+		}
+	}
+
+	query += fmt.Sprintf(" WHERE id = $%d", argIdx)
+	args = append(args, id)
+
+	_, err := r.db.Exec(ctx, query, args...)
 	return err
 }
 
