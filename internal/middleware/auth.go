@@ -104,15 +104,18 @@ func AppAuthMiddleware(jwtSecret string, redisClient *redis.Client) gin.HandlerF
 	}
 }
 
-// extractToken extracts the Bearer token from the Authorization header
+// extractToken extracts the Bearer token from the Authorization header.
+// Falls back to the ?token= query param to support SSE (EventSource cannot set headers).
 func extractToken(c *gin.Context) string {
 	auth := c.GetHeader("Authorization")
-	if auth == "" {
-		return ""
+	if auth != "" {
+		parts := strings.SplitN(auth, " ", 2)
+		if len(parts) == 2 && parts[0] == "Bearer" {
+			return parts[1]
+		}
 	}
-	parts := strings.SplitN(auth, " ", 2)
-	if len(parts) != 2 || parts[0] != "Bearer" {
-		return ""
+	if q := c.Query("token"); q != "" {
+		return q
 	}
-	return parts[1]
+	return ""
 }

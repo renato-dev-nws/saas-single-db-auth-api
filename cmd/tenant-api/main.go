@@ -184,6 +184,7 @@ func main() {
 			// Images
 			images := tenantScoped.Group("/images")
 			{
+				images.GET("/:id/events", handler.StreamImageEvents)
 				images.PUT("/:id", handler.UpdateImageTitle)
 				images.DELETE("/:id", handler.DeleteImage)
 			}

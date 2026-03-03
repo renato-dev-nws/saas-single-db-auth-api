@@ -220,7 +220,16 @@ func (w *worker) processImage(ctx context.Context, imageID string) error {
 		return fmt.Errorf("failed to mark completed: %w", err)
 	}
 
+	// 11. Notify SSE subscribers
+	w.publishCompletion(ctx, imageID)
+
 	return nil
+}
+
+// publishCompletion notifies the tenant-api SSE endpoint that an image is ready.
+func (w *worker) publishCompletion(ctx context.Context, imageID string) {
+	payload, _ := json.Marshal(map[string]string{"image_id": imageID})
+	w.rdb.Publish(ctx, "image:done:"+imageID, string(payload))
 }
 
 func (w *worker) generateVariant(ctx context.Context, img *imageRow, srcImage image.Image, format string, vc variantConfig, convertWebp bool) (string, string, error) {

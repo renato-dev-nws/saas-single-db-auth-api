@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"github.com/gin-gonic/gin"
 
@@ -1747,6 +1748,80 @@ func (h *Handler) ListServiceImages(c *gin.Context) {
 		return
 	}
 	c.JSON(http.StatusOK, gin.H{"images": images})
+}
+
+// StreamImageEvents godoc
+// @Summary Stream SSE de processamento de imagem
+// @Description Abre conexão SSE. Envia evento 'pending' ao conectar, 'completed' quando o processamento terminar, 'timeout' após 90s.
+// @Tags Images
+// @Produce text/event-stream
+// @Security BearerAuth
+// @Param url_code path string true "URL code do tenant"
+// @Param id path string true "ID da imagem"
+// @Router /{url_code}/images/{id}/events [get]
+func (h *Handler) StreamImageEvents(c *gin.Context) {
+	imageID := c.Param("id")
+	tenantID := c.GetString("tenant_id")
+
+	c.Header("Content-Type", "text/event-stream")
+	c.Header("Cache-Control", "no-cache")
+	c.Header("Connection", "keep-alive")
+	c.Header("X-Accel-Buffering", "no")
+	c.Writer.WriteHeader(http.StatusOK)
+
+	sendEvent := func(event string, data interface{}) {
+		b, _ := json.Marshal(data)
+		fmt.Fprintf(c.Writer, "event: %s\ndata: %s\n\n", event, string(b))
+		c.Writer.Flush()
+	}
+
+	// Subscribe first to avoid race between subscribe and status check
+	pubsub := h.cache.Subscribe(c.Request.Context(), "image:done:"+imageID)
+	defer pubsub.Close()
+
+	// If already completed, return immediately
+	img, err := h.repo.GetImage(c.Request.Context(), tenantID, imageID)
+	if err != nil {
+		sendEvent("error", gin.H{"error": "image not found"})
+		return
+	}
+	if b, e := json.Marshal(img); e == nil {
+		var m map[string]interface{}
+		if json.Unmarshal(b, &m) == nil {
+			if status, _ := m["processing_status"].(string); status == "completed" {
+				sendEvent("completed", img)
+				return
+			}
+		}
+	}
+
+	// Notify client connection is established
+	sendEvent("pending", gin.H{"image_id": imageID})
+
+	ch := pubsub.Channel()
+	timeout := time.NewTimer(90 * time.Second)
+	defer timeout.Stop()
+
+	for {
+		select {
+		case <-c.Request.Context().Done():
+			return
+		case <-timeout.C:
+			sendEvent("timeout", gin.H{"image_id": imageID})
+			return
+		case _, ok := <-ch:
+			if !ok {
+				return
+			}
+			updatedImg, err := h.repo.GetImage(c.Request.Context(), tenantID, imageID)
+			if err != nil {
+				sendEvent("error", gin.H{"error": "failed to load image"})
+			} else {
+				sendEvent("completed", updatedImg)
+			}
+			return
+		}
+	}
 }
 
 // UpdateImageTitle godoc
