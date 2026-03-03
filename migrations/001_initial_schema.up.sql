@@ -251,7 +251,6 @@ CREATE TABLE products (
     sku           VARCHAR(100),
     stock         INTEGER        NOT NULL DEFAULT 0,
     is_active     BOOLEAN        NOT NULL DEFAULT true,
-    image_url     TEXT,
     translations  JSONB          NOT NULL DEFAULT '{}',
     created_at    TIMESTAMP      NOT NULL DEFAULT NOW(),
     updated_at    TIMESTAMP      NOT NULL DEFAULT NOW(),
@@ -266,7 +265,6 @@ CREATE TABLE services (
     price         DECIMAL(10,2)  NOT NULL DEFAULT 0,
     duration      INTEGER,
     is_active     BOOLEAN        NOT NULL DEFAULT true,
-    image_url     TEXT,
     translations  JSONB          NOT NULL DEFAULT '{}',
     created_at    TIMESTAMP      NOT NULL DEFAULT NOW(),
     updated_at    TIMESTAMP      NOT NULL DEFAULT NOW()

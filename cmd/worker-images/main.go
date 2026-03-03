@@ -181,13 +181,29 @@ func (w *worker) processImage(ctx context.Context, imageID string) error {
 		return fmt.Errorf("failed to decode image: %w", err)
 	}
 
-	// 7. Update original dimensions
+	// 7. Convert original to WebP if configured and not already webp
+	if convertWebp && format != "webp" {
+		newOrigPath, newOrigURL, newSize, err := w.convertOriginalToWebp(img, srcImage)
+		if err != nil {
+			log.Printf("Warning: failed to convert original to webp for image %s: %v", imageID, err)
+		} else {
+			// Delete old original file
+			oldFullPath := filepath.Join(cfg_storagePath(), img.OriginalPath)
+			os.Remove(oldFullPath)
+			// Update DB record and in-memory struct
+			w.updateOriginalWebp(ctx, imageID, newOrigPath, newOrigURL, newSize)
+			img.OriginalPath = newOrigPath
+			img.Extension = "webp"
+		}
+	}
+
+	// 8. Update original dimensions
 	bounds := srcImage.Bounds()
 	origWidth := bounds.Dx()
 	origHeight := bounds.Dy()
 	w.updateDimensions(ctx, imageID, origWidth, origHeight)
 
-	// 8. Generate variants and update the same row
+	// 9. Generate variants and update the same row
 	for _, v := range variants {
 		variantPath, variantURL, err := w.generateVariant(ctx, img, srcImage, format, v, convertWebp)
 		if err != nil {
@@ -199,7 +215,7 @@ func (w *worker) processImage(ctx context.Context, imageID string) error {
 		w.updateVariant(ctx, imageID, v.Name, variantPath, variantURL)
 	}
 
-	// 9. Mark as completed
+	// 10. Mark as completed
 	if err := w.updateStatusCompleted(ctx, imageID); err != nil {
 		return fmt.Errorf("failed to mark completed: %w", err)
 	}
@@ -265,6 +281,54 @@ func (w *worker) generateVariant(ctx context.Context, img *imageRow, srcImage im
 	variantURL := fmt.Sprintf("%s/%s", baseURL, variantStoragePath)
 
 	return variantStoragePath, variantURL, nil
+}
+
+// convertOriginalToWebp re-encodes the original image as WebP and saves it alongside the original.
+// Returns the new storage path, public URL, file size, and any error.
+func (w *worker) convertOriginalToWebp(img *imageRow, srcImage image.Image) (string, string, int64, error) {
+	origBase := filepath.Base(img.OriginalPath)
+	nameWithoutExt := strings.TrimSuffix(origBase, filepath.Ext(origBase))
+	webpFilename := nameWithoutExt + ".webp"
+	dir := filepath.Dir(img.OriginalPath)
+	webpStoragePath := filepath.Join(dir, webpFilename)
+
+	storagePath := cfg_storagePath()
+	fullPath := filepath.Join(storagePath, webpStoragePath)
+
+	if err := os.MkdirAll(filepath.Dir(fullPath), 0755); err != nil {
+		return "", "", 0, fmt.Errorf("failed to create dir: %w", err)
+	}
+
+	outFile, err := os.Create(fullPath)
+	if err != nil {
+		return "", "", 0, fmt.Errorf("failed to create file: %w", err)
+	}
+
+	if err := webp.Encode(outFile, srcImage, &webp.Options{Lossless: false, Quality: 85}); err != nil {
+		outFile.Close()
+		os.Remove(fullPath)
+		return "", "", 0, fmt.Errorf("failed to encode webp: %w", err)
+	}
+	outFile.Close()
+
+	fi, _ := os.Stat(fullPath)
+	var size int64
+	if fi != nil {
+		size = fi.Size()
+	}
+
+	baseURL := cfg_storageBaseURL()
+	webpURL := fmt.Sprintf("%s/%s", baseURL, webpStoragePath)
+
+	return webpStoragePath, webpURL, size, nil
+}
+
+// updateOriginalWebp updates the images row to reflect the newly converted WebP original.
+func (w *worker) updateOriginalWebp(ctx context.Context, imageID, newPath, newURL string, fileSize int64) {
+	w.db.Exec(ctx,
+		`UPDATE images SET original_path = $1, original_url = $2, extension = 'webp', mime_type = 'image/webp', file_size = $3, updated_at = NOW() WHERE id = $4`,
+		newPath, newURL, fileSize, imageID,
+	)
 }
 
 // updateVariant updates the image row with the path and URL for a specific variant (medium, small, thumb).

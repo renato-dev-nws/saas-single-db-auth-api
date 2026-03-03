@@ -732,6 +732,14 @@ func (r *Repository) RemovePermissionFromRole(ctx context.Context, roleID, permi
 
 // --- Products ---
 
+// imageURLs holds the primary image URLs for a product or service.
+type imageURLs struct {
+	Original  *string `json:"original"`
+	Medium    *string `json:"medium"`
+	Small     *string `json:"small"`
+	Thumbnail *string `json:"thumbnail"`
+}
+
 func (r *Repository) ListProducts(ctx context.Context, tenantID string, limit, offset int) ([]interface{}, int64, error) {
 	var total int64
 	r.db.QueryRow(ctx,
@@ -739,9 +747,18 @@ func (r *Repository) ListProducts(ctx context.Context, tenantID string, limit, o
 	).Scan(&total)
 
 	rows, err := r.db.Query(ctx,
-		`SELECT id, name, description, price, sku, stock, is_active, image_url, translations, created_at, updated_at
-		 FROM products WHERE tenant_id = $1
-		 ORDER BY created_at DESC LIMIT $2 OFFSET $3`, tenantID, limit, offset,
+		`SELECT p.id, p.name, p.description, p.price, p.sku, p.stock, p.is_active, p.translations, p.created_at, p.updated_at,
+		        img.original_url, img.medium_url, img.small_url, img.thumb_url
+		 FROM products p
+		 LEFT JOIN LATERAL (
+		     SELECT original_url, medium_url, small_url, thumb_url
+		     FROM images
+		     WHERE imageable_type = 'products' AND imageable_id = p.id
+		     ORDER BY display_order ASC, created_at ASC
+		     LIMIT 1
+		 ) img ON true
+		 WHERE p.tenant_id = $1
+		 ORDER BY p.created_at DESC LIMIT $2 OFFSET $3`, tenantID, limit, offset,
 	)
 	if err != nil {
 		return nil, 0, err
@@ -758,13 +775,18 @@ func (r *Repository) ListProducts(ctx context.Context, tenantID string, limit, o
 			SKU          *string     `json:"sku"`
 			Stock        int         `json:"stock"`
 			IsActive     bool        `json:"is_active"`
-			ImageURL     *string     `json:"image_url"`
 			Translations interface{} `json:"translations"`
 			CreatedAt    interface{} `json:"created_at"`
 			UpdatedAt    interface{} `json:"updated_at"`
+			Images       *imageURLs  `json:"images"`
 		}
-		if err := rows.Scan(&p.ID, &p.Name, &p.Description, &p.Price, &p.SKU, &p.Stock, &p.IsActive, &p.ImageURL, &p.Translations, &p.CreatedAt, &p.UpdatedAt); err != nil {
+		var origURL, medURL, smlURL, thmURL *string
+		if err := rows.Scan(&p.ID, &p.Name, &p.Description, &p.Price, &p.SKU, &p.Stock, &p.IsActive, &p.Translations, &p.CreatedAt, &p.UpdatedAt,
+			&origURL, &medURL, &smlURL, &thmURL); err != nil {
 			return nil, 0, err
+		}
+		if origURL != nil || medURL != nil || smlURL != nil || thmURL != nil {
+			p.Images = &imageURLs{Original: origURL, Medium: medURL, Small: smlURL, Thumbnail: thmURL}
 		}
 		products = append(products, p)
 	}
@@ -780,17 +802,31 @@ func (r *Repository) GetProduct(ctx context.Context, tenantID, productID string)
 		SKU          *string     `json:"sku"`
 		Stock        int         `json:"stock"`
 		IsActive     bool        `json:"is_active"`
-		ImageURL     *string     `json:"image_url"`
 		Translations interface{} `json:"translations"`
 		CreatedAt    interface{} `json:"created_at"`
 		UpdatedAt    interface{} `json:"updated_at"`
+		Images       *imageURLs  `json:"images"`
 	}
+	var origURL, medURL, smlURL, thmURL *string
 	err := r.db.QueryRow(ctx,
-		`SELECT id, name, description, price, sku, stock, is_active, image_url, translations, created_at, updated_at
-		 FROM products WHERE tenant_id = $1 AND id = $2`, tenantID, productID,
-	).Scan(&p.ID, &p.Name, &p.Description, &p.Price, &p.SKU, &p.Stock, &p.IsActive, &p.ImageURL, &p.Translations, &p.CreatedAt, &p.UpdatedAt)
+		`SELECT p.id, p.name, p.description, p.price, p.sku, p.stock, p.is_active, p.translations, p.created_at, p.updated_at,
+		        img.original_url, img.medium_url, img.small_url, img.thumb_url
+		 FROM products p
+		 LEFT JOIN LATERAL (
+		     SELECT original_url, medium_url, small_url, thumb_url
+		     FROM images
+		     WHERE imageable_type = 'products' AND imageable_id = p.id
+		     ORDER BY display_order ASC, created_at ASC
+		     LIMIT 1
+		 ) img ON true
+		 WHERE p.tenant_id = $1 AND p.id = $2`, tenantID, productID,
+	).Scan(&p.ID, &p.Name, &p.Description, &p.Price, &p.SKU, &p.Stock, &p.IsActive, &p.Translations, &p.CreatedAt, &p.UpdatedAt,
+		&origURL, &medURL, &smlURL, &thmURL)
 	if err != nil {
 		return nil, err
+	}
+	if origURL != nil || medURL != nil || smlURL != nil || thmURL != nil {
+		p.Images = &imageURLs{Original: origURL, Medium: medURL, Small: smlURL, Thumbnail: thmURL}
 	}
 	return p, nil
 }
@@ -859,14 +895,6 @@ func (r *Repository) DeleteProduct(ctx context.Context, tenantID, productID stri
 	return err
 }
 
-func (r *Repository) UpdateProductImage(ctx context.Context, tenantID, productID, imageURL string) error {
-	_, err := r.db.Exec(ctx,
-		`UPDATE products SET image_url = $1, updated_at = NOW() WHERE tenant_id = $2 AND id = $3`,
-		imageURL, tenantID, productID,
-	)
-	return err
-}
-
 // --- Services ---
 
 func (r *Repository) ListServices(ctx context.Context, tenantID string, limit, offset int) ([]interface{}, int64, error) {
@@ -876,9 +904,18 @@ func (r *Repository) ListServices(ctx context.Context, tenantID string, limit, o
 	).Scan(&total)
 
 	rows, err := r.db.Query(ctx,
-		`SELECT id, name, description, price, duration, is_active, image_url, translations, created_at, updated_at
-		 FROM services WHERE tenant_id = $1
-		 ORDER BY created_at DESC LIMIT $2 OFFSET $3`, tenantID, limit, offset,
+		`SELECT s.id, s.name, s.description, s.price, s.duration, s.is_active, s.translations, s.created_at, s.updated_at,
+		        img.original_url, img.medium_url, img.small_url, img.thumb_url
+		 FROM services s
+		 LEFT JOIN LATERAL (
+		     SELECT original_url, medium_url, small_url, thumb_url
+		     FROM images
+		     WHERE imageable_type = 'services' AND imageable_id = s.id
+		     ORDER BY display_order ASC, created_at ASC
+		     LIMIT 1
+		 ) img ON true
+		 WHERE s.tenant_id = $1
+		 ORDER BY s.created_at DESC LIMIT $2 OFFSET $3`, tenantID, limit, offset,
 	)
 	if err != nil {
 		return nil, 0, err
@@ -894,13 +931,18 @@ func (r *Repository) ListServices(ctx context.Context, tenantID string, limit, o
 			Price        float64     `json:"price"`
 			Duration     *int        `json:"duration"`
 			IsActive     bool        `json:"is_active"`
-			ImageURL     *string     `json:"image_url"`
 			Translations interface{} `json:"translations"`
 			CreatedAt    interface{} `json:"created_at"`
 			UpdatedAt    interface{} `json:"updated_at"`
+			Images       *imageURLs  `json:"images"`
 		}
-		if err := rows.Scan(&s.ID, &s.Name, &s.Description, &s.Price, &s.Duration, &s.IsActive, &s.ImageURL, &s.Translations, &s.CreatedAt, &s.UpdatedAt); err != nil {
+		var origURL, medURL, smlURL, thmURL *string
+		if err := rows.Scan(&s.ID, &s.Name, &s.Description, &s.Price, &s.Duration, &s.IsActive, &s.Translations, &s.CreatedAt, &s.UpdatedAt,
+			&origURL, &medURL, &smlURL, &thmURL); err != nil {
 			return nil, 0, err
+		}
+		if origURL != nil || medURL != nil || smlURL != nil || thmURL != nil {
+			s.Images = &imageURLs{Original: origURL, Medium: medURL, Small: smlURL, Thumbnail: thmURL}
 		}
 		services = append(services, s)
 	}
@@ -915,17 +957,31 @@ func (r *Repository) GetService(ctx context.Context, tenantID, serviceID string)
 		Price        float64     `json:"price"`
 		Duration     *int        `json:"duration"`
 		IsActive     bool        `json:"is_active"`
-		ImageURL     *string     `json:"image_url"`
 		Translations interface{} `json:"translations"`
 		CreatedAt    interface{} `json:"created_at"`
 		UpdatedAt    interface{} `json:"updated_at"`
+		Images       *imageURLs  `json:"images"`
 	}
+	var origURL, medURL, smlURL, thmURL *string
 	err := r.db.QueryRow(ctx,
-		`SELECT id, name, description, price, duration, is_active, image_url, translations, created_at, updated_at
-		 FROM services WHERE tenant_id = $1 AND id = $2`, tenantID, serviceID,
-	).Scan(&s.ID, &s.Name, &s.Description, &s.Price, &s.Duration, &s.IsActive, &s.ImageURL, &s.Translations, &s.CreatedAt, &s.UpdatedAt)
+		`SELECT s.id, s.name, s.description, s.price, s.duration, s.is_active, s.translations, s.created_at, s.updated_at,
+		        img.original_url, img.medium_url, img.small_url, img.thumb_url
+		 FROM services s
+		 LEFT JOIN LATERAL (
+		     SELECT original_url, medium_url, small_url, thumb_url
+		     FROM images
+		     WHERE imageable_type = 'services' AND imageable_id = s.id
+		     ORDER BY display_order ASC, created_at ASC
+		     LIMIT 1
+		 ) img ON true
+		 WHERE s.tenant_id = $1 AND s.id = $2`, tenantID, serviceID,
+	).Scan(&s.ID, &s.Name, &s.Description, &s.Price, &s.Duration, &s.IsActive, &s.Translations, &s.CreatedAt, &s.UpdatedAt,
+		&origURL, &medURL, &smlURL, &thmURL)
 	if err != nil {
 		return nil, err
+	}
+	if origURL != nil || medURL != nil || smlURL != nil || thmURL != nil {
+		s.Images = &imageURLs{Original: origURL, Medium: medURL, Small: smlURL, Thumbnail: thmURL}
 	}
 	return s, nil
 }
@@ -985,14 +1041,6 @@ func (r *Repository) UpdateService(ctx context.Context, tenantID, serviceID stri
 func (r *Repository) DeleteService(ctx context.Context, tenantID, serviceID string) error {
 	_, err := r.db.Exec(ctx,
 		`DELETE FROM services WHERE tenant_id = $1 AND id = $2`, tenantID, serviceID,
-	)
-	return err
-}
-
-func (r *Repository) UpdateServiceImage(ctx context.Context, tenantID, serviceID, imageURL string) error {
-	_, err := r.db.Exec(ctx,
-		`UPDATE services SET image_url = $1, updated_at = NOW() WHERE tenant_id = $2 AND id = $3`,
-		imageURL, tenantID, serviceID,
 	)
 	return err
 }

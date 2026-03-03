@@ -3329,9 +3329,7 @@ const docTemplate = `{
                     "type": "string",
                     "example": "uuid"
                 },
-                "image_url": {
-                    "type": "string"
-                },
+                "images": {},
                 "is_active": {
                     "type": "boolean",
                     "example": true
@@ -3411,9 +3409,7 @@ const docTemplate = `{
                     "type": "string",
                     "example": "uuid"
                 },
-                "image_url": {
-                    "type": "string"
-                },
+                "images": {},
                 "is_active": {
                     "type": "boolean",
                     "example": true

@@ -443,7 +443,7 @@ type ProductResponse struct {
 	SKU          *string     `json:"sku" example:"WDG-001"`
 	Stock        int         `json:"stock" example:"100"`
 	IsActive     bool        `json:"is_active" example:"true"`
-	ImageURL     *string     `json:"image_url"`
+	Images       interface{} `json:"images"`
 	Translations interface{} `json:"translations"`
 	CreatedAt    time.Time   `json:"created_at"`
 	UpdatedAt    time.Time   `json:"updated_at"`
@@ -458,7 +458,7 @@ type ServiceResponse struct {
 	Price        float64     `json:"price" example:"150.00"`
 	Duration     *int        `json:"duration" example:"60"`
 	IsActive     bool        `json:"is_active" example:"true"`
-	ImageURL     *string     `json:"image_url"`
+	Images       interface{} `json:"images"`
 	Translations interface{} `json:"translations"`
 	CreatedAt    time.Time   `json:"created_at"`
 	UpdatedAt    time.Time   `json:"updated_at"`

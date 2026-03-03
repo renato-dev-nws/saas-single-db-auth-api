@@ -475,8 +475,7 @@ definitions:
       id:
         example: uuid
         type: string
-      image_url:
-        type: string
+      images: {}
       is_active:
         example: true
         type: boolean
@@ -533,8 +532,7 @@ definitions:
       id:
         example: uuid
         type: string
-      image_url:
-        type: string
+      images: {}
       is_active:
         example: true
         type: boolean

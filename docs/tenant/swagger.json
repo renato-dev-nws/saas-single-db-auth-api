@@ -3323,9 +3323,7 @@
                     "type": "string",
                     "example": "uuid"
                 },
-                "image_url": {
-                    "type": "string"
-                },
+                "images": {},
                 "is_active": {
                     "type": "boolean",
                     "example": true
@@ -3405,9 +3403,7 @@
                     "type": "string",
                     "example": "uuid"
                 },
-                "image_url": {
-                    "type": "string"
-                },
+                "images": {},
                 "is_active": {
                     "type": "boolean",
                     "example": true

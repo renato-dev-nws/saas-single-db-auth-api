@@ -1264,9 +1264,6 @@ func (h *Handler) UploadProductImage(c *gin.Context) {
 			continue
 		}
 
-		// Set image_url on product if it's the first image
-		_ = h.repo.UpdateProductImage(c.Request.Context(), tenantID, productID, publicURL)
-
 		// Publish to Redis for async processing
 		msg, _ := json.Marshal(map[string]string{"image_id": imageID})
 		h.cache.Publish(c.Request.Context(), "image:process", string(msg))
@@ -1511,8 +1508,6 @@ func (h *Handler) UploadServiceImage(c *gin.Context) {
 		if err != nil {
 			continue
 		}
-
-		_ = h.repo.UpdateServiceImage(c.Request.Context(), tenantID, serviceID, publicURL)
 
 		msg, _ := json.Marshal(map[string]string{"image_id": imageID})
 		h.cache.Publish(c.Request.Context(), "image:process", string(msg))
